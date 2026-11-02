@@ -15,7 +15,7 @@ uv run train --config-name humanoid/imitation/walk_pd trainer.max_iterations=300
 
 Overrides use full dotted paths such as `trainer.max_iterations`. Prefix a key
 with `+` to add one the config does not define. The
-[configuration reference](../reference/configuration.md) describes the main
+[configuration reference](../reference/configuration/index.md) describes the main
 settings.
 
 Each run writes to `logs/ppo/<config directory>/<start time>_ppo_custom_<config>/`:

@@ -29,8 +29,8 @@ hyperparameter searches planned by an LLM agent.
 
 - [Motion demonstrations](reference/motion-demo.md): configs and timings behind
   the project-page videos.
-- [Configuration](reference/configuration.md): the config layout, overrides,
-  compilation and reduced precision.
+- [Configuration](reference/configuration/index.md): every config section,
+  from the environment and actions to PPO, training and playback.
 - [Simulation](reference/simulation.md): the MuJoCo Warp runtime and its kernels.
 - [HPO task schema](reference/hpo-task-schema.md): search task files.
 

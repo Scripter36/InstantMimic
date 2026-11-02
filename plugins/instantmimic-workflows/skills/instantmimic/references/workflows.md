@@ -9,15 +9,15 @@ or report the missing capability.
 
 | User goal | Public guides | Detailed procedure files |
 | --- | --- | --- |
-| Train or resume an included task | `docs/getting-started/first-run.md`, `docs/guides/training-and-playback.md`, `docs/reference/configuration.md` | `plugins/instantmimic-workflows/skills/train/SKILL.md` |
-| Change a config or policy network | `docs/reference/configuration.md`, `docs/development.md`; inspect the selected config and runtime consumers | `plugins/instantmimic-workflows/skills/config-variant-check/SKILL.md` |
+| Train or resume an included task | `docs/getting-started/first-run.md`, `docs/guides/training-and-playback.md`, `docs/reference/configuration/` | `plugins/instantmimic-workflows/skills/train/SKILL.md` |
+| Change a config or policy network | `docs/reference/configuration/`, `docs/development.md`; inspect the selected config and runtime consumers | `plugins/instantmimic-workflows/skills/config-variant-check/SKILL.md` |
 | Evaluate or record a checkpoint | `docs/guides/training-and-playback.md`, `docs/guides/rendering.md` | `plugins/instantmimic-workflows/skills/play-best/SKILL.md` |
 | Use muscle control | `docs/guides/muscle-control.md`, relevant `data/` provenance | Training and evaluation procedures above |
 | Use Unitree G1 tracking | `docs/guides/beyondmimic.md` | Training and evaluation procedures above; prepare the declared external inputs first |
 | Prepare AMASS or latent policies | `docs/data/amass-retargeting.md` | Follow its stage-specific config, input, and checkpoint requirements |
-| Bring a new body or learning task | `docs/development.md`, `docs/reference/configuration.md`, `docs/reference/simulation.md`; inspect `src/instantmimic/envs/` and the closest compatible task | For an existing external environment port: `plugins/instantmimic-workflows/skills/migrate-external-env/SKILL.md` |
+| Bring a new body or learning task | `docs/development.md`, `docs/reference/configuration/`, `docs/reference/simulation.md`; inspect `src/instantmimic/envs/` and the closest compatible task | For an existing external environment port: `plugins/instantmimic-workflows/skills/migrate-external-env/SKILL.md` |
 | Improve learning settings within a budget | `docs/guides/hpo.md`, `docs/reference/hpo-task-schema.md` | `plugins/instantmimic-workflows/skills/tune-hyperparameters/SKILL.md` |
-| Improve runtime speed or memory | `docs/development.md`, `docs/reference/simulation.md`, `docs/reference/configuration.md` | `plugins/instantmimic-workflows/skills/optimize-runtime/SKILL.md`; load profiling procedures only if needed |
+| Improve runtime speed or memory | `docs/development.md`, `docs/reference/simulation.md`, `docs/reference/configuration/` | `plugins/instantmimic-workflows/skills/optimize-runtime/SKILL.md`; load profiling procedures only if needed |
 
 ## New models and tasks
 

@@ -33,7 +33,13 @@ nav:
       - Video rendering: guides/rendering.md
   - Reference:
       - Motion demonstrations: reference/motion-demo.md
-      - Configuration: reference/configuration.md
+      - Configuration:
+          - Overview: reference/configuration/index.md
+          - Environment: reference/configuration/environment.md
+          - Actions and muscles: reference/configuration/actions-and-muscles.md
+          - Models: reference/configuration/models.md
+          - PPO: reference/configuration/ppo.md
+          - Training and playback: reference/configuration/training-and-playback.md
       - Simulation: reference/simulation.md
       - HPO task schema: reference/hpo-task-schema.md
   - Development:
