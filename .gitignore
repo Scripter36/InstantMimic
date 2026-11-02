@@ -1,0 +1,34 @@
+# Python and build products
+.venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+/build/
+/dist/
+*.egg-info/
+
+# Local runs, caches, and credentials
+/logs/
+/wandb/
+/workspaces/
+.env
+.env.*
+/data/local/
+/data/cache/
+/.agents/
+/.codex/
+.vscode/
+
+# Generated documentation
+/site/
+
+# Separately prepared BeyondMimic runtime assets
+/data/unitree_g1/beyondmimic/
+
+# Source checkouts used only for external asset preparation
+/external/
+
+# Locally licensed AMASS data and derived files
+/data/amass/
+/data/humanoid/motions/amass/

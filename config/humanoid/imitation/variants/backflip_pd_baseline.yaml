@@ -1,0 +1,212 @@
+# @package _global_
+# Self-contained backflip PD baseline using IsaacLab Humanoid-style PPO settings.
+defaults:
+  - _self_
+
+schema_version: 1
+seed: -1
+task: "SNU-Imitation-v0"
+env:
+  sim:
+    mjcf_path: "data/humanoid/mjcf/humanoid_pd.xml"
+    hz: 120
+    integrator: implicitfast
+    render_interval: 1
+    njmax: 64
+    nconmax: 12
+    iterations: 4
+    ls_iterations: 4
+    is_sparse: false
+  scene:
+    num_envs: 2048
+  viewer:
+    resolution: [1080, 1080]
+
+  use_cuda_graph: true
+  use_parallelized_kernel_launch: true
+  use_optimized_kernel: false
+
+  decimation: 4
+
+  episode_length_s: 15.0
+  action:
+    type: ctrl
+    space: 28
+    scale: 1.0
+    use_reference: true
+
+  observations:
+    include_root_target: false
+    joint_pose: 6d
+    future_mode: phc_v6
+    future_frames: 1
+    future_frame_step: 1
+
+    previous_action: null
+  motion:
+    source: "data/humanoid/motions/mimickit/humanoid_backflip.pkl"
+    scale: 1.0
+    offset: [0.0, 0.0, 0.0]
+    bvh_map:
+      "Hips": "pelvis"
+      "RightUpLeg": "right_thigh"
+      "RightLeg": "right_shin"
+      "RightFoot": "right_foot"
+      "LeftUpLeg": "left_thigh"
+      "LeftLeg": "left_shin"
+      "LeftFoot": "left_foot"
+      "Spine1": "torso"
+      "Head": "head"
+      "RightArm": "right_upper_arm"
+      "RightForeArm": "right_lower_arm"
+      "LeftArm": "left_upper_arm"
+      "LeftForeArm": "left_lower_arm"
+
+    loop:
+      velocity_extrapolate: false
+      velocity_from_first_frame: false
+      smooth: true
+      blend_frames: 30
+
+  spawn_offset: [0.0, 0.0, 0.01]
+  reset:
+    random_start: true
+    motion_noise_std: 0.02
+  reward:
+    alive: 0.05
+    tracking:
+      type: joint
+      pose:
+        weight: 10.0
+        mode: default
+        include_root: true
+      velocity:
+        weight: 0.05
+        mode: qvel
+        include_root: false
+    com_weight: 10.0
+    end_effector:
+      position_weight: 10.0
+      rotation_weight: 2.0
+      position_root_relative: false
+    combination:
+      type: product
+
+  termination:
+    min_torso_height: 0.8
+    early:
+      reward_threshold: 0.05
+      consecutive_steps: 4
+  adaptive_sampling:
+    enabled: false
+    metric: reward
+    chunk_size: 1
+    ema_alpha: 0.3
+    temperature: 0.01
+    decay_rate: 0.995
+    random_sample_prob: 0.05
+    min_metric: 1.0e-6
+
+  ghost_offset: [-1.5, 0.0, 0.0]
+
+  log_dir: ""
+
+models:
+  shared: true
+  actor:
+    architecture: mlp
+    layers:
+      - 384
+      - 384
+      - 192
+    activation: silu
+    normalization: none
+    distribution:
+      std: parameter
+      initial_log_std: -2.0
+      log_std_bounds:
+        - -20.0
+        - 2.0
+      bound_mode: clamp
+      action_transform: none
+agent:
+  class: PPO
+  rollouts: 32
+  discount_factor: 0.99
+  optimizer:
+    type: muon
+    nesterov: true
+    eps: 2e-05
+    weight_decay: 3e-05
+    adjust_lr_fn: match_rms_adamw
+    momentum: 0.95
+    ns_steps: 5
+    adamw:
+      betas: [0.9, 0.999]
+      eps: 2.0e-5
+      weight_decay: 3.0e-5
+      amsgrad: false
+  time_limit_bootstrap: false
+  grad_norm_clip: 1.0
+  state_preprocessor: RunningStandardScaler
+  learning_epochs: 5
+  mini_batches: 4
+  gae_lambda: 0.95
+  learning_rate:
+    bounds: [1.0e-6, 1.0e-2]
+    initial: 5.0e-04
+    scheduler:
+      type: kl_adaptive
+      threshold: 0.008
+      factor: 1.5
+  value_preprocessor: RunningStandardScaler
+  shuffle_mode: per_update
+  ratio_clip: 0.2
+  value_clip: 0.2
+  clip_predicted_values: true
+  entropy_loss_scale: 0.0
+  value_loss_scale: 2.0
+trainer:
+  max_iterations: 400
+  benchmark:
+    interval: 5
+    steps: 300
+    num_envs: 32
+    objective:
+      metric: reward_mean
+      direction: maximize
+    termination:
+      type: inherit
+experiment:
+  directory: humanoid/imitation/backflip_pd_baseline
+  logger:
+    type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+  name: ''
+  write_interval: 4
+  episode_metrics_interval: 4
+  checkpoint:
+    periodic:
+      interval: 5
+    best:
+      interval: 160
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+runtime:
+  act_cuda_graph: true
+  update_cuda_graph: true
+  shuffle_cuda_graph: true
+  compile: true
+  compile_act_into: true
+  compile_update_fullgraph: true
+  compile_mode: max-autotune-no-cudagraphs
+  mixed_precision: true
+  nsys_nvtx_mode: launch
+play:
+  num_envs: 1
+  steps:
+  action:
+    mode: mean
+  video:
+    enabled: false
+    length: 300

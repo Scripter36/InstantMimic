@@ -1,0 +1,16 @@
+# @package _global_
+# Hydra Defaults - spinkick PD config layered on the shared InstantMimic PD base
+defaults:
+  - base
+  - _self_
+
+env:
+  motion:
+    source: "data/humanoid/motions/mimickit/humanoid_spinkick.pkl"
+
+experiment:
+  directory: humanoid/imitation/spinkick_pd
+  write_interval: 1
+  episode_metrics_interval: 1
+  writer_max_queue: 256
+  writer_flush_secs: 120

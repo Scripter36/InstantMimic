@@ -1,0 +1,15 @@
+# @package _global_
+defaults:
+- /freemusco/run/chimanoid/musubi
+- _self_
+env:
+  sim:
+    mjcf_path: data/freemusco/animal/chimanoid/chimanoid_split4.xml
+trainer:
+  max_iterations: 500
+experiment:
+  directory: freemusco/experiments/split_geometry/run/chimanoid/musubi_split4
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

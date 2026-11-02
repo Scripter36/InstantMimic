@@ -1,0 +1,66 @@
+# @package _global_
+defaults:
+- /freemusco/command/base
+- _self_
+env:
+  species: ostrich
+  sim:
+    mjcf_path: data/freemusco/animal/ostrich/ostrich.xml
+    njmax: 256
+    nconmax: 36
+  episode_length_s: 10.0
+  motion_data_dir: data/freemusco/animal/ostrich/mocap
+  smooth_cycle_blend_frames: 6
+  include_muscle_observation_blocks: false
+  include_heading_frame_body_state_obs: true
+  imitation_profile:
+    root_body_name: ostrich
+    head_body_name: head
+    foot_body_names:
+    - r_pes
+    - l_pes
+    pelvis_geom_name: pelvis
+    end_effector_body_names:
+    - r_pes
+    - l_pes
+    - head
+    talus_body_names: []
+    toe_body_names:
+    - r_pes
+    - l_pes
+    reference_body_start: 1
+    reference_body_count_offset: 2
+    root_qpos_position_indices:
+    - 0
+    - 1
+    - 2
+    root_qpos_rotation_indices:
+    - 3
+    - 4
+    - 5
+    loop_vertical_axis: 2
+    phase_observation_mode: configurable
+    loop_transform_mode: extrapolated_root_yaw
+    mirror_mode: paired_joint_reflection
+    mirror_left_prefix: l_
+    mirror_right_prefix: r_
+    mirror_clip_suffix: __mirror
+    smoothing_mode: extrapolated_root_cycle
+    ghost_root_xpath: .//body[@name='ostrich']
+    ghost_root_description: Ostrich root body
+  fixed_motion_idx: null
+  start_frame_idx: 0
+  motion_clip: '0006'
+  motion_clips:
+  - '0006'
+  - '0010'
+  - '0029'
+  - '0053'
+  - '0084'
+  - '0086'
+  - '0091'
+  - '0094'
+  - cyclic
+  mirror_motion_clips: true
+  mirror_exclude_motion_clips:
+  - cyclic

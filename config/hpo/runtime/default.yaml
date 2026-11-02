@@ -1,0 +1,17 @@
+# @package _global_
+
+defaults:
+  - _self_
+
+runtime:
+  resume: null
+  # Final cycle index for the run. Resuming cycle 40 with 60 executes cycles 41-60.
+  cycles: null
+  dry_run: false
+  evaluator:
+    # local: direct execution; slurm/hq: scheduler-managed job.
+    launcher: null
+    max_parallel: null
+    slurm_host: null
+    slurm_sbatch_args: null
+    hq_submit_args: null

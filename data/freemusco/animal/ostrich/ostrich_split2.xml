@@ -1,0 +1,27 @@
+<mujoco model="ostrich_split2">
+    <include file="shared.xml" />
+    <include file="bones/assets.xml" />
+    <worldbody>
+        <geom name="floor" type="plane" conaffinity="1" size="100 100 0.2" material="grid" pos="0 0 0" zaxis="0 0 1" />
+        <body name="ostrich" pos="0 0 1.05">
+            <light name="top" mode="trackcom" exponent="10" cutoff="45" ambient="0 0 0" pos="0 0 5" directional="false" />
+            <joint name="root_x" type="slide" pos="0 0 0" axis="1 0 0" limited="false" stiffness="0" damping="0" />
+            <joint name="root_y" type="slide" pos="0 0 0" axis="0 1 0" limited="false" stiffness="0" damping="0" />
+            <joint name="root_z" type="slide" pos="0 0 0" axis="0 0 1" limited="false" stiffness="0" damping="0" />
+            <joint name="root_rot_x" pos="0 0 0" axis="1 0 0" limited="false" stiffness="0" damping="0" />
+            <joint name="root_rot_y" pos="0 0 0" axis="0 1 0" limited="false" stiffness="0" damping="0" />
+            <joint name="root_rot_z" pos="0 0 0" axis="0 0 1" limited="false" stiffness="0" damping="0" />
+            <include file="bones/legs_split2.xml" />
+            <include file="bones/neck_split2.xml" />
+            <include file="bones/torso_split2.xml" />
+        </body>
+    </worldbody>
+    <include file="tendons/legs_split2.xml" />
+    <include file="tendons/neck_split2.xml" />
+    <include file="actuators/legs_split2.xml" />
+    <include file="actuators/neck_split2.xml" />
+    <sensor>
+        <subtreelinvel name="torso_subtreelinvel" body="ostrich" />
+        <subtreecom name="body_com" body="ostrich" />
+    </sensor>
+</mujoco>

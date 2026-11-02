@@ -1,0 +1,16 @@
+# @package _global_
+defaults:
+- /humanoid/amass/base@_global_
+- _self_
+trainer:
+  clip_failure_benchmark:
+    interval: 100
+    mode: anchor
+    window_steps: 180
+    batch_size: 4096
+    execution: shared_motion
+    anchor_stride: 30
+    cuda_graph: true
+    compile: true
+    preserve_training_graphs: true
+    clone_shared_motion_tensors: false

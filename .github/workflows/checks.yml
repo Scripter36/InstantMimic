@@ -1,0 +1,46 @@
+name: Checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  configuration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "0.9.28"
+      - name: Install Python
+        run: uv python install 3.12
+      - name: Install configuration dependencies only
+        run: uv sync --locked --only-group ci --no-install-project
+      - name: Validate checkout configurations and asset paths
+        env:
+          PYTHONPATH: src
+        run: .venv/bin/python -m instantmimic.tools.validate_configs --allow-unprepared-assets --json
+      - name: Lint
+        run: uvx ruff==0.14.9 check src tests plugins
+      - name: Check formatting
+        run: uvx ruff==0.14.9 format --check src tests plugins
+      - name: Build source and wheel distributions
+        run: uv build --out-dir /tmp/instantmimic-dist
+
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "0.9.28"
+      - name: Install Python
+        run: uv python install 3.12
+      - name: Install documentation dependencies
+        run: uv sync --locked --only-group docs --no-install-project
+      - name: Build documentation
+        run: .venv/bin/mkdocs build --strict

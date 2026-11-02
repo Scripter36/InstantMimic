@@ -1,0 +1,24 @@
+# @package _global_
+defaults:
+  - /freemusco/imitation/chimanoid/base
+  - /freemusco/presets/activation_mode@_global_
+  - _self_
+models:
+  actor:
+    distribution:
+      initial_log_std: -1.5
+      action_transform: none
+agent:
+  optimizer:
+    type: adamw
+    betas:
+      - 0.9
+      - 0.999
+    eps: 2e-05
+    amsgrad: false
+experiment:
+  directory: freemusco/imitation/chimanoid/single/activation
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

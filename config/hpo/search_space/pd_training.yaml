@@ -1,0 +1,103 @@
+# @package _global_
+
+# The InstantMimic PD hpo search boundary, shared by every task
+# that tunes config/humanoid/imitation/variants/backflip_pd_baseline.
+
+# Deliberate HPO surface. Keep this list on canonical train-config paths so task
+# orchestration, logging, playback, schema, and runtime implementation switches
+# cannot become accidental search axes.
+parameter_space:
+  - env.scene.num_envs
+  - env.episode_length_s
+  - env.action.scale
+  - env.action.use_reference
+  - env.observations.include_root_target
+  - env.observations.previous_action
+  - env.observations.future_frames
+  - env.observations.future_frame_step
+  - env.motion.offset
+  - env.motion.offset.0
+  - env.motion.offset.1
+  - env.motion.offset.2
+  - env.motion.loop.velocity_extrapolate
+  - env.motion.loop.velocity_from_first_frame
+  - env.motion.loop.smooth
+  - env.motion.loop.blend_frames
+  - env.spawn_offset
+  - env.spawn_offset.0
+  - env.spawn_offset.1
+  - env.spawn_offset.2
+  - env.reset.random_start
+  - env.reset.motion_noise_std
+  - env.reward.alive
+  - env.reward.tracking.pose.weight
+  - env.reward.tracking.velocity.weight
+  - env.reward.com_weight
+  - env.reward.end_effector.position_weight
+  - env.reward.end_effector.rotation_weight
+  - env.termination.min_torso_height
+  - env.termination.early.reward_threshold
+  - env.termination.early.consecutive_steps
+  - env.adaptive_sampling.enabled
+  - env.adaptive_sampling.chunk_size
+  - env.adaptive_sampling.ema_alpha
+  - env.adaptive_sampling.temperature
+  - env.adaptive_sampling.decay_rate
+  - env.adaptive_sampling.random_sample_prob
+  - env.adaptive_sampling.min_metric
+  - models.actor.layers
+  - models.actor.layers.0
+  - models.actor.layers.1
+  - models.actor.layers.2
+  - models.actor.normalization
+  - models.actor.distribution.std
+  - models.actor.distribution.action_transform
+  - models.actor.distribution.initial_log_std
+  - models.actor.distribution.log_std_bounds.0
+  - models.actor.distribution.log_std_bounds.1
+  - agent.rollouts
+  - agent.learning_epochs
+  - agent.mini_batches
+  - agent.discount_factor
+  - agent.gae_lambda
+  - agent.optimizer.momentum
+  - agent.optimizer.nesterov
+  - agent.optimizer.ns_steps
+  - agent.optimizer.eps
+  - agent.optimizer.weight_decay
+  - agent.optimizer.adamw.betas
+  - agent.optimizer.adamw.betas.0
+  - agent.optimizer.adamw.betas.1
+  - agent.optimizer.adamw.eps
+  - agent.optimizer.adamw.weight_decay
+  - agent.optimizer.adamw.amsgrad
+  - agent.learning_rate.initial
+  - agent.learning_rate.scheduler.threshold
+  - agent.grad_norm_clip
+  - agent.ratio_clip
+  - agent.value_clip
+  - agent.clip_predicted_values
+  - agent.entropy_loss_scale
+  - agent.value_loss_scale
+  - agent.time_limit_bootstrap
+
+# The benchmark protocol, the training budget, and the runtime implementation
+# switches are this experiment's fixed frame. The env.* entries name the exact
+# subtrees that stay fixed while the rest of env remains searchable.
+forbidden_prefixes:
+  - schema_version
+  - seed
+  - task
+  - trainer
+  - experiment
+  - play
+  - runtime
+  - env.action.space
+  - env.observation_space
+  - env.motion.scale
+  - env.sim
+  - env.decimation
+  - env.use_cuda_graph
+  - env.compile_mjw_step
+  - env.use_optimized_kernel
+  - env.use_parallelized_kernel_launch

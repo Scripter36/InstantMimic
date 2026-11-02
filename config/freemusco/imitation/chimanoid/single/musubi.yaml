@@ -1,0 +1,13 @@
+# @package _global_
+defaults:
+- /freemusco/imitation/chimanoid/base
+- _self_
+env:
+  action:
+    type: musubi
+experiment:
+  directory: freemusco/imitation/chimanoid/single/musubi
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

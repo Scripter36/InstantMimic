@@ -1,0 +1,171 @@
+# @package _global_
+defaults:
+- _self_
+schema_version: 1
+seed: -1
+task: SNU-Imitation-v0
+env:
+  sim:
+    mjcf_path: data/snu_humanoid/mjcf/humanoid.xml
+    hz: 120
+    integrator: implicitfast
+    render_interval: 1
+    njmax: 128
+    nconmax: 16
+    is_sparse: false
+  scene:
+    num_envs: 4096
+  viewer:
+    resolution:
+    - 1080
+    - 1080
+  use_cuda_graph: true
+  decimation: 4
+  episode_length_s: 10.0
+  activation_visualization:
+    enabled: true
+    color_low:
+    - 0.194618
+    - 0.242281
+    - 0.318547
+    - 0.3
+    color_high:
+    - 0.701102
+    - 0.0
+    - 0.0
+    - 1.0
+    alpha: 0.95
+    interpolation: hsv
+    line_width: 3.0
+  muscle:
+    force_scale: 1.0
+    length_range:
+    - 0.2
+    - 1.3
+  character_render_mode: mesh
+  motion:
+    scale: 1.0
+    offset:
+    - 0.0
+    - 0.0
+    - 0.0
+    bvh_map:
+      Character1_Hips: Pelvis
+      Character1_RightUpLeg: FemurR
+      Character1_RightLeg: TibiaR
+      Character1_RightFoot: TalusR
+      Character1_LeftUpLeg: FemurL
+      Character1_LeftLeg: TibiaL
+      Character1_LeftFoot: TalusL
+      Character1_Spine: Spine
+      Character1_Spine1: Torso
+      Character1_Neck: Neck
+      Character1_Head: Head
+      Character1_RightShoulder: ShoulderR
+      Character1_RightArm: ArmR
+      Character1_RightForeArm: ForeArmR
+      Character1_RightHand: HandR
+      Character1_LeftShoulder: ShoulderL
+      Character1_LeftArm: ArmL
+      Character1_LeftForeArm: ForeArmL
+      Character1_LeftHand: HandL
+    loop:
+      velocity_extrapolate: false
+      velocity_from_first_frame: false
+      smooth: true
+      blend_frames: 30
+  spawn_offset:
+  - 0.0
+  - 0.0
+  - 0.01
+  reset:
+    random_start: true
+    motion_noise_std: 0.02
+  reward:
+    alive: 0.05
+    tracking:
+      type: body_state
+      frame: world
+      weights:
+        position: 100.0
+        rotation: 5.0
+        linear_velocity: 0.1
+        angular_velocity: 0.1
+    com_weight: 0.0
+    end_effector:
+      position_weight: 0.0
+      rotation_weight: 0.0
+      position_root_relative: true
+    combination:
+      type: power_sum
+      q: 2.0
+      beta: 1.0
+      epsilon: 1.0e-06
+  observations:
+    joint_pose: 6d
+    future_mode: phc_v6
+    future_frames: 3
+    future_frame_step: 1
+    previous_action: null
+  termination:
+    min_torso_height: 0.0
+    nonfinite: true
+    early:
+      reward_threshold: 0.15
+      consecutive_steps: 4
+  adaptive_sampling:
+    enabled: true
+    metric: reward
+    blame: episode_start
+    chunk_size: 15
+    ema_alpha: 0.1
+    temperature: 0.05
+    decay_rate: 0.998
+    benchmark_beta: 0.0
+    random_sample_prob: 0.01
+    terminal_window_chunks: 4
+  nan_debug:
+    enabled: false
+    buffer_size: 120
+    max_env_videos: 4
+    output_directory: nan_debug
+    raise_on_nan: true
+  ghost_offset:
+  - -1.5
+  - 0.0
+  - 0.0
+  log_dir: ''
+experiment:
+  directory: snu_humanoid/lafan/base
+  write_interval: 5
+  episode_metrics_interval: 5
+  checkpoint:
+    periodic:
+      interval: 250
+    best:
+      interval: 40
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+  logger:
+    type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+runtime:
+  compile: true
+  compile_act_into: false
+  compile_update_fullgraph: true
+  compile_mode: max-autotune-no-cudagraphs
+  mixed_precision: true
+  nsys_nvtx_mode: launch
+  act_cuda_graph: true
+  update_cuda_graph: true
+  shuffle_cuda_graph: true
+play:
+  steps: null
+  time_limit_policy: extend
+  done_policy: reset_continue
+  video:
+    enabled: false
+    length: 240
+  num_envs: 1
+  action:
+    mode: mean

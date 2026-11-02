@@ -1,0 +1,13 @@
+# @package _global_
+defaults:
+- /freemusco/imitation/ostrich/single/musubi
+- _self_
+env:
+  sim:
+    mjcf_path: data/freemusco/animal/ostrich/ostrich_split2.xml
+experiment:
+  directory: freemusco/experiments/split_geometry/imitation/ostrich/single/musubi_split2
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

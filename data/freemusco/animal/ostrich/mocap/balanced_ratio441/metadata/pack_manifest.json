@@ -1,0 +1,290 @@
+{
+  "generated_clips": [
+    {
+      "actual_frame_budget": {
+        "cyclic": 96,
+        "number_motion": 100,
+        "transition": 24
+      },
+      "actual_ratio_vs_transition": {
+        "cyclic": 4.0,
+        "number_motion": 4.166666666666667,
+        "transition": 1.0
+      },
+      "clip_name": "cyclic_to_0029_loopx8_to_cyclic_ratio414",
+      "duration_seconds": 5.4750000000000005,
+      "forward_plan": {
+        "blend_frames": 12,
+        "body_cost": 0.14830138649795632,
+        "cost": 1.9299455826193803,
+        "foot_vel_cost": 4.770088227614572,
+        "prefix_keep_frames": 16,
+        "root_height_cost": 0.12405920028686523,
+        "source_anchor_idx": 981,
+        "source_clip": "cyclic",
+        "speed_cost": 0.23929291425510124,
+        "suffix_keep_frames": 16,
+        "support_code": 1,
+        "target_anchor_idx": 28,
+        "target_clip": "0029_loopx8",
+        "yaw_rate_cost": 0.5048502046063184
+      },
+      "frame_count": 219,
+      "kind": "balanced_roundtrip",
+      "preferred_reverse_source_idx": 147,
+      "requested_frame_budget": {
+        "cyclic_side_frames": 48,
+        "cyclic_total_frames": 96,
+        "number_motion_frames": 96,
+        "transition_total_frames": 24
+      },
+      "requested_ratio": {
+        "cyclic": 4,
+        "number_motion": 4,
+        "transition": 1
+      },
+      "reverse_plan": {
+        "blend_frames": 12,
+        "body_cost": 0.11928065289581095,
+        "cost": 4.349251444436209,
+        "foot_vel_cost": 13.497516179475202,
+        "prefix_keep_frames": 16,
+        "root_height_cost": 0.18831195682287216,
+        "source_anchor_idx": 151,
+        "source_clip": "0029_loopx8",
+        "speed_cost": 0.31312126920476224,
+        "suffix_keep_frames": 16,
+        "support_code": 1,
+        "target_anchor_idx": 18,
+        "target_clip": "cyclic",
+        "yaw_rate_cost": 0.7648970740830769
+      },
+      "segments": {
+        "forward_source_blend_start": 970,
+        "forward_target_blend_start": 28,
+        "reverse_target_blend_start": 140,
+        "source_prefix_start": 922,
+        "source_return_end": 78,
+        "source_return_start": 18
+      },
+      "smooth_cycle_blend_frames": 12
+    },
+    {
+      "actual_frame_budget": {
+        "cyclic": 96,
+        "number_motion": 100,
+        "transition": 24
+      },
+      "actual_ratio_vs_transition": {
+        "cyclic": 4.0,
+        "number_motion": 4.166666666666667,
+        "transition": 1.0
+      },
+      "clip_name": "cyclic_to_0029_loopx8_to_cyclic_ratio414__mirror",
+      "duration_seconds": 5.4750000000000005,
+      "forward_plan": {
+        "blend_frames": 12,
+        "body_cost": 0.14830138649795632,
+        "cost": 1.9299455826193803,
+        "foot_vel_cost": 4.770088227614572,
+        "prefix_keep_frames": 16,
+        "root_height_cost": 0.12405920028686523,
+        "source_anchor_idx": 981,
+        "source_clip": "cyclic",
+        "speed_cost": 0.23929291425510124,
+        "suffix_keep_frames": 16,
+        "support_code": 1,
+        "target_anchor_idx": 28,
+        "target_clip": "0029_loopx8",
+        "yaw_rate_cost": 0.5048502046063184
+      },
+      "frame_count": 219,
+      "kind": "balanced_roundtrip",
+      "mirrored_from": "cyclic_to_0029_loopx8_to_cyclic_ratio414",
+      "preferred_reverse_source_idx": 147,
+      "requested_frame_budget": {
+        "cyclic_side_frames": 48,
+        "cyclic_total_frames": 96,
+        "number_motion_frames": 96,
+        "transition_total_frames": 24
+      },
+      "requested_ratio": {
+        "cyclic": 4,
+        "number_motion": 4,
+        "transition": 1
+      },
+      "reverse_plan": {
+        "blend_frames": 12,
+        "body_cost": 0.11928065289581095,
+        "cost": 4.349251444436209,
+        "foot_vel_cost": 13.497516179475202,
+        "prefix_keep_frames": 16,
+        "root_height_cost": 0.18831195682287216,
+        "source_anchor_idx": 151,
+        "source_clip": "0029_loopx8",
+        "speed_cost": 0.31312126920476224,
+        "suffix_keep_frames": 16,
+        "support_code": 1,
+        "target_anchor_idx": 18,
+        "target_clip": "cyclic",
+        "yaw_rate_cost": 0.7648970740830769
+      },
+      "segments": {
+        "forward_source_blend_start": 970,
+        "forward_target_blend_start": 28,
+        "reverse_target_blend_start": 140,
+        "source_prefix_start": 922,
+        "source_return_end": 78,
+        "source_return_start": 18
+      },
+      "smooth_cycle_blend_frames": 12
+    },
+    {
+      "actual_frame_budget": {
+        "cyclic": 96,
+        "number_motion": 101,
+        "transition": 24
+      },
+      "actual_ratio_vs_transition": {
+        "cyclic": 4.0,
+        "number_motion": 4.208333333333333,
+        "transition": 1.0
+      },
+      "clip_name": "cyclic_to_0094_loopx8_to_cyclic_ratio414",
+      "duration_seconds": 5.5,
+      "forward_plan": {
+        "blend_frames": 12,
+        "body_cost": 0.1054792271404846,
+        "cost": 1.3201087303864245,
+        "foot_vel_cost": 4.249454407412377,
+        "prefix_keep_frames": 16,
+        "root_height_cost": 0.11010979115962982,
+        "source_anchor_idx": 981,
+        "source_clip": "cyclic",
+        "speed_cost": 0.09332103450828289,
+        "suffix_keep_frames": 16,
+        "support_code": 1,
+        "target_anchor_idx": 26,
+        "target_clip": "0094_loopx8",
+        "yaw_rate_cost": 0.07299690362896818
+      },
+      "frame_count": 220,
+      "kind": "balanced_roundtrip",
+      "preferred_reverse_source_idx": 145,
+      "requested_frame_budget": {
+        "cyclic_side_frames": 48,
+        "cyclic_total_frames": 96,
+        "number_motion_frames": 96,
+        "transition_total_frames": 24
+      },
+      "requested_ratio": {
+        "cyclic": 4,
+        "number_motion": 4,
+        "transition": 1
+      },
+      "reverse_plan": {
+        "blend_frames": 12,
+        "body_cost": 0.08208773366764142,
+        "cost": 3.8782028935826443,
+        "foot_vel_cost": 14.121889145333249,
+        "prefix_keep_frames": 16,
+        "root_height_cost": 0.17173367366194725,
+        "source_anchor_idx": 150,
+        "source_clip": "0094_loopx8",
+        "speed_cost": 0.16313628092760268,
+        "suffix_keep_frames": 16,
+        "support_code": 2,
+        "target_anchor_idx": 47,
+        "target_clip": "cyclic",
+        "yaw_rate_cost": 0.13380965929400232
+      },
+      "segments": {
+        "forward_source_blend_start": 970,
+        "forward_target_blend_start": 26,
+        "reverse_target_blend_start": 139,
+        "source_prefix_start": 922,
+        "source_return_end": 107,
+        "source_return_start": 47
+      },
+      "smooth_cycle_blend_frames": 12
+    },
+    {
+      "actual_frame_budget": {
+        "cyclic": 96,
+        "number_motion": 101,
+        "transition": 24
+      },
+      "actual_ratio_vs_transition": {
+        "cyclic": 4.0,
+        "number_motion": 4.208333333333333,
+        "transition": 1.0
+      },
+      "clip_name": "cyclic_to_0094_loopx8_to_cyclic_ratio414__mirror",
+      "duration_seconds": 5.5,
+      "forward_plan": {
+        "blend_frames": 12,
+        "body_cost": 0.1054792271404846,
+        "cost": 1.3201087303864245,
+        "foot_vel_cost": 4.249454407412377,
+        "prefix_keep_frames": 16,
+        "root_height_cost": 0.11010979115962982,
+        "source_anchor_idx": 981,
+        "source_clip": "cyclic",
+        "speed_cost": 0.09332103450828289,
+        "suffix_keep_frames": 16,
+        "support_code": 1,
+        "target_anchor_idx": 26,
+        "target_clip": "0094_loopx8",
+        "yaw_rate_cost": 0.07299690362896818
+      },
+      "frame_count": 220,
+      "kind": "balanced_roundtrip",
+      "mirrored_from": "cyclic_to_0094_loopx8_to_cyclic_ratio414",
+      "preferred_reverse_source_idx": 145,
+      "requested_frame_budget": {
+        "cyclic_side_frames": 48,
+        "cyclic_total_frames": 96,
+        "number_motion_frames": 96,
+        "transition_total_frames": 24
+      },
+      "requested_ratio": {
+        "cyclic": 4,
+        "number_motion": 4,
+        "transition": 1
+      },
+      "reverse_plan": {
+        "blend_frames": 12,
+        "body_cost": 0.08208773366764142,
+        "cost": 3.8782028935826443,
+        "foot_vel_cost": 14.121889145333249,
+        "prefix_keep_frames": 16,
+        "root_height_cost": 0.17173367366194725,
+        "source_anchor_idx": 150,
+        "source_clip": "0094_loopx8",
+        "speed_cost": 0.16313628092760268,
+        "suffix_keep_frames": 16,
+        "support_code": 2,
+        "target_anchor_idx": 47,
+        "target_clip": "cyclic",
+        "yaw_rate_cost": 0.13380965929400232
+      },
+      "segments": {
+        "forward_source_blend_start": 970,
+        "forward_target_blend_start": 26,
+        "reverse_target_blend_start": 139,
+        "source_prefix_start": 922,
+        "source_return_end": 107,
+        "source_return_start": 47
+      },
+      "smooth_cycle_blend_frames": 12
+    }
+  ],
+  "included_base_clips": [
+    "0006",
+    "0010",
+    "0053",
+    "0084",
+    "0086",
+    "0091"
+  ]
+}

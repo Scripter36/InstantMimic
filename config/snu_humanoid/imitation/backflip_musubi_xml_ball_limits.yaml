@@ -1,0 +1,7 @@
+# @package _global_
+defaults:
+- backflip_musubi
+- presets/xml_ball_limits@_global_
+- _self_
+experiment:
+  directory: snu_humanoid/imitation/backflip_musubi_xml_ball_limits

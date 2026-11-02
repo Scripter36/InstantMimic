@@ -1,0 +1,23 @@
+# @package _global_
+defaults:
+- /freemusco/command/ostrich/base
+- _self_
+env:
+  command_mode: velocity_heading
+  early_termination_reward_threshold: 0.05
+  velocity_command_arrow_offset:
+  - 0.0
+  - 0.0
+  - 0.0
+  velocity_command_arrow_scale:
+  - 1.0
+  - 1.0
+  - 1.0
+  velocity_heading_direction_only: false
+  target_speed_min: 3.2
+  target_speed_max: 4.6
+  velocity_heading_reward_mode: velocity_vector_heading
+  velocity_heading_speed_sigma: 0.5
+  velocity_command_resample_interval_min_s: 3.0
+  velocity_command_resample_interval_max_s: 4.0
+  velocity_heading_heading_weight: 0.5

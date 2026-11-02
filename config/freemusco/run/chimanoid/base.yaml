@@ -1,0 +1,32 @@
+# @package _global_
+defaults:
+- /freemusco/run/base
+- _self_
+env:
+  species: chimanoid
+  sim:
+    mjcf_path: data/freemusco/animal/chimanoid/chimanoid.xml
+    njmax: 768
+    nconmax: 84
+  root_body_name: pelvis
+  head_body_name: thorax
+  torso_body_name: thorax
+  foot_body_names:
+  - toes_r
+  - toes_l
+  root_yaw_joint_name: pelvis_rotation
+  forward_joint_name: pelvis_tx
+  qpos_observation_skip: forward_joint
+  torso_tilt_source: torso_upright
+  target_forward_velocity: 3.0
+  reward_track_sigma: 3.0
+  reward_head_height_target: 1.0
+  reward_head_height_scale: 0.3
+  reward_pelvis_height_threshold: 0.6
+  reward_pelvis_height_penalty_scale: 2.0
+  min_head_height: 0.8
+  min_pelvis_height: 0.4
+  max_torso_tilt_rad: 1.2
+trainer:
+  benchmark:
+    steps: 400

@@ -1,0 +1,21 @@
+# @package _global_
+# Method-neutral muscle geometry and LBS runtime shared by control modes.
+#
+# It sits at the family root because imitation, lafan and run all need it.
+env:
+  muscle:
+    geometry:
+      waypoint_attachment: single_body
+    lbs:
+      attachment_layout: body_wrench
+      # Measured on the 1,024-env workload; it is a Warp tile width, not a
+      # batch parameter, so the 4,096-env lafan and run tasks take the same
+      # value. Small-batch callers that omit this preset keep the library
+      # fallback.
+      forward_tile_block_dim: 32
+      body_wrench:
+        forward_mode: native_tile
+        native_tile:
+          muscle_cap: 32
+          segment_cap: 256
+          event_cap: 640

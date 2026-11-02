@@ -1,0 +1,18 @@
+# @package _global_
+# Shared MASS torque control: policy torque -> MuscleNN activation.
+defaults:
+  - /snu_humanoid/imitation/mass/presets/mass_common@_global_
+  - _self_
+
+env:
+  action:
+    policy_output:
+      type: torque
+      scale: auto
+
+    bounds:
+      env_clip: false
+
+    muscle_nn:
+      hidden_dims: [1024, 512, 512]
+      regularization_weight: 0.01

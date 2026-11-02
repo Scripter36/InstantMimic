@@ -1,0 +1,14 @@
+# @package _global_
+# Activation-output (one-level) baseline: the policy outputs one excitation per
+# muscle, the environment clamps it to [0, 1] and applies passive muscle forces,
+# and PPO adds a squared penalty on the policy mean.
+env:
+  action:
+    type: activation
+  muscle:
+    passive_force:
+      env: true
+agent:
+  activation_regularization:
+    weight: 0.1
+    target: 0.0

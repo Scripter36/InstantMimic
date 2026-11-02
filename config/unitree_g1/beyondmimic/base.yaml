@@ -1,0 +1,173 @@
+# @package _global_
+# Readable Stage-1 reference matching public BeyondMimic through pinned mjlab.
+defaults:
+  - _self_
+
+schema_version: 1
+seed: 42
+task: Unitree-G1-BeyondMimic-Tracking-v0
+
+env:
+  seed: 42
+  sim:
+    mjcf_path: data/unitree_g1/beyondmimic/mjcf/scene.xml
+    hz: 200
+    integrator: implicitfast
+    render_interval: 4
+    njmax: 250
+    nconmax: 35
+    iterations: 10
+    ls_iterations: 20
+  scene:
+    num_envs: 4096
+  viewer:
+    resolution: [1080, 1080]
+  decimation: 4
+  episode_length_s: 10.0
+  action_space: 29
+  observation_space: 160
+  state_space: 286
+  terminate_on_nonfinite: true
+  track_done_reasons: true
+  execution_mode: reference
+
+  # Unfused reference task; side_kick enables the fused task and captured PPO paths.
+  use_cuda_graph: false
+  compile_mjw_step: false
+  use_parallelized_kernel_launch: false
+  use_optimized_kernel: false
+
+  motion:
+    file: data/unitree_g1/beyondmimic/motions/converted/side_kick_motion.npz
+    sampling_mode: adaptive
+    adaptive_kernel_size: 1
+    adaptive_lambda: 0.8
+    adaptive_uniform_ratio: 0.1
+    adaptive_alpha: 0.001
+  reset:
+    position_range:
+      - [-0.05, 0.05]
+      - [-0.05, 0.05]
+      - [-0.01, 0.01]
+    euler_range:
+      - [-0.1, 0.1]
+      - [-0.1, 0.1]
+      - [-0.2, 0.2]
+    velocity_range:
+      - [-0.5, 0.5]
+      - [-0.5, 0.5]
+      - [-0.2, 0.2]
+      - [-0.52, 0.52]
+      - [-0.52, 0.52]
+      - [-0.78, 0.78]
+    joint_position_range: [-0.1, 0.1]
+  randomization:
+    enabled: true
+    push_enabled: true
+    foot_friction_range: [0.3, 1.2]
+    encoder_bias_range: [-0.01, 0.01]
+    torso_com_offset_range:
+      - [-0.025, 0.025]
+      - [-0.05, 0.05]
+      - [-0.05, 0.05]
+    push_interval_range_s: [1.0, 3.0]
+    push_velocity_range:
+      - [-0.5, 0.5]
+      - [-0.5, 0.5]
+      - [-0.2, 0.2]
+      - [-0.52, 0.52]
+      - [-0.52, 0.52]
+      - [-0.78, 0.78]
+  observations:
+    corruption: true
+  log_dir: ""
+
+models:
+  shared: false
+  actor:
+    architecture: mlp
+    layers: [512, 256, 128]
+    activation: elu
+    normalization: none
+    distribution:
+      std: parameter
+      parameterization: scalar
+      initial_log_std: 0.0
+      log_std_bounds: [-13.815510557964274, 13.815510557964274]
+      bound_mode: clamp
+      action_transform: none
+  critic:
+    architecture: mlp
+    layers: [512, 256, 128]
+    activation: elu
+    normalization: none
+
+agent:
+  class: PPO
+  rollouts: 24
+  discount_factor: 0.99
+  time_limit_bootstrap: true
+  grad_norm_clip: 1.0
+  state_preprocessor: RslRlEmpiricalNormalization
+  value_preprocessor: none
+  learning_epochs: 5
+  mini_batches: 4
+  ratio_clip: 0.2
+  value_clip: 0.2
+  clip_predicted_values: true
+  value_loss_clip_mode: max
+  shuffle_mode: per_update
+  parameter_initialization: rsl_rl
+  entropy_loss_scale: 0.005
+  value_loss_scale: 1.0
+  gae_lambda: 0.95
+  optimizer:
+    type: adam
+  learning_rate:
+    initial: 0.001
+    bounds: [0.00001, 0.01]
+    scheduler:
+      type: kl_adaptive
+      threshold: 0.01
+      factor: 1.5
+      update_mode: per_minibatch
+  kl_estimator: analytic
+
+trainer:
+  max_iterations: 6000
+
+experiment:
+  directory: unitree_g1/beyondmimic/reference
+  logger:
+    type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+  name: ""
+  write_interval: 5
+  episode_metrics_interval: 5
+  checkpoint:
+    periodic:
+      interval: 500
+    best:
+      interval: 500
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+
+runtime:
+  act_cuda_graph: false
+  update_cuda_graph: false
+  shuffle_cuda_graph: false
+  compile: false
+  compile_act_into: false
+  compile_update_fullgraph: false
+  mixed_precision: false
+
+play:
+  num_envs: 1
+  steps:
+  action:
+    mode: mean
+  video:
+    enabled: false
+    length: 450
+  time_limit_policy: extend
+  done_policy: reset_continue

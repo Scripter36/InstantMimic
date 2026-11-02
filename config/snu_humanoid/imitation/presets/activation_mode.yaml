@@ -1,0 +1,25 @@
+# @package _global_
+# Activation-output (one-level) baseline: the policy outputs one excitation per
+# muscle, the environment clamps it to [0, 1] and applies passive muscle forces,
+# and PPO adds a squared penalty on the policy mean.
+defaults:
+  - /snu_humanoid/presets/muscle_dynamics_env@_global_
+  - _self_
+env:
+  action:
+    type: activation
+    space: 284
+  muscle:
+    passive_force:
+      env: true
+models:
+  actor:
+    distribution:
+      initial_log_std: -1.5
+agent:
+  activation_regularization:
+    weight: 0.1
+    target: 0.0
+  learning_rate:
+    scheduler:
+      threshold: 0.15

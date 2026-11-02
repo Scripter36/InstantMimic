@@ -1,0 +1,28 @@
+# @package _global_
+defaults:
+- /freemusco/imitation/ostrich/multi/base
+- /freemusco/imitation/ostrich/multi/presets/musubi
+- _self_
+env:
+  motion_clip: '0006'
+  motion_clips:
+  - '0006'
+  - '0010'
+  - '0029'
+  - '0053'
+  - '0084'
+  - '0086'
+  - '0091'
+  - '0094'
+  - cyclic
+  mirror_motion_clips: true
+  mirror_exclude_motion_clips:
+  - cyclic
+trainer:
+  max_iterations: 500
+experiment:
+  directory: freemusco/imitation/ostrich/multi/floor_loop/musubi
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

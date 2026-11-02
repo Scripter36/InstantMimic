@@ -1,0 +1,20 @@
+{
+  "name": "instantmimic-local",
+  "interface": {
+    "displayName": "InstantMimic Local"
+  },
+  "plugins": [
+    {
+      "name": "instantmimic-workflows",
+      "source": {
+        "source": "local",
+        "path": "./instantmimic-workflows"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

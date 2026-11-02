@@ -1,0 +1,4 @@
+interface:
+  display_name: "Optimize Runtime"
+  short_description: "Choose tools, measure and validate runtime improvements"
+  default_prompt: "Use $optimize-runtime to choose appropriate metrics and tools, improve and validate this workload, and continue until no actionable axes remain."

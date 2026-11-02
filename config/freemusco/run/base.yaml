@@ -1,0 +1,71 @@
+# @package _global_
+defaults:
+- /freemusco/base
+- _self_
+task: FreeMusco-Run-v0
+env:
+  episode_length_s: 10.0
+  randomize_reset_joints: true
+  reset_joint_range_scale: 0.05
+  pelvis_geom_name: pelvis
+  forward_velocity_source: qvel_root_x
+  reward_mode: maximize
+  reward_velocity_scale: 1.0
+  reward_upright_scale: 0.1
+  reward_head_height_sigma: 0.1
+  reward_direction_scale: 0.3
+  reward_pose_regularization_mode: heading_frame_body_pose
+  reward_pose_regularization_scale: 0.1
+  reward_pose_regularization_body_pos_weight: 1.0
+  reward_pose_regularization_body_rot_weight: 1.0
+  max_joint_velocity: 100.0
+  muscle:
+    force_scale: 1.0
+    length_range:
+    - 0.2
+    - 1.3
+    geometry:
+      backend: waypoint
+  include_muscle_observation_blocks: false
+  include_heading_frame_body_state_obs: true
+  activation_visualization:
+    enabled: true
+  observations:
+    previous_action: null
+    applied_torque: false
+trainer:
+  benchmark:
+    interval: 20
+    num_envs: 8
+    objective:
+      metric: reward_mean
+      direction: maximize
+    termination:
+      type: inherit
+models:
+  actor:
+    architecture: mlp
+    layers:
+      - 512
+      - 512
+      - 256
+    activation: silu
+    normalization: none
+agent:
+  mini_batches: 4
+  entropy_loss_scale: 0.0001
+  value_loss_scale: 3.5
+  optimizer:
+    type: muon
+    nesterov: true
+    eps: 1e-07
+    adjust_lr_fn: match_rms_adamw
+    momentum: 0.95
+    ns_steps: 5
+    adamw:
+      betas: [0.9, 0.999]
+      eps: 2.0e-5
+      weight_decay: 3.0e-5
+      amsgrad: false
+  learning_rate:
+    initial: 0.0001

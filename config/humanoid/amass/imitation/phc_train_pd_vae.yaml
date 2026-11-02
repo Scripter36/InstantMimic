@@ -1,0 +1,104 @@
+# @package _global_
+defaults:
+- base
+- _self_
+env:
+  sim:
+    mjcf_path: data/humanoid/mjcf/humanoid_amass.xml
+    njmax: 256
+    nconmax: 32
+    iterations: 4
+    ls_iterations: 4
+  scene:
+    num_envs: 4096
+  motion:
+    source:
+    - data/humanoid/motions/amass/phc_train/**/*.npz
+    cache_directory: motion_cache/phc_train
+  adaptive_sampling:
+    chunk_size: 60
+    ema_alpha: 0.15
+    temperature: 0.1
+    decay_rate: 0.9992
+    random_sample_prob: 0.01
+  reward:
+    tracking:
+      type: body_state
+      frame: world
+      weights:
+        position: 50.0
+        rotation: 5.0
+        linear_velocity: 0.05
+        angular_velocity: 0.05
+    combination:
+      type: power_sum
+      q: 2.0
+      beta: 1.0
+      epsilon: 1.0e-06
+  termination:
+    early:
+      reward_threshold: 0.15
+      consecutive_steps: 4
+models:
+  shared: true
+  actor:
+    architecture: mlp
+    layers:
+    - 1024
+    - 768
+    - 512
+    activation: silu
+    normalization: none
+    distribution:
+      initial_log_std: -2.0
+      action_transform: none
+agent:
+  rollouts: 32
+  discount_factor: 0.95
+  learning_epochs: 5
+  mini_batches: 4
+  value_loss_scale: 8.0
+  entropy_loss_scale: 0.005
+  latent_prior:
+    enabled: true
+    use_full_obs_critic: true
+    critic_use_detached_posterior_mu: false
+    latent_dim: 32
+    kl_weight: 0.001
+    ar1_weight: 0.005
+    ar1_phi: 0.99
+    posterior_sample_alpha: 1.0
+    posterior_hidden_dims:
+    - 512
+    - 256
+    prior_hidden_dims:
+    - 512
+    - 256
+    eval_mode: posterior
+  gae_lambda: 0.95
+  learning_rate:
+    initial: 5.0e-05
+    bounds:
+    - 1e-06
+    - 0.0001
+    scheduler:
+      type: kl_adaptive
+      threshold: 0.03
+      factor: 1.5
+trainer:
+  max_iterations: 16000
+  clip_failure_benchmark:
+    interval: 500
+    mode: full_motion
+experiment:
+  directory: humanoid/amass/imitation/phc_train_pd_vae
+  write_interval: 5
+  episode_metrics_interval: 5
+  checkpoint:
+    periodic:
+      interval: 500
+    best:
+      interval: 40
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120

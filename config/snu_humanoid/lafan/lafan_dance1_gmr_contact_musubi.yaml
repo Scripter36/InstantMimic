@@ -1,0 +1,31 @@
+# @package _global_
+defaults:
+- base
+- presets/musubi_mode@_global_
+- _self_
+env:
+  sim:
+    mjcf_path: data/snu_humanoid/mjcf/snu_humanoid_ball_feet_hand_muscle.xml
+    njmax: 192
+    nconmax: 24
+  motion:
+    source: data/snu_humanoid/motions/lafan_gmr_parent_span_contact_shoulder_moderate_full77/dance1_subject1.npz
+trainer:
+  max_iterations: 1000
+  clip_failure_benchmark:
+    interval: 50
+    mode: anchor
+    window_steps: 180
+    batch_size: 4096
+    execution: subprocess
+    anchor_stride: 30
+    cuda_graph: true
+    compile: true
+    clip_indices: null
+    history_filename: clip_failure_benchmark_history.jsonl
+experiment:
+  directory: snu_humanoid/lafan/lafan_dance1_gmr_contact_musubi
+  write_interval: 5
+  episode_metrics_interval: 5
+  writer_max_queue: 256
+  writer_flush_secs: 120

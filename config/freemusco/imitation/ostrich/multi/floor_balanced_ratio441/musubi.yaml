@@ -1,0 +1,23 @@
+# @package _global_
+defaults:
+- /freemusco/imitation/ostrich/multi/base
+- /freemusco/imitation/ostrich/multi/presets/musubi
+- _self_
+env:
+  motion_clip: cyclic_to_0029_loopx8_to_cyclic_ratio414
+  motion_data_dir: data/freemusco/animal/ostrich/mocap/balanced_ratio441
+  motion_clips:
+  - cyclic_to_0029_loopx8_to_cyclic_ratio414
+  - cyclic_to_0029_loopx8_to_cyclic_ratio414__mirror
+  - cyclic_to_0094_loopx8_to_cyclic_ratio414
+  - cyclic_to_0094_loopx8_to_cyclic_ratio414__mirror
+  mirror_motion_clips: false
+  mirror_exclude_motion_clips: []
+trainer:
+  max_iterations: 1000
+experiment:
+  directory: freemusco/imitation/ostrich/multi/floor_balanced_ratio441/musubi
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

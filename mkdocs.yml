@@ -1,0 +1,46 @@
+site_name: InstantMimic
+site_description: GPU-native character imitation, PPO and muscle control
+repo_url: https://github.com/Scripter36/InstantMimic
+repo_name: Scripter36/InstantMimic
+docs_dir: docs
+site_dir: site
+theme:
+  name: material
+  font: false
+plugins:
+  - search
+markdown_extensions:
+  - tables
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+nav:
+  - Home: index.md
+  - Get started:
+      - Installation: getting-started/installation.md
+      - First training run: getting-started/first-run.md
+  - Guides:
+      - Training and playback: guides/training-and-playback.md
+      - Muscle simulation and control: guides/muscle-control.md
+      - AMASS motions and latent policies: data/amass-retargeting.md
+      - BeyondMimic: guides/beyondmimic.md
+      - Hyperparameter optimization: guides/hpo.md
+      - Video rendering: guides/rendering.md
+  - Reference:
+      - Motion demonstrations: reference/motion-demo.md
+      - Configuration: reference/configuration.md
+      - Simulation: reference/simulation.md
+      - HPO task schema: reference/hpo-task-schema.md
+  - Development:
+      - Contributing: development.md
+      - Assistant workflows: guides/assistant-workflows.md
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn

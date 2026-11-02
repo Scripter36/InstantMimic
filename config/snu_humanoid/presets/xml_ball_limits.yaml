@@ -1,0 +1,228 @@
+# @package _global_
+env:
+  sim:
+    ball_joint_limits:
+    - joint: FemurR
+      swing:
+      - 2.0
+      - 2.0
+      swing_lower:
+      - -2.0
+      - -2.0
+      twist:
+      - -2.0
+      - 2.0
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: TalusR
+      swing:
+      - 1.0
+      - 1.0
+      swing_lower:
+      - -1.0
+      - -1.0
+      twist:
+      - -1.0
+      - 1.0
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: FemurL
+      swing:
+      - 2.0
+      - 2.0
+      swing_lower:
+      - -2.0
+      - -2.0
+      twist:
+      - -2.0
+      - 2.0
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: TalusL
+      swing:
+      - 1.0
+      - 1.0
+      swing_lower:
+      - -1.0
+      - -1.0
+      twist:
+      - -1.0
+      - 1.0
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: Spine
+      swing:
+      - 0.4
+      - 0.4
+      swing_lower:
+      - -0.4
+      - -0.4
+      twist:
+      - -0.2
+      - 0.2
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: Torso
+      swing:
+      - 0.4
+      - 0.4
+      swing_lower:
+      - -0.4
+      - -0.4
+      twist:
+      - -0.2
+      - 0.2
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: Neck
+      swing:
+      - 0.6
+      - 0.6
+      swing_lower:
+      - -0.4
+      - -0.4
+      twist:
+      - -0.4
+      - 0.6
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: Head
+      swing:
+      - 0.6
+      - 0.6
+      swing_lower:
+      - -0.4
+      - -0.4
+      twist:
+      - -0.4
+      - 0.6
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: ShoulderR
+      swing:
+      - 0.5
+      - 0.5
+      swing_lower:
+      - -0.5
+      - -0.5
+      twist:
+      - -0.5
+      - 0.5
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: ArmR
+      swing:
+      - 2.0
+      - 2.0
+      swing_lower:
+      - -2.0
+      - -2.0
+      twist:
+      - -2.0
+      - 2.0
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: HandR
+      swing:
+      - 0.7
+      - 0.7
+      swing_lower:
+      - -0.7
+      - -0.7
+      twist:
+      - -0.7
+      - 0.7
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: ShoulderL
+      swing:
+      - 0.5
+      - 0.5
+      swing_lower:
+      - -0.5
+      - -0.5
+      twist:
+      - -0.5
+      - 0.5
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: ArmL
+      swing:
+      - 2.0
+      - 2.0
+      swing_lower:
+      - -2.0
+      - -2.0
+      twist:
+      - -2.0
+      - 2.0
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604
+    - joint: HandL
+      swing:
+      - 0.7
+      - 0.7
+      swing_lower:
+      - -0.7
+      - -0.7
+      twist:
+      - -0.7
+      - 0.7
+      frame:
+      - 0.5
+      - 0.5
+      - 0.5
+      - 0.5
+      safety_angle: 2.9670597283903604

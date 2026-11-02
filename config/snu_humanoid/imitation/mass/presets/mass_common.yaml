@@ -1,0 +1,28 @@
+# @package _global_
+# Shared MASS torque-target -> MuscleNN -> muscle-force runtime contract.
+defaults:
+  - /snu_humanoid/presets/muscle_dynamics_env@_global_
+  - _self_
+
+env:
+  action:
+    type: mass
+    space: 50
+
+    muscle_nn:
+      target_includes_passive_force: false
+      substep_sampling_mode: random
+      reuse_activation_across_substeps: false
+      frozen: false
+      optimizer:
+        type: adam
+      learning_rate: 3.0e-4
+      batch_size: 2048
+      epochs: 4
+      bound_tolerance: [0.0, 0.0]
+      buffer_capacity: 32768
+      grad_clip: 0.5
+
+  muscle:
+    passive_force:
+      env: true

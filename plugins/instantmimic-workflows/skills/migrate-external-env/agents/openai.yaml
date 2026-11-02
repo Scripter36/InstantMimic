@@ -1,0 +1,4 @@
+interface:
+  display_name: "External Env Migration"
+  short_description: "Migrate external simulation environments safely"
+  default_prompt: "Use $migrate-external-env to migrate an IsaacLab or mjlab environment into InstantMimic."

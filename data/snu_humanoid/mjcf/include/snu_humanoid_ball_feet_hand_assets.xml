@@ -1,0 +1,47 @@
+<mujocoinclude>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .5 .7" rgb2="0 0 0" width="32" height="512" />
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".1 .2 .3" rgb2=".2 .3 .4" />
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2" />
+    <mesh name="L_Femur" file="L_Femur.obj" />
+    <mesh name="L_FootPinky" file="L_FootPinky.obj" />
+    <mesh name="L_FootThumb" file="L_FootThumb.obj" />
+    <mesh name="L_Hand" file="L_Hand.obj" />
+    <mesh name="L_Humerus" file="L_Humerus.obj" />
+    <mesh name="L_Radius" file="L_Radius.obj" />
+    <mesh name="L_Shoulder" file="L_Shoulder.obj" />
+    <mesh name="L_Talus" file="L_Talus.obj" />
+    <mesh name="L_Tibia" file="L_Tibia.obj" />
+    <mesh name="Neck" file="Neck.obj" />
+    <mesh name="Pelvis" file="Pelvis.obj" />
+    <mesh name="R_Femur" file="R_Femur.obj" />
+    <mesh name="R_FootPinky" file="R_FootPinky.obj" />
+    <mesh name="R_FootThumb" file="R_FootThumb.obj" />
+    <mesh name="R_Hand" file="R_Hand.obj" />
+    <mesh name="R_Humerus" file="R_Humerus.obj" />
+    <mesh name="R_Radius" file="R_Radius.obj" />
+    <mesh name="R_Shoulder" file="R_Shoulder.obj" />
+    <mesh name="R_Talus" file="R_Talus.obj" />
+    <mesh name="R_Tibia" file="R_Tibia.obj" />
+    <mesh name="Skull" file="Skull.obj" />
+    <mesh name="Spine" file="Spine.obj" />
+    <mesh name="Torso" file="Torso.obj" />
+  </asset>
+  <default>
+    <default class="geom_collision">
+      <geom contype="1" condim="3" conaffinity="2" />
+    </default>
+    <default class="geom_nocollide">
+      <geom contype="0" conaffinity="0" />
+    </default>
+    <default class="geom_visual_mesh">
+      <geom type="mesh" contype="0" conaffinity="0" mass="0" group="2" />
+    </default>
+    <default class="geom_floor">
+      <geom type="plane" size="0 0 .05" material="grid" condim="3" contype="2" conaffinity="1" />
+    </default>
+    <default class="site_muscle">
+      <site size="0.003" />
+    </default>
+  </default>
+</mujocoinclude>

@@ -1,0 +1,36 @@
+# @package _global_
+defaults:
+- /freemusco/run/base
+- _self_
+env:
+  species: ostrich
+  sim:
+    mjcf_path: data/freemusco/animal/ostrich/ostrich.xml
+    njmax: 256
+    nconmax: 36
+  root_body_name: ostrich
+  head_body_name: head
+  foot_body_names:
+  - r_pes
+  - l_pes
+  root_tilt_joint_names:
+  - root_rot_x
+  - root_rot_y
+  root_yaw_joint_name: root_rot_z
+  forward_velocity_sensor_name: torso_subtreelinvel
+  supports_dynamic_target_forward_velocity: true
+  qpos_observation_skip: first
+  torso_tilt_source: root_tilt_xy
+  termination_torso_tilt_mode: xy_norm
+  target_forward_velocity: 4.5
+  reward_track_sigma: 1.5
+  reward_head_height_target: 2.3
+  reward_head_height_scale: 0.0
+  min_head_height: 0.9
+  min_pelvis_height: 0.6
+  max_torso_tilt_rad: 0.8
+  track_done_reasons: true
+trainer:
+  max_iterations: 400
+  benchmark:
+    steps: 1000

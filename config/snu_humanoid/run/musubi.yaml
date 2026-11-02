@@ -1,0 +1,11 @@
+# @package _global_
+defaults:
+- base
+- presets/musubi_mode@_global_
+- _self_
+experiment:
+  directory: snu_humanoid/run/musubi
+  write_interval: 5
+  episode_metrics_interval: 5
+  writer_max_queue: 256
+  writer_flush_secs: 120

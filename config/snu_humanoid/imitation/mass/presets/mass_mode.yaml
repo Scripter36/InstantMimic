@@ -1,0 +1,42 @@
+# @package _global_
+# Shared MASS pose control: pose residual -> Stable PD torque -> MuscleNN activation.
+defaults:
+  - /snu_humanoid/imitation/mass/presets/mass_common@_global_
+  - _self_
+
+env:
+  action:
+    policy_output:
+      type: pose
+      # Applied to the unsquashed Gaussian pose residual after sampling.
+      scale: 0.04
+      reference: motion
+      stable_pd:
+        mjcf_path: data/snu_humanoid/mjcf/humanoid_pd.xml
+        kp_scale: 1.4
+        kv_scale: 1.0
+        torque_scale: 1.0
+        torque_limit: 0.0
+        regularization: 1.0e-6
+
+    bounds:
+      env_clip: true
+      chunk_size: 16
+
+    muscle_nn:
+      hidden_dims: [384, 384, 384]
+      input_scale: 200.0
+      target_scale: 100.0
+      target_loss_weight: 1.0
+      regularization_weight: 0.02
+      bound_loss_weight: 0.0
+
+  muscle:
+    # MASS feeds normalized muscle length into MuscleNN over this range.
+    length_range: [0.2, 1.55]
+models:
+  actor:
+    distribution:
+      # The residual scale converts raw policy units to radians. Offset the
+      # base -2.0 log std by -log(0.04) to preserve physical exploration width.
+      initial_log_std: 1.2

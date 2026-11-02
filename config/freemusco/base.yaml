@@ -1,0 +1,85 @@
+# @package _global_
+schema_version: 1
+seed: -1
+env:
+  sim:
+    hz: 400
+    integrator: implicitfast
+    render_interval: 5
+  scene:
+    num_envs: 1024
+  viewer:
+    resolution:
+    - 1080
+    - 1080
+  use_cuda_graph: true
+  compile_mjw_step: false
+  terminate_on_nonfinite: true
+  character_render_mode: mesh
+  decimation: 10
+  log_dir: ''
+  action:
+    space: 120
+models:
+  shared: true
+  actor:
+    distribution:
+      std: parameter
+      log_std_bounds:
+        - -20.0
+        - 2.0
+      bound_mode: clamp
+      action_transform: none
+agent:
+  class: PPO
+  rollouts: 32
+  discount_factor: 0.99
+  time_limit_bootstrap: true
+  grad_norm_clip: 1.0
+  state_preprocessor: RunningStandardScaler
+  learning_epochs: 5
+  value_preprocessor: RunningStandardScaler
+  ratio_clip: 0.2
+  value_clip: 0.2
+  clip_predicted_values: true
+  gae_lambda: 0.95
+  optimizer:
+    type: adamw
+    weight_decay: 3e-05
+  learning_rate:
+    bounds: [1.0e-6, 1.0e-2]
+    scheduler:
+      type: kl_adaptive
+      threshold: 0.1
+      factor: 1.5
+experiment:
+  directory: freemusco/base
+  write_interval: 3
+  episode_metrics_interval: 3
+  checkpoint:
+    periodic:
+      interval: 125
+    best:
+      interval: 40
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+  logger:
+    type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+runtime:
+  compile: true
+  compile_act_into: false
+  compile_update_fullgraph: true
+  compile_mode: max-autotune-no-cudagraphs
+  mixed_precision: true
+  act_cuda_graph: true
+  update_cuda_graph: true
+  shuffle_cuda_graph: true
+play:
+  steps: null
+  video:
+    enabled: false
+    length: 240
+  num_envs: 1
+  action:
+    mode: mean

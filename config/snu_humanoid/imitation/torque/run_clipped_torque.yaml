@@ -1,0 +1,36 @@
+# @package _global_
+# Direct-torque baseline clipped to the state-dependent muscle-induced torque
+# bounds, with passive muscle forces applied by the environment.
+defaults:
+  - /snu_humanoid/imitation/base@_global_
+  - /snu_humanoid/presets/muscle_dynamics_env@_global_
+  - _self_
+env:
+  motion:
+    source: "data/snu_humanoid/motions/single/run.bvh"
+    scale: 1.0
+    offset: [0.0, 0.0, 0.0]
+  spawn_offset: [0.0, 0.0, 0.03]
+  action:
+    type: torque
+    space: 50
+    scale: auto
+    bounds:
+      env_clip: true
+  muscle:
+    passive_force:
+      env: true
+  termination:
+    min_torso_height: 0.6
+    nonfinite: true
+agent:
+  rollouts: 16
+  value_loss_scale: 6.0
+trainer:
+  max_iterations: 1000
+experiment:
+  directory: snu_humanoid/imitation/torque/run_clipped_torque
+  write_interval: 10
+  episode_metrics_interval: 10
+  writer_max_queue: 256
+  writer_flush_secs: 120

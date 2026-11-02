@@ -1,0 +1,213 @@
+# @package _global_
+# Hydra Defaults - shared base for InstantMimic imitation PD configs
+defaults:
+  - _self_
+
+schema_version: 1
+seed: -1
+task: "SNU-Imitation-v0"
+env:
+  character_render_mode: collision
+  sim:
+    mjcf_path: "data/humanoid/mjcf/humanoid_pd.xml"
+    hz: 120
+    integrator: implicitfast
+    render_interval: 1
+    njmax: 64
+    nconmax: 8
+    iterations: 4
+    ls_iterations: 4
+    is_sparse: false
+  scene:
+    num_envs: 2048
+  viewer:
+    resolution: [1080, 1080]
+
+  use_cuda_graph: true
+
+  # use repo-local stream-parallel scheduling and optimized MuJoCo Warp kernels.
+  use_parallelized_kernel_launch: true
+  use_optimized_kernel: true
+  decimation: 4
+
+  episode_length_s: 15.0
+  action:
+    type: ctrl
+    space: 28
+    scale: 1.0
+    use_reference: true
+
+  observations:
+    include_root_target: false
+    joint_pose: 6d
+    future_mode: phc_v6
+    future_frames: 1
+    future_frame_step: 1
+
+    previous_action: null
+  motion:
+    scale: 1.0
+    offset: [0.0, 0.0, 0.0]
+    bvh_map:
+      "Hips": "pelvis"
+      "RightUpLeg": "right_thigh"
+      "RightLeg": "right_shin"
+      "RightFoot": "right_foot"
+      "LeftUpLeg": "left_thigh"
+      "LeftLeg": "left_shin"
+      "LeftFoot": "left_foot"
+      "Spine1": "torso"
+      "Head": "head"
+      "RightArm": "right_upper_arm"
+      "RightForeArm": "right_lower_arm"
+      "LeftArm": "left_upper_arm"
+      "LeftForeArm": "left_lower_arm"
+
+    loop:
+      velocity_extrapolate: false
+      velocity_from_first_frame: false
+      smooth: true
+      blend_frames: 30
+
+  spawn_offset: [0.0, 0.0, 0.01]
+  reset:
+    random_start: true
+    motion_noise_std: 0.02
+  reward:
+    tracking:
+      type: body_state
+      frame: world
+      weights:
+        position: 100.0
+        rotation: 5.0
+        linear_velocity: 0.1
+        angular_velocity: 0.1
+    combination:
+      type: power_sum
+      q: 2.0
+      beta: 1.0
+      epsilon: 1.0e-6
+
+  termination:
+    min_torso_height: 0.8
+    early:
+      type: reward
+      reward_threshold: 0.15
+      consecutive_steps: 4
+      distance: 0.5
+  adaptive_sampling:
+    enabled: false
+    metric: reward
+    chunk_size: 1
+    ema_alpha: 0.3
+    temperature: 0.01
+    decay_rate: 0.995
+    random_sample_prob: 0.05
+    min_metric: 1.0e-6
+
+  ghost_offset: [-1.5, 0.0, 0.0]
+
+  log_dir: ""
+
+models:
+  shared: true
+  actor:
+    architecture: mlp
+    layers:
+      - 384
+      - 384
+      - 192
+    activation: silu
+    normalization: none
+    distribution:
+      std: parameter
+      initial_log_std: -2.0
+      log_std_bounds:
+        - -20.0
+        - 2.0
+      bound_mode: clamp
+      action_transform: none
+agent:
+  class: PPO
+  rollouts: 6
+  discount_factor: 0.95
+  optimizer:
+    type: muon
+    nesterov: true
+    eps: 2e-05
+    weight_decay: 3e-05
+    adjust_lr_fn: match_rms_adamw
+    momentum: 0.95
+    ns_steps: 5
+    adamw:
+      betas: [0.9, 0.999]
+      eps: 2.0e-5
+      weight_decay: 3.0e-5
+      amsgrad: false
+  time_limit_bootstrap: true
+  grad_norm_clip: 1.0
+  state_preprocessor: RunningStandardScaler
+  learning_epochs: 5
+  mini_batches: 4
+  gae_lambda: 0.95
+  learning_rate:
+    bounds: [1.0e-6, 1.0e-2]
+    initial: 1.0e-03
+    scheduler:
+      type: kl_adaptive
+      threshold: 0.1
+      factor: 1.5
+  value_preprocessor: RunningStandardScaler
+  shuffle_mode: per_update
+  ratio_clip: 0.2
+  value_clip: 0.2
+  clip_predicted_values: true
+  value_loss_clip_mode: clamp
+  entropy_loss_scale: 0.001
+  value_loss_scale: 4.5
+trainer:
+  max_iterations: 150
+  benchmark:
+    interval: 5
+    steps: 300
+    num_envs: 32
+    objective:
+      metric: reward_mean
+      direction: maximize
+    termination:
+      type: inherit
+experiment:
+  directory: humanoid/imitation/base
+  logger:
+    type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+  name: ''
+  write_interval: 5
+  episode_metrics_interval: 5
+  checkpoint:
+    periodic:
+      interval: 50
+    best:
+      interval: 160
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+runtime:
+  act_cuda_graph: true
+  update_cuda_graph: true
+  shuffle_cuda_graph: true
+  compile: true
+  compile_act_into: true
+  compile_update_fullgraph: true
+  compile_mode: max-autotune-no-cudagraphs
+  mixed_precision: true
+  nsys_nvtx_mode: launch
+play:
+  num_envs: 1
+  steps:
+  action:
+    mode: mean
+  video:
+    enabled: false
+    length: 300
+  time_limit_policy: extend
+  done_policy: reset_continue

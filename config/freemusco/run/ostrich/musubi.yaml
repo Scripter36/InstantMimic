@@ -1,0 +1,13 @@
+# @package _global_
+defaults:
+- base
+- _self_
+env:
+  action:
+    type: musubi
+experiment:
+  directory: freemusco/run/ostrich/musubi
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

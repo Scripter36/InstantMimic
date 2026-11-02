@@ -1,0 +1,56 @@
+# @package _global_
+defaults:
+- /freemusco/imitation/base
+- _self_
+task: FreeMusco-ChimanoidImitation-FastMuscle-v0
+env:
+  species: chimanoid
+  sim:
+    mjcf_path: data/freemusco/animal/chimanoid/chimanoid.xml
+    njmax: 512
+    nconmax: 48
+  episode_length_s: 25.0
+  motion_clip: rest_loop_2frame
+  motion_data_dir: data/freemusco/animal/chimanoid/mocap
+  include_muscle_observation_blocks: true
+  imitation_profile:
+    root_body_name: pelvis
+    head_body_name: thorax
+    foot_body_names:
+    - toes_r
+    - toes_l
+    pelvis_geom_name: pelvis
+    end_effector_body_names:
+    - toes_r
+    - toes_l
+    - hand_r
+    - hand_l
+    - thorax
+    talus_body_names:
+    - talus_r
+    - talus_l
+    toe_body_names:
+    - toes_r
+    - toes_l
+    reference_body_start: 1
+    reference_body_count_offset: 1
+    root_qpos_position_indices:
+    - 0
+    - 1
+    - 2
+    root_qpos_rotation_indices:
+    - 3
+    - 4
+    - 5
+    loop_vertical_axis: 2
+    phase_observation_mode: required
+    loop_transform_mode: endpoint_root_pose
+    mirror_mode: none
+    mirror_left_prefix: l_
+    mirror_right_prefix: r_
+    mirror_clip_suffix: __mirror
+    smoothing_mode: none
+    ghost_root_xpath: .//body[@name='pelvis']
+    ghost_root_description: Chimanoid root body
+trainer:
+  max_iterations: 1000

@@ -1,0 +1,71 @@
+# @package _global_
+defaults:
+- /humanoid/amass/base@_global_
+- _self_
+task: SNU-Command-v0
+env:
+  scene:
+    num_envs: 4096
+  low_level_action_space: null
+  low_level_residual_scale: 1.0
+  low_level_append_prior_to_obs: true
+  command_residual_l2_weight: 0.01
+  command_residual_rate_weight: 0.005
+  low_level_config_autoload: true
+  low_level_reset_motion_subsets:
+  - ACCAD/*Walking_c3d/*.npz
+  - ACCAD/*Running_c3d/*.npz
+  command_alive_reward: 0.05
+  command_upright_weight: 0.1
+  command_fall_penalty: 10.0
+  termination:
+    min_torso_height: 0.5
+    motion_end: false
+    nonfinite: true
+    early:
+      enabled: false
+      reward_threshold: -1.0
+      consecutive_steps: 4
+  track_done_reasons: true
+  motion:
+    source: ''
+  reset:
+    motion:
+      source: []
+  low_level_checkpoint: null
+models:
+  actor:
+    architecture: mlp
+    layers:
+    - 512
+    - 512
+    - 256
+    activation: silu
+    normalization: none
+    distribution:
+      std: parameter
+      initial_log_std: -0.5
+      log_std_bounds:
+      - -3.0
+      - 2.0
+      action_transform: none
+agent:
+  discount_factor: 0.98
+  learning_epochs: 5
+  mini_batches: 4
+  latent_prior:
+    enabled: false
+experiment:
+  directory: humanoid/amass/command/base
+  write_interval: 5
+  episode_metrics_interval: 5
+  checkpoint:
+    periodic:
+      interval: 200
+    best:
+      interval: 20
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+trainer:
+  benchmark: null

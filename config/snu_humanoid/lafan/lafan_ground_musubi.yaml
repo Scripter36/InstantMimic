@@ -1,0 +1,25 @@
+# @package _global_
+defaults:
+- base
+- presets/musubi_mode@_global_
+- _self_
+env:
+  sim:
+    mjcf_path: data/snu_humanoid/mjcf/snu_humanoid_ball_full_muscle.xml
+    njmax: 384
+    nconmax: 32
+  motion:
+    source:
+    - data/snu_humanoid/motions/lafan/ground1_subject1_retarget.bvh
+    cache_directory: motion_cache/snu_lafan
+    cache_mode: auto
+  reset:
+    motion_index: null
+trainer:
+  max_iterations: 4000
+experiment:
+  directory: snu_humanoid/lafan/lafan_ground_musubi
+  write_interval: 5
+  episode_metrics_interval: 5
+  writer_max_queue: 256
+  writer_flush_secs: 120

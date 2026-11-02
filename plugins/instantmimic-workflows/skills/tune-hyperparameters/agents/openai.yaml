@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tune Training with HPO"
+  short_description: "Tune fixed environments for speed and learning quality"
+  default_prompt: "Use $tune-hyperparameters to derive and run a bounded training-only search from the latest migration evidence."

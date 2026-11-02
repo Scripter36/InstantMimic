@@ -1,0 +1,43 @@
+<mujoco>
+    <compiler meshdir="meshes" balanceinertia="true" angle="radian" eulerseq="xyz"/>
+    <option timestep="0.0025"/>
+    <size njmax="800" nconmax="500"/>
+    <visual>
+        <quality shadowsize="4096"/>
+        <!--<headlight ambient="0.5 0.5 0.5" diffuse="0.8 0.8 0.8" specular="0.1 0.1 0.1"/>-->
+        <headlight ambient="0.5 0.5 0.5" diffuse="0.8 0.8 0.8" specular="0.1 0.1 0.1"/>
+        <map znear="0.01"/>
+        <rgba actuator= "0.2 0.2 0.2 1" actuatornegative="0 0 1 1" actuatorpositive="1 0 0 1"></rgba> <!-- my added -->
+    </visual>
+    <statistic extent="2.0" center="0 0 1"/>
+    <default>
+        <joint limited="true" solimplimit="0 0.99 0.01" stiffness="10.0" armature="0.01" damping="5.0"/>
+        <geom type="mesh" rgba="0.5 0.5 0.5 1" contype="1" conaffinity="0" group="0" friction="0.7" solref="0.015 1" solimp="0.95 0.99 0.003" material="bone" /> <!-- rgba="1. 1. 1. 0.7"-->
+        <site group="4" rgba="0 1 0 1" size="0.01 0.01 0.01"/>
+        <!--<tendon width="0.003" rgba="0.95 0.3 0.3 1"/>-->
+        <tendon width="0.002" rgba="0. 0. 0. 1" />
+        <muscle ctrllimited="true" ctrlrange="-1 1"/>
+        <default class="leg">
+            <geom type="mesh" contype="3" conaffinity="2" group="0" friction="0.7" solref="0.015 1" solimp="0.95 0.99 0.003" material="bone"/>
+        </default>
+        <default class="wrapping">
+            <geom type="cylinder" contype="0" conaffinity="0" group="5" rgba="0 0 0.8 0.5"/>
+        </default>
+    </default>
+    <asset>
+        <!--<texture name="skybox" type="skybox" builtin="gradient" rgb1="0.4 0.6 0.8" rgb2="0 0 0" mark="random" markrgb="1 1 1" width="800" height="800"/>-->
+        <texture name="skybox" type="skybox" builtin="gradient" rgb1="0.4 0.6 0.8" rgb2="0.4 0.6 0.8"  markrgb="1 1 1" width="800" height="800"/> <!-- my added -->
+        <texture name="plane" type="2d" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.3 0.4 0.5" width="10" height="10"/>
+        <!--<material name="plane" texture="plane" texrepeat="5 5" reflectance="0.2"/>-->
+        <material name="plane" texture="plane" texrepeat="5 5" reflectance="0."/> <!-- my added -->
+        <texture name="grid" type="2d" builtin="checker" rgb1="0.1 0.2 0.3" rgb2="0.2 0.3 0.4" mark="edge" markrgb="0.2 0.3 0.4" width="300" height="300"/>
+        <!--<texture name="grid" type="2d" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.3 0.4 0.5" mark="edge" markrgb="0.2 0.3 0.4" width="300" height="300"/>--><!-- my added -->
+        <!--<material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance="0.2"/>-->
+        <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance="0."/><!-- my added -->
+
+
+
+
+
+    </asset>
+</mujoco>

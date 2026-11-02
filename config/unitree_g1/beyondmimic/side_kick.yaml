@@ -1,0 +1,24 @@
+# @package _global_
+# Fused task computation, optimized simulator kernels and graph/compile PPO.
+defaults:
+  - side_kick_reference
+  - _self_
+
+env:
+  execution_mode: optimized
+  use_cuda_graph: true
+  use_parallelized_kernel_launch: true
+  use_optimized_kernel: true
+
+experiment:
+  directory: unitree_g1/beyondmimic/side_kick
+
+runtime:
+  act_cuda_graph: true
+  update_cuda_graph: true
+  shuffle_cuda_graph: true
+  compile: true
+  compile_act_into: false
+  compile_update_fullgraph: true
+  compile_mode: default
+  mixed_precision: false

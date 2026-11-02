@@ -1,0 +1,21 @@
+# @package _global_
+defaults:
+- /freemusco/command/ostrich/base
+- _self_
+env:
+  command_mode: point_goal
+  point_goal_marker_mesh_path: data/render/command_goal.obj
+  point_goal_marker_rgba:
+  - 0.85
+  - 0.2
+  - 0.15
+  - 1.0
+  point_goal_marker_offset:
+  - 0.0
+  - 0.0
+  - 0.0
+  point_goal_marker_scale:
+  - 1.0
+  - 1.0
+  - 1.0
+  early_termination_reward_threshold: -5.0

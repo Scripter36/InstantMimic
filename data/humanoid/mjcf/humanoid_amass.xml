@@ -1,0 +1,160 @@
+<mujoco model="humanoid_amass">
+  <compiler angle="radian"/>
+  <option timestep="0.00833333333" integrator="implicitfast" cone="pyramidal" jacobian="dense" iterations="4" ls_iterations="4"/>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .5 .7" rgb2="0 0 0" width="32" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".1 .2 .3" rgb2=".2 .3 .4"/>
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
+  </asset>
+
+  <default>
+    <position ctrllimited="true"/>
+    <default class="geom_collision">
+      <geom contype="1" condim="3" conaffinity="2" friction="1.0 0.05 0.05" solimp=".9 .99 .003" solref=".015 1"/>
+    </default>
+    <default class="geom_nocollide">
+      <geom contype="0" condim="1" conaffinity="0" friction="1.0 0.05 0.05" solimp=".9 .99 .003" solref=".015 1"/>
+    </default>
+    <default class="geom_floor">
+      <geom type="plane" size="0 0 0.05" material="grid" condim="3" contype="2" conaffinity="1" friction="1.0 0.05 0.05"/>
+    </default>
+    <default class="body">
+      <joint solimplimit="0 .99 .01"/>
+    </default>
+
+    <default class="act_position_torso">
+      <position kp="300" kv="30" forcelimited="true" forcerange="-250 250"/>
+    </default>
+    <default class="act_position_neck">
+      <position kp="75" kv="7.5" forcelimited="true" forcerange="-50 50"/>
+    </default>
+    <default class="act_position_shoulder">
+      <position kp="150" kv="15" forcelimited="true" forcerange="-100 100"/>
+    </default>
+    <default class="act_position_elbow">
+      <position kp="105" kv="10.5" forcelimited="true" forcerange="-70 70"/>
+    </default>
+    <default class="act_position_hip">
+      <position kp="300" kv="30" forcelimited="true" forcerange="-350 350"/>
+    </default>
+    <default class="act_position_knee">
+      <position kp="220" kv="22" forcelimited="true" forcerange="-150 150"/>
+    </default>
+    <default class="act_position_ankle">
+      <position kp="50" kv="5" forcelimited="true" forcerange="-90 90"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <geom name="floor" class="geom_floor" pos="0 0 0"/>
+    <body name="pelvis" pos="0 0 0.9809" childclass="body">
+      <freejoint name="root"/>
+      <light name="spotlight" mode="track" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="0 -6 4" dir="0 0.8320503 -0.5547002" cutoff="30"/>
+      <geom name="pelvis" class="geom_collision" type="sphere" pos="0 0 0.07" size=".09" density="2226"/>
+      <geom name="upper_waist" class="geom_collision" type="sphere" pos="0 0 0.205" size="0.07" density="2226"/>
+
+      <body name="torso" pos="0 0 0.236151">
+        <joint name="abdomen" type="ball" limited="true" range="0 1.5708" armature=".02"/>
+        <geom name="torso" class="geom_collision" type="sphere" pos="0 0 0.12" size="0.11" density="1623"/>
+
+        <geom name="right_clavicle" class="geom_collision" type="capsule" fromto="-0.0060125 -0.0457775 0.2287955 -0.016835 -0.128177 0.2376182" size=".045" density="1623"/>
+        <geom name="left_clavicle" class="geom_collision" type="capsule" fromto="-0.0060125 0.0457775 0.2287955 -0.016835 0.128177 0.2376182" size=".045" density="1623"/>
+
+        <body name="head" pos="0 0 0.223894">
+          <joint name="neck" type="ball" limited="true" range="0 1.0472" armature=".01"/>
+          <geom name="head" class="geom_collision" type="sphere" pos="0 0 0.175" size="0.095" density="1081"/>
+        </body>
+
+        <body name="right_upper_arm" pos="-0.02405 -0.18311 0.24350">
+          <joint name="right_shoulder" type="ball" limited="true" range="0 2.7925" armature=".02"/>
+          <geom name="right_upper_arm" class="geom_collision" type="capsule" fromto="0 -0.03 0 0 -0.23 0" size=".045" density="982"/>
+
+          <body name="right_lower_arm" pos="0 -0.274788 0">
+            <joint name="right_elbow" type="hinge" axis="0 0 1" limited="true" range="0 2.7925" actuatorfrcrange="-70 70" armature=".01"/>
+            <geom name="right_lower_arm" class="geom_collision" type="capsule" fromto="0 -0.035 0 0 -0.1875 0" size="0.04" density="1056"/>
+
+            <body name="right_hand" pos="0 -0.258947 0">
+              <geom name="right_hand" class="geom_collision" type="sphere" size=".04" density="1865"/>
+            </body>
+          </body>
+        </body>
+
+        <body name="left_upper_arm" pos="-0.02405 0.18311 0.24350">
+          <joint name="left_shoulder" type="ball" limited="true" range="0 2.7925" armature=".02"/>
+          <geom name="left_upper_arm" class="geom_collision" type="capsule" fromto="0 0.03 0 0 0.23 0" size="0.045" density="982"/>
+
+          <body name="left_lower_arm" pos="0 0.274788 0">
+            <joint name="left_elbow" type="hinge" axis="0 0 1" limited="true" range="-2.7925 0" actuatorfrcrange="-70 70" armature=".01"/>
+            <geom name="left_lower_arm" class="geom_collision" type="capsule" fromto="0 0.035 0 0 0.1875 0" size="0.04" density="1056"/>
+
+            <body name="left_hand" pos="0 0.258947 0">
+              <geom name="left_hand" class="geom_collision" type="sphere" size=".04" density="1865"/>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <body name="right_thigh" pos="0 -0.084887 0">
+        <joint name="right_hip" type="ball" limited="true" range="0 2.4435" armature=".02"/>
+        <geom name="right_thigh" class="geom_collision" type="capsule" fromto="0 0 -0.04 0 0 -0.36" size="0.055" density="1269"/>
+
+        <body name="right_shin" pos="0 0 -0.421546">
+          <joint name="right_knee" type="hinge" axis="0 1 0" limited="true" range="0 2.7925" actuatorfrcrange="-150 150" armature=".02"/>
+          <geom name="right_shin" class="geom_collision" type="capsule" fromto="0 0 -0.03 0 0 -0.355"  size=".05" density="1014"/>
+
+          <body name="right_foot" pos="0 0 -0.409870">
+            <joint name="right_ankle" type="ball" limited="true" range="0 0.9599" armature=".01"/>
+            <geom name="right_foot" class="geom_collision" type="box" pos="0.045 0 -0.0225" size="0.0885 0.045 0.0275" density="1141"/>
+          </body>
+        </body>
+      </body>
+
+      <body name="left_thigh" pos="0 0.084887 0">
+        <joint name="left_hip" type="ball" limited="true" range="0 2.4435" armature=".02"/>
+        <geom name="left_thigh" class="geom_collision" type="capsule" fromto="0 0 -0.04 0 0 -0.36" size=".055" density="1269"/>
+
+        <body name="left_shin" pos="0 0 -0.421546">
+          <joint name="left_knee" type="hinge" axis="0 1 0" limited="true" range="0 2.7925" actuatorfrcrange="-150 150" armature=".02"/>
+          <geom name="left_shin" class="geom_collision" type="capsule" fromto="0 0 -0.03 0 0 -0.355"  size=".05" density="1014"/>
+
+          <body name="left_foot" pos="0 0 -0.409870">
+            <joint name="left_ankle" type="ball" limited="true" range="0 0.9599" armature=".01"/>
+            <geom name="left_foot" class="geom_collision" type="box" pos="0.045 0 -0.0225" size="0.0885 0.045 0.0275" density="1141"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position name="abdomen_x" joint="abdomen" gear="1 0 0" class="act_position_torso" ctrlrange="-1.5708 1.5708"/>
+    <position name="abdomen_y" joint="abdomen" gear="0 1 0" class="act_position_torso" ctrlrange="-1.5708 1.5708"/>
+    <position name="abdomen_z" joint="abdomen" gear="0 0 1" class="act_position_torso" ctrlrange="-1.5708 1.5708"/>
+    <position name="neck_x" joint="neck" gear="1 0 0" class="act_position_neck" ctrlrange="-1.0472 1.0472"/>
+    <position name="neck_y" joint="neck" gear="0 1 0" class="act_position_neck" ctrlrange="-1.0472 1.0472"/>
+    <position name="neck_z" joint="neck" gear="0 0 1" class="act_position_neck" ctrlrange="-1.0472 1.0472"/>
+    <position name="right_shoulder_x" joint="right_shoulder" gear="1 0 0" class="act_position_shoulder" ctrlrange="-2.7925 2.7925"/>
+    <position name="right_shoulder_y" joint="right_shoulder" gear="0 1 0" class="act_position_shoulder" ctrlrange="-2.7925 2.7925"/>
+    <position name="right_shoulder_z" joint="right_shoulder" gear="0 0 1" class="act_position_shoulder" ctrlrange="-2.7925 2.7925"/>
+    <position name="right_elbow" joint="right_elbow" class="act_position_elbow" ctrlrange="0 2.7925"/>
+    <position name="left_shoulder_x" joint="left_shoulder" gear="1 0 0" class="act_position_shoulder" ctrlrange="-2.7925 2.7925"/>
+    <position name="left_shoulder_y" joint="left_shoulder" gear="0 1 0" class="act_position_shoulder" ctrlrange="-2.7925 2.7925"/>
+    <position name="left_shoulder_z" joint="left_shoulder" gear="0 0 1" class="act_position_shoulder" ctrlrange="-2.7925 2.7925"/>
+    <position name="left_elbow" joint="left_elbow" class="act_position_elbow" ctrlrange="-2.7925 0"/>
+    <position name="right_hip_x" joint="right_hip" gear="1 0 0" class="act_position_hip" ctrlrange="-2.4435 2.4435"/>
+    <position name="right_hip_z" joint="right_hip" gear="0 0 1" class="act_position_hip" ctrlrange="-2.4435 2.4435"/>
+    <position name="right_hip_y" joint="right_hip" gear="0 1 0" class="act_position_hip" ctrlrange="-2.4435 2.4435"/>
+    <position name="right_knee" joint="right_knee" class="act_position_knee" ctrlrange="0 2.7925"/>
+    <position name="right_ankle_x" joint="right_ankle" gear="1 0 0" class="act_position_ankle" ctrlrange="-0.9599 0.9599"/>
+    <position name="right_ankle_y" joint="right_ankle" gear="0 1 0" class="act_position_ankle" ctrlrange="-0.9599 0.9599"/>
+    <position name="right_ankle_z" joint="right_ankle" gear="0 0 1" class="act_position_ankle" ctrlrange="-0.9599 0.9599"/>
+    <position name="left_hip_x" joint="left_hip" gear="1 0 0" class="act_position_hip" ctrlrange="-2.4435 2.4435"/>
+    <position name="left_hip_z" joint="left_hip" gear="0 0 1" class="act_position_hip" ctrlrange="-2.4435 2.4435"/>
+    <position name="left_hip_y" joint="left_hip" gear="0 1 0" class="act_position_hip" ctrlrange="-2.4435 2.4435"/>
+    <position name="left_knee" joint="left_knee" class="act_position_knee" ctrlrange="0 2.7925"/>
+    <position name="left_ankle_x" joint="left_ankle" gear="1 0 0" class="act_position_ankle" ctrlrange="-0.9599 0.9599"/>
+    <position name="left_ankle_y" joint="left_ankle" gear="0 1 0" class="act_position_ankle" ctrlrange="-0.9599 0.9599"/>
+    <position name="left_ankle_z" joint="left_ankle" gear="0 0 1" class="act_position_ankle" ctrlrange="-0.9599 0.9599"/>
+  </actuator>
+</mujoco>

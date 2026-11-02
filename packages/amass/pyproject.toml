@@ -1,0 +1,20 @@
+[project]
+name = "instantmimic-amass"
+version = "0.1.0"
+readme = "README.md"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
+description = "Offline AMASS motion preparation for InstantMimic"
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+dependencies = ["mujoco>=3.12,<4", "numpy>=2", "scipy>=1.14"]
+
+[project.optional-dependencies]
+metadata = ["joblib>=1.4"]
+
+[project.scripts]
+prepare-amass = "instantmimic_amass.prepare:main"
+convert-phc-metadata = "instantmimic_amass.metadata:main"
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"

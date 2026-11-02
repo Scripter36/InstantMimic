@@ -1,0 +1,93 @@
+<?xml version="1.0" ?>
+<mujoco model="Human">
+  <compiler angle="radian" inertiafromgeom="true" meshdir="assets"/>
+  <option timestep="0.00833333333" integrator="implicitfast" cone="pyramidal"/>
+  <default>
+    <default class="joint_default">
+      <joint armature="0.006" type="ball"/>
+    </default>
+    <default class="act_position_hip">
+      <position kp="500" kv="50" ctrllimited="true"/>
+    </default>
+    <default class="act_position_knee">
+      <position kp="500" kv="50" ctrllimited="true"/>
+    </default>
+    <default class="act_position_ankle">
+      <position kp="100" kv="10" ctrllimited="true"/>
+    </default>
+    <default class="act_position_toe">
+      <position kp="50" kv="5" ctrllimited="true"/>
+    </default>
+    <default class="act_position_spine">
+      <position kp="1000" kv="100" ctrllimited="true"/>
+    </default>
+    <default class="act_position_head">
+      <position kp="100" kv="10" ctrllimited="true"/>
+    </default>
+    <default class="act_position_shoulder">
+      <position kp="400" kv="40" ctrllimited="true"/>
+    </default>
+    <default class="act_position_arm">
+      <position kp="400" kv="40" ctrllimited="true"/>
+    </default>
+    <default class="act_position_forearm">
+      <position kp="300" kv="30" ctrllimited="true"/>
+    </default>
+    <default class="act_position_hand">
+      <position kp="200" kv="20" ctrllimited="true"/>
+    </default>
+  </default>
+  <include file="include/body.xml"/>
+  <actuator>
+    <position name="FemurR_x_pos" joint="FemurR" class="act_position_hip" gear="1 0 0" ctrlrange="-2.00 2.00"/>
+    <position name="FemurR_y_pos" joint="FemurR" class="act_position_hip" gear="0 1 0" ctrlrange="-2.00 2.00"/>
+    <position name="FemurR_z_pos" joint="FemurR" class="act_position_hip" gear="0 0 1" ctrlrange="-2.00 2.00"/>
+    <position name="TibiaR_pos" joint="TibiaR" class="act_position_knee" ctrlrange="0.00 2.30"/>
+    <position name="TalusR_x_pos" joint="TalusR" class="act_position_ankle" gear="1 0 0" ctrlrange="-1.00 1.00"/>
+    <position name="TalusR_y_pos" joint="TalusR" class="act_position_ankle" gear="0 1 0" ctrlrange="-1.00 1.00"/>
+    <position name="TalusR_z_pos" joint="TalusR" class="act_position_ankle" gear="0 0 1" ctrlrange="-1.00 1.00"/>
+    <position name="FootThumbR_pos" joint="FootThumbR" class="act_position_toe" ctrlrange="-0.60 0.60"/>
+    <position name="FootPinkyR_pos" joint="FootPinkyR" class="act_position_toe" ctrlrange="-0.60 0.60"/>
+    <position name="FemurL_x_pos" joint="FemurL" class="act_position_hip" gear="1 0 0" ctrlrange="-2.00 2.00"/>
+    <position name="FemurL_y_pos" joint="FemurL" class="act_position_hip" gear="0 1 0" ctrlrange="-2.00 2.00"/>
+    <position name="FemurL_z_pos" joint="FemurL" class="act_position_hip" gear="0 0 1" ctrlrange="-2.00 2.00"/>
+    <position name="TibiaL_pos" joint="TibiaL" class="act_position_knee" ctrlrange="0.00 2.30"/>
+    <position name="TalusL_x_pos" joint="TalusL" class="act_position_ankle" gear="1 0 0" ctrlrange="-1.00 1.00"/>
+    <position name="TalusL_y_pos" joint="TalusL" class="act_position_ankle" gear="0 1 0" ctrlrange="-1.00 1.00"/>
+    <position name="TalusL_z_pos" joint="TalusL" class="act_position_ankle" gear="0 0 1" ctrlrange="-1.00 1.00"/>
+    <position name="FootThumbL_pos" joint="FootThumbL" class="act_position_toe" ctrlrange="-0.60 0.60"/>
+    <position name="FootPinkyL_pos" joint="FootPinkyL" class="act_position_toe" ctrlrange="-0.60 0.60"/>
+    <position name="Spine_x_pos" joint="Spine" class="act_position_spine" gear="1 0 0" ctrlrange="-0.20 0.20"/>
+    <position name="Spine_y_pos" joint="Spine" class="act_position_spine" gear="0 1 0" ctrlrange="-0.40 0.40"/>
+    <position name="Spine_z_pos" joint="Spine" class="act_position_spine" gear="0 0 1" ctrlrange="-0.40 0.40"/>
+    <position name="Torso_x_pos" joint="Torso" class="act_position_spine" gear="1 0 0" ctrlrange="-0.20 0.20"/>
+    <position name="Torso_y_pos" joint="Torso" class="act_position_spine" gear="0 1 0" ctrlrange="-0.40 0.40"/>
+    <position name="Torso_z_pos" joint="Torso" class="act_position_spine" gear="0 0 1" ctrlrange="-0.40 0.40"/>
+    <position name="Neck_x_pos" joint="Neck" class="act_position_head" gear="1 0 0" ctrlrange="-0.40 0.60"/>
+    <position name="Neck_y_pos" joint="Neck" class="act_position_head" gear="0 1 0" ctrlrange="-0.40 0.60"/>
+    <position name="Neck_z_pos" joint="Neck" class="act_position_head" gear="0 0 1" ctrlrange="-0.40 0.60"/>
+    <position name="Head_x_pos" joint="Head" class="act_position_head" gear="1 0 0" ctrlrange="-0.40 0.60"/>
+    <position name="Head_y_pos" joint="Head" class="act_position_head" gear="0 1 0" ctrlrange="-0.40 0.60"/>
+    <position name="Head_z_pos" joint="Head" class="act_position_head" gear="0 0 1" ctrlrange="-0.40 0.60"/>
+    <position name="ShoulderR_z_pos" joint="ShoulderR" class="act_position_shoulder" gear="0 0 1" ctrlrange="-0.50 0.50"/>
+    <position name="ShoulderR_x_pos" joint="ShoulderR" class="act_position_shoulder" gear="1 0 0" ctrlrange="-0.50 0.50"/>
+    <position name="ShoulderR_y_pos" joint="ShoulderR" class="act_position_shoulder" gear="0 1 0" ctrlrange="-0.50 0.50"/>
+    <position name="ArmR_z_pos" joint="ArmR" class="act_position_arm" gear="0 0 1" ctrlrange="-2.00 2.00"/>
+    <position name="ArmR_x_pos" joint="ArmR" class="act_position_arm" gear="1 0 0" ctrlrange="-2.00 2.00"/>
+    <position name="ArmR_y_pos" joint="ArmR" class="act_position_arm" gear="0 1 0" ctrlrange="-2.00 2.00"/>
+    <position name="ForeArmR_pos" joint="ForeArmR" class="act_position_forearm" ctrlrange="0.00 2.30"/>
+    <position name="HandR_z_pos" joint="HandR" class="act_position_hand" gear="0 0 1" ctrlrange="-0.70 0.70"/>
+    <position name="HandR_x_pos" joint="HandR" class="act_position_hand" gear="1 0 0" ctrlrange="-0.70 0.70"/>
+    <position name="HandR_y_pos" joint="HandR" class="act_position_hand" gear="0 1 0" ctrlrange="-0.70 0.70"/>
+    <position name="ShoulderL_z_pos" joint="ShoulderL" class="act_position_shoulder" gear="0 0 1" ctrlrange="-0.50 0.50"/>
+    <position name="ShoulderL_x_pos" joint="ShoulderL" class="act_position_shoulder" gear="1 0 0" ctrlrange="-0.50 0.50"/>
+    <position name="ShoulderL_y_pos" joint="ShoulderL" class="act_position_shoulder" gear="0 1 0" ctrlrange="-0.50 0.50"/>
+    <position name="ArmL_z_pos" joint="ArmL" class="act_position_arm" gear="0 0 1" ctrlrange="-2.00 2.00"/>
+    <position name="ArmL_x_pos" joint="ArmL" class="act_position_arm" gear="1 0 0" ctrlrange="-2.00 2.00"/>
+    <position name="ArmL_y_pos" joint="ArmL" class="act_position_arm" gear="0 1 0" ctrlrange="-2.00 2.00"/>
+    <position name="ForeArmL_pos" joint="ForeArmL" class="act_position_forearm" ctrlrange="-2.30 0.00"/>
+    <position name="HandL_z_pos" joint="HandL" class="act_position_hand" gear="0 0 1" ctrlrange="-0.70 0.70"/>
+    <position name="HandL_x_pos" joint="HandL" class="act_position_hand" gear="1 0 0" ctrlrange="-0.70 0.70"/>
+    <position name="HandL_y_pos" joint="HandL" class="act_position_hand" gear="0 1 0" ctrlrange="-0.70 0.70"/>
+  </actuator>
+</mujoco>

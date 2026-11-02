@@ -1,0 +1,27 @@
+{
+  "name": "instantmimic-workflows",
+  "version": "0.2.5+codex.20261102",
+  "description": "Public repository workflows for InstantMimic experiments.",
+  "skills": "./skills/",
+  "author": {
+    "name": "scripter36"
+  },
+  "interface": {
+    "displayName": "InstantMimic Workflows",
+    "shortDescription": "Start from a goal: set up, train, evaluate, and optimize InstantMimic.",
+    "longDescription": "A standalone InstantMimic entry skill starts without a runtime checkout, acquires the public source, prepares tasks, and connects training, evaluation, rendering, migration, and bounded optimization workflows.",
+    "developerName": "scripter36",
+    "category": "Productivity",
+    "capabilities": [
+      "Start without a runtime checkout",
+      "Training command construction",
+      "Experiment reporting",
+      "GPU profiling guidance",
+      "Hydra configuration checks",
+      "External environment migration review",
+      "Training-only Pareto HPO",
+      "Workload-specific iterative runtime optimization"
+    ],
+    "defaultPrompt": "Use InstantMimic to prepare and complete my physics-based reinforcement-learning task."
+  }
+}

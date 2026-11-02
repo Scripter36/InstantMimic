@@ -1,0 +1,7 @@
+# @package _global_
+defaults:
+  - base
+  - _self_
+
+experiment:
+  directory: unitree_g1/beyondmimic/side_kick_reference

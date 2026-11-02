@@ -1,0 +1,21 @@
+{
+  "name": "instantmimic-local",
+  "owner": {
+    "name": "scripter36"
+  },
+  "metadata": {
+    "description": "Local InstantMimic workflow plugins."
+  },
+  "plugins": [
+    {
+      "name": "instantmimic-workflows",
+      "description": "Public repository workflows for InstantMimic experiments.",
+      "version": "0.2.5",
+      "author": {
+        "name": "scripter36"
+      },
+      "source": "./instantmimic-workflows",
+      "category": "development"
+    }
+  ]
+}

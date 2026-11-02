@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "files": {
+    "data/unitree_g1/beyondmimic/mjcf/scene.xml": "python -m instantmimic.tools.prepare_beyondmimic (see docs/guides/beyondmimic.md)",
+    "data/unitree_g1/beyondmimic/motions/converted/side_kick_motion.npz": "python -m instantmimic.tools.prepare_beyondmimic (see docs/guides/beyondmimic.md)",
+    "data/snu_humanoid/motions/lafan_gmr_parent_span_contact_shoulder_moderate_full77/dance1_subject1.npz": "Prepare the named motion locally under its source dataset terms; see docs/guides/muscle-control.md.",
+    "data/snu_humanoid/motions/single/dance.bvh": "Prepare the named motion locally under its source dataset terms; see docs/guides/muscle-control.md.",
+    "data/snu_humanoid/motions/lafan/fallAndGetUp1_subject1_retarget.bvh": "Prepare the named motion locally under its source dataset terms; see docs/guides/muscle-control.md.",
+    "data/snu_humanoid/motions/lafan/fight1_subject2_retarget.bvh": "Prepare the named motion locally under its source dataset terms; see docs/guides/muscle-control.md.",
+    "data/snu_humanoid/motions/lafan/ground1_subject1_retarget.bvh": "Prepare the named motion locally under its source dataset terms; see docs/guides/muscle-control.md.",
+    "data/snu_humanoid/motions/single/lafan_jump.bvh": "Prepare the named motion locally under its source dataset terms; see docs/guides/muscle-control.md.",
+    "data/snu_humanoid/motions/single/lafan_run.bvh": "Prepare the named motion locally under its source dataset terms; see docs/guides/muscle-control.md.",
+    "data/snu_humanoid/motions/single/lafan_walk.bvh": "Prepare the named motion locally under its source dataset terms; see docs/guides/muscle-control.md.",
+    "data/humanoid/motions/amass/phc_train/**/*.npz": "Prepare original AMASS locally with the CPU package; see docs/data/amass-retargeting.md."
+  }
+}

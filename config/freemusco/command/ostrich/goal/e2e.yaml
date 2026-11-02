@@ -1,0 +1,11 @@
+# @package _global_
+defaults:
+- base
+- /freemusco/command/ostrich/presets/e2e
+- _self_
+experiment:
+  directory: freemusco/command/ostrich/goal/e2e
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

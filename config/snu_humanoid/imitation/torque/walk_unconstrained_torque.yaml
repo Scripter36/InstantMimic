@@ -1,0 +1,40 @@
+# @package _global_
+# Direct-torque baseline: rest-pose muscle bounds set normalization at startup,
+# but no muscle clipping, passive force, or muscle runtime control is used.
+defaults:
+  - /snu_humanoid/imitation/base@_global_
+  - /snu_humanoid/presets/muscle_dynamics_env@_global_
+  - _self_
+
+env:
+  motion:
+    source: "data/snu_humanoid/motions/single/walk.bvh"
+    scale: 1.0
+    offset: [0.0, 0.0, 0.0]
+  spawn_offset: [0.0, 0.0, 0.03]
+  action:
+    type: torque
+    space: 50
+    scale: auto
+    bounds:
+      env_clip: false
+  muscle:
+    passive_force:
+      env: false
+  termination:
+    min_torso_height: 0.8
+    nonfinite: true
+
+agent:
+  rollouts: 16
+  value_loss_scale: 3.5
+
+trainer:
+  max_iterations: 1000
+
+experiment:
+  directory: snu_humanoid/imitation/torque/walk_unconstrained_torque
+  write_interval: 10
+  episode_metrics_interval: 10
+  writer_max_queue: 256
+  writer_flush_secs: 120

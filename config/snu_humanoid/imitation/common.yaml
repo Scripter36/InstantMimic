@@ -1,0 +1,188 @@
+# @package _global_
+# Hydra Defaults - shared runtime for SNU humanoid imitation configs
+defaults:
+  - _self_
+schema_version: 1
+seed: -1
+task: "SNU-Imitation-v0"
+env:
+  sim:
+    mjcf_path: "data/snu_humanoid/mjcf/humanoid.xml"
+    hz: 120
+    integrator: implicitfast
+    render_interval: 1
+    njmax: 128
+    nconmax: 12
+    is_sparse: false
+  scene:
+    num_envs: 1024
+  viewer:
+    resolution: [1080, 1080]
+
+  use_cuda_graph: true
+
+  # use repo-local stream-parallel scheduling and optimized MuJoCo Warp kernels.
+  use_parallelized_kernel_launch: true
+  use_optimized_kernel: true
+  decimation: 4
+
+  # Optional per-DOF numerical guard for non-root joint velocities (rad/s).
+  # A value of -1 disables the guard without launching an extra kernel.
+  max_joint_velocity: -1.0
+
+  episode_length_s: 15.0
+  # Base task observation width. The finalized control/observation pipeline
+  # derives the effective Gym space after optional context blocks are known.
+  activation_visualization:
+    enabled: true
+    color_low: [0.20, 0.25, 0.90, 0.300000]
+    color_high: [1.00, 0.15, 0.10, 1.000000]
+    alpha: 0.95
+    interpolation: hsv
+  observations:
+    include_root_target: false
+    joint_pose: 6d
+    future_mode: phc_v6
+    future_frames: 1
+    future_frame_step: 36
+    previous_action: null
+  character_render_mode: mesh
+  muscle:
+    force_scale: 1.0
+    length_range: [0.2, 1.3]
+    passive_force:
+      type: exponential
+      k_pe: 5.5
+      e_mo: 0.3
+      lmax: 1.6
+      fpmax: 1.3
+    force_velocity:
+      enabled: false
+      vmax: 1.5
+      fvmax: 1.5
+      implicit: true
+  reset:
+    random_start: true
+    motion_noise_std: 0.03
+  motion:
+    bvh_map:
+      "Hips": "Pelvis"
+      "RightUpLeg": "FemurR"
+      "RightLeg": "TibiaR"
+      "RightFoot": "TalusR"
+      "LeftUpLeg": "FemurL"
+      "LeftLeg": "TibiaL"
+      "LeftFoot": "TalusL"
+      "Spine": "Spine"
+      "Spine1": "Torso"
+      "Neck": "Neck"
+      "Head": "Head"
+      "RightShoulder": "ShoulderR"
+      "RightArm": "ArmR"
+      "RightForeArm": "ForeArmR"
+      "RightHand": "HandR"
+      "LeftShoulder": "ShoulderL"
+      "LeftArm": "ArmL"
+      "LeftForeArm": "ForeArmL"
+      "LeftHand": "HandL"
+
+    loop:
+      velocity_extrapolate: false
+      velocity_from_first_frame: false
+      smooth: true
+      blend_frames: 30
+      mode: tail_warp
+
+  reward:
+    alive: 0.05
+    tracking:
+      type: body_state
+      frame: world
+      weights:
+        position: 50.0
+        rotation: 5.0
+        linear_velocity: 0.1
+        angular_velocity: 0.1
+    com_weight: 0.0
+    end_effector:
+      position_weight: 0.0
+      rotation_weight: 0.0
+      position_root_relative: true
+    combination:
+      type: power_sum
+      q: 2.0
+      beta: 1.0
+      epsilon: 1.0e-6
+
+  adaptive_sampling:
+    enabled: false
+    metric: reward
+    chunk_size: 1
+    ema_alpha: 0.3
+    temperature: 0.1
+    decay_rate: 0.995
+    random_sample_prob: 0.0
+    min_metric: 1.0e-6
+
+  nan_debug:
+    enabled: false
+    buffer_size: 120
+    max_env_videos: 4
+    output_directory: "nan_debug"
+    raise_on_nan: true
+
+  termination:
+    nonfinite: true
+    early:
+      reward_threshold: 0.15
+      consecutive_steps: 4
+  ghost_offset: [-1.5, 0.0, 0.0]
+
+  log_dir: ""
+
+trainer:
+  benchmark:
+    interval: 25
+    steps: 300
+    num_envs: 32
+    objective:
+      metric: reward_mean
+      direction: maximize
+    termination:
+      type: inherit
+experiment:
+  directory: snu_humanoid/imitation/base
+  write_interval: 10
+  episode_metrics_interval: 10
+  checkpoint:
+    replay: false
+    periodic:
+      interval: 250
+    best:
+      interval: 250
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+  logger:
+    type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+runtime:
+  compile: true
+  compile_act_into: false
+  compile_update_fullgraph: true
+  compile_mode: max-autotune-no-cudagraphs
+  mixed_precision: true
+  fail_on_nonfinite_update: false
+  nsys_nvtx_mode: launch
+  act_cuda_graph: true
+  update_cuda_graph: true
+  shuffle_cuda_graph: true
+play:
+  steps:
+  time_limit_policy: extend
+  done_policy: reset_continue
+  video:
+    enabled: false
+    length: 240
+  num_envs: 1
+  action:
+    mode: mean

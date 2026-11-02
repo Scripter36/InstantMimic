@@ -1,0 +1,15 @@
+# @package _global_
+defaults:
+- base
+- _self_
+env:
+  action:
+    type: musubi
+trainer:
+  max_iterations: 500
+experiment:
+  directory: freemusco/run/chimanoid/musubi
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

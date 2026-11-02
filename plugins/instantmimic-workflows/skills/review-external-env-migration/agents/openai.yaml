@@ -1,0 +1,6 @@
+interface:
+  display_name: "Migration Evidence Reviewer"
+  short_description: "Audit migration gates from raw evidence"
+  default_prompt: "Use $review-external-env-migration to audit this migration evidence packet in a fresh read-only context."
+policy:
+  allow_implicit_invocation: false

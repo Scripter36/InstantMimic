@@ -1,0 +1,79 @@
+# @package _global_
+
+defaults:
+  - /hpo/runtime/default
+  - /hpo/planner/default
+  - /hpo/search_space/pd_training
+  - _self_
+
+name: backflip-pd
+description: Tune the InstantMimic backflip PD baseline for active train time to a success-rate evaluation benchmark.
+
+hpo_tracking:
+  backend: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+  experiment_name: instantmimic-hpo
+  log_artifacts: true
+  log_llm_traces: true
+
+batch:
+  motions:
+    backflip_pd_baseline:
+      config_path: config/humanoid/imitation/variants
+      config_name: backflip_pd_baseline
+  seeds: [1, 2, 3]
+  max_parallel: 1
+  seed_batch: require
+  retries_per_seed: 1
+  trial_timeout_seconds: 240
+  stop_on_fail: false
+  min_experiments_per_cycle: 1
+  max_experiments_per_cycle: 4
+  lock_motion_configs: true
+  eval_source: train_benchmark
+  train_benchmark_recent_window: 3
+  playback:
+    video: false
+  fixed_train_overrides:
+    - trainer.max_iterations=375
+    - experiment.logger.type=tensorboard
+    - ++experiment.checkpoint.disabled=true
+    - trainer.benchmark.objective.metric=success_rate
+    - trainer.benchmark.objective.direction=maximize
+    - trainer.benchmark.termination.type=inherit
+    - ++trainer.benchmark.interval=5
+    - ++trainer.benchmark.steps=300
+    - ++trainer.benchmark.num_envs=32
+    - ++trainer.benchmark.metric_frame=root
+    - ++trainer.benchmark.include_root_in_ape=false
+    - ++trainer.benchmark.deterministic_reset=true
+    - ++trainer.benchmark.require_full_horizon=true
+    - ++trainer.benchmark.thresholds.success_rate=0.9
+    - ++trainer.benchmark.thresholds.consecutive_passes=1
+    - ++trainer.stopping.type=benchmark
+    - ++trainer.stopping.timeout_seconds=30.0
+    - ++trainer.stopping.fail_on_miss=true
+    - ++trainer.stopping.warmup_iterations=1
+
+objective:
+  mode: scalar
+  strategy: time_to_tracking_benchmark
+  threshold_mode: threshold
+  thresholds:
+    success_rate: 0.9
+  improvement_margin: 0.1
+  local_incumbent_advance: false
+
+planner:
+  reasoning_effort: high
+  sandbox: read-only
+  timeout_seconds: 900.0
+  max_same_dimension_streak: 2
+  deep_review:
+    results_rows: 30
+  search_base_selection:
+    enabled: true
+  instructions: |
+    Make config/humanoid/imitation/variants/backflip_pd_baseline.yaml reach
+    success_rate >= 0.90 faster in active train time. Keep
+    trainer.max_iterations and the benchmark protocol fixed; compare the
+    discovered config against the baseline.

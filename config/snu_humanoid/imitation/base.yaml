@@ -1,0 +1,6 @@
+# @package _global_
+# Shared PPO base for SNU humanoid imitation configs.
+defaults:
+  - common
+  - presets/ppo@_global_
+  - _self_

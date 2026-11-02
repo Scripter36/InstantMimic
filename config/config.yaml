@@ -1,0 +1,2 @@
+defaults:
+  - humanoid/imitation/walk_pd

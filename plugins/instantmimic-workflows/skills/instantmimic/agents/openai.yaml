@@ -1,0 +1,3 @@
+interface:
+  display_name: "InstantMimic"
+  short_description: "Set up, train, and evaluate physics-based RL tasks"

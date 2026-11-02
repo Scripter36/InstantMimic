@@ -1,0 +1,199 @@
+[project]
+name = "instantmimic"
+version = "0.2.0"
+description = "GPU-native reinforcement learning for physics-based character skills"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
+authors = [
+    { name = "Ikjun Choi", email = "ikjun@imo.snu.ac.kr" },
+    { name = "Geonho Leem", email = "geonholeem@imo.snu.ac.kr" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "instantmimic-amass",
+    "gymnasium[other]>=1.2.2",
+    "hydra-core>=1.3.7,<1.4",
+    "mujoco==3.16.0",
+    "mujoco-warp==3.16.0",
+    "mjviser>=0.0.10",
+    "mlflow>=3.0.0",
+    "pillow",
+    "pyopengl-accelerate>=3.1.10",
+    "python-dotenv>=1.2.1",
+    "tensorboard>=2.20.0",
+    "torch>=2.11,<2.12",
+    "upc-pymotion>=0.2.3",
+    "wandb>=0.25.0",
+    "pynvvideocodec>=2.1,<2.2",
+    "h5py>=3.16.0",
+    "imageio-ffmpeg>=0.6.0",
+    "pydantic>=2.12,<3",
+    "warp-lang==1.15.0",
+    "cuda-bindings>=12.9,<13; sys_platform == 'linux' or sys_platform == 'win32'",
+    "triton-windows>=3.6,<3.7; sys_platform == 'win32'",
+    "wandb-workspaces==0.4.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/Scripter36/InstantMimic"
+Repository = "https://github.com/Scripter36/InstantMimic"
+Issues = "https://github.com/Scripter36/InstantMimic/issues"
+
+[project.scripts]
+train = "instantmimic.train.__main__:main"
+play = "instantmimic.play.__main__:cli"
+run_hpo = "instantmimic.hpo.run_hpo:cli"
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+package = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-m 'not integration'"
+markers = [
+    "cuda: requires a CUDA-capable torch/warp runtime",
+    "integration: broader integration coverage that may touch real assets or heavy runtime setup",
+    "local_data: requires generated or machine-local data that is not part of the repository",
+]
+norecursedirs = [
+    ".git",
+    ".venv",
+    "analysis",
+    "artifacts",
+    "logs",
+    "wandb",
+]
+
+[tool.uv.build-backend]
+module-name = "instantmimic"
+module-root = "src"
+source-include = [
+    ".github/**",
+    "CONTRIBUTING.md",
+    "config/**",
+    "data/**",
+    "docs/**",
+    "plugins/**",
+    "packages/amass/**",
+    "mkdocs.yml",
+    "tests/**",
+    "THIRD_PARTY_NOTICES.md",
+    "uv.lock",
+    ".gitignore",
+]
+
+source-exclude = [
+    "data/unitree_g1/beyondmimic/**",
+    "data/amass/**",
+    "data/humanoid/motions/amass/**",
+    "packages/amass/.venv/**",
+    "packages/amass/src/**/__pycache__/**",
+]
+
+[tool.uv.sources]
+instantmimic-amass = { path = "packages/amass", editable = true }
+torch = [
+  { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+  { index = "pytorch-cpu", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[dependency-groups]
+dev = [
+    "joblib>=1.4,<2",
+    "pybind11-stubgen>=2.5.5",
+    "pre-commit>=4.3.0",
+    "pytest>=9.0",
+    "pytest-xdist>=3.6",
+    "ruff>=0.14.9",
+]
+# Just enough to compose and validate every config without torch. The linux
+# torch wheel comes from the cu128 index and is ~3GB, which is not something to
+# download on every CI run; instantmimic.tools.validate_configs only needs
+# Hydra composition and pydantic validation.
+ci = [
+    "hydra-core>=1.3.7,<1.4",
+    "pydantic>=2.12,<3",
+]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.6,<10",
+    "pymdown-extensions>=10,<11",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+extend-exclude = [
+    "analysis",
+    "artifacts",
+    "logs",
+    "wandb",
+]
+
+[tool.ruff.lint]
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "I",
+    "B",       # bugbear: the mistakes a reader does not see
+    "BLE",     # broad exception handlers
+    "FURB",    # refurbishment
+    "PIE",     # small unnecessary constructs
+    "RUF100",  # a noqa for a rule we do not run suppresses nothing
+    "S110",    # try/except/pass
+    "S112",    # try/except/continue
+    "TID",     # absolute imports only
+    "UP",      # syntax this Python version made unnecessary
+]
+ignore = [
+    "E731",
+    # Ruff cannot see that a function body is compiled by Warp rather than
+    # CPython, and Warp's subset does not accept what these rewrite the code
+    # into. `x in (A, B)` fails to parse inside a kernel, and `float(0.0)` is
+    # how a kernel local declares its type. Both rules are cosmetic; the risk
+    # is not.
+    "SIM109",
+    "UP018",
+    # Not yet: each is a real cleanup with more sites than one commit should
+    # carry.
+    "B007",
+    "B008",
+    "B023",
+    "UP022",
+    "UP031",
+    "UP035",
+    "UP047",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["instantmimic", "scripts"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

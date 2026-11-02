@@ -1,0 +1,59 @@
+# @package _global_
+# Backflip PD settings selected by the paper's hyperparameter search (cycle 65),
+# layered on the search's initial configuration. The paper reports a median of
+# 2.17 s of active training to 90% benchmark success for this setting.
+defaults:
+  - /humanoid/imitation/variants/backflip_pd_baseline@_global_
+  - _self_
+
+env:
+  scene:
+    num_envs: 2048
+
+  action:
+    scale: 0.875
+  observations:
+    include_root_target: true
+
+  reset:
+    motion_noise_std: 0.01
+  reward:
+    tracking:
+      pose:
+        weight: 12.0
+    com_weight: 8.0
+    end_effector:
+      rotation_weight: 1.0
+
+  termination:
+    min_torso_height: 0.6
+    early:
+      consecutive_steps: 3
+models:
+  actor:
+    distribution:
+      initial_log_std: -1.5
+      action_transform: none
+agent:
+  rollouts: 8
+  discount_factor: 0.98
+  learning_epochs: 3
+  mini_batches: 4
+  ratio_clip: 0.32
+  entropy_loss_scale: 0.00025
+  value_loss_scale: 4.0
+  gae_lambda: 0.99
+  learning_rate:
+    initial: 6.25e-04
+    scheduler:
+      type: kl_adaptive
+      threshold: 0.12
+      factor: 1.5
+trainer:
+  max_iterations: 150
+experiment:
+  directory: humanoid/imitation/backflip_pd_optimized_cycle65
+  write_interval: 1
+  episode_metrics_interval: 1
+  writer_max_queue: 256
+  writer_flush_secs: 120

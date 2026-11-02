@@ -1,0 +1,18 @@
+# @package _global_
+defaults:
+  - base
+  - /freemusco/presets/activation_mode@_global_
+  - _self_
+models:
+  actor:
+    distribution:
+      initial_log_std: -1.8
+      action_transform: none
+trainer:
+  max_iterations: 1000
+experiment:
+  directory: freemusco/run/chimanoid/activation
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

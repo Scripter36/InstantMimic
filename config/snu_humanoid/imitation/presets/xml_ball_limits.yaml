@@ -1,0 +1,4 @@
+# @package _global_
+defaults:
+- /snu_humanoid/presets/xml_ball_limits@_global_
+- _self_

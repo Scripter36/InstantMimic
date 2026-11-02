@@ -1,0 +1,26 @@
+# @package _global_
+defaults:
+- /freemusco/run/ostrich/musubi
+- _self_
+env:
+  episode_length_s: 25.0
+  reset_joint_range_scale: 1.0
+  forward_velocity_source: sensor_subtreelinvel_x
+  reward_mode: raw_forward_velocity
+  reward_upright_scale: 0.0
+  reward_direction_scale: 0.0
+  reward_pose_regularization_scale: 0.0
+  include_muscle_observation_blocks: true
+  include_heading_frame_body_state_obs: false
+  observation_include_target_forward_velocity: false
+  observation_include_velocity_error: false
+  termination_torso_tilt_mode: root_rot_y_abs
+  max_joint_velocity: 0.0
+trainer:
+  max_iterations: 1000
+experiment:
+  directory: freemusco/run/ostrich/benchmark/musubi
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

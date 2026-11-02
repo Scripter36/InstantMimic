@@ -1,0 +1,100 @@
+# @package _global_
+# MASS torque control with instantaneous wrapped muscle geometry.
+defaults:
+- /freemusco/imitation/ostrich/base
+- _self_
+env:
+  action:
+    type: mass
+    space: 50
+    policy_output:
+      type: torque
+      scale: auto
+    bounds:
+      env_clip: false
+    muscle_nn:
+      hidden_dims:
+      - 1024
+      - 512
+      - 512
+      target_includes_passive_force: false
+      substep_sampling_mode: random
+      reuse_activation_across_substeps: false
+      optimizer:
+        type: adam
+      learning_rate: 0.0003
+      batch_size: 2048
+      epochs: 4
+      regularization_weight: 0.01
+      buffer_capacity: 32768
+      grad_clip: 0.5
+  muscle:
+    passive_force:
+      env: true
+models:
+  shared: true
+  actor:
+    architecture: mlp
+    layers:
+    - 512
+    - 512
+    - 256
+    activation: silu
+    normalization: none
+    distribution:
+      std: parameter
+      initial_log_std: -2.0
+      log_std_bounds:
+      - -20.0
+      - 2.0
+      bound_mode: clamp
+      action_transform: none
+agent:
+  class: PPO
+  discount_factor: 0.95
+  gae_lambda: 0.95
+  time_limit_bootstrap: true
+  optimizer:
+    type: muon
+    momentum: 0.95
+    nesterov: true
+    adjust_lr_fn: match_rms_adamw
+    ns_steps: 5
+    eps: 1.0e-07
+    weight_decay: 3.0e-05
+    adamw:
+      betas:
+      - 0.9
+      - 0.999
+      eps: 2.0e-05
+      weight_decay: 3.0e-05
+      amsgrad: false
+  learning_rate:
+    bounds:
+    - 1.0e-06
+    - 0.01
+    initial: 0.0001
+    scheduler:
+      type: kl_adaptive
+      threshold: 0.1
+      factor: 1.5
+  state_preprocessor: RunningStandardScaler
+  value_preprocessor: RunningStandardScaler
+  reward_preprocessor: none
+  grad_norm_clip: 1.0
+  ratio_clip: 0.2
+  value_clip: 0.2
+  clip_predicted_values: true
+  entropy_loss_scale: 0.0001
+  kl_estimator: sampled
+  learning_epochs: 5
+  mini_batches: 4
+  shuffle_mode: per_update
+  rollouts: 16
+  value_loss_scale: 3.5
+experiment:
+  directory: freemusco/imitation/ostrich/single/mass
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

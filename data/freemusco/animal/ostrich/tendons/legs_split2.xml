@@ -1,0 +1,1256 @@
+<mujoco>
+    <tendon>
+        <spatial name="r_ic_split1">
+            <site site="r_ic-p1_split1" />
+            <site site="r_ic-p2_split1" />
+            <geom geom="r_ic_knee" sidesite="r_ic_knee" />
+            <site site="r_ic-p3_split1" />
+        </spatial>
+        <spatial name="r_ic_split2">
+            <site site="r_ic-p1_split2" />
+            <site site="r_ic-p2_split2" />
+            <geom geom="r_ic_knee" sidesite="r_ic_knee" />
+            <site site="r_ic-p3_split2" />
+        </spatial>
+        <spatial name="r_ila_split1">
+            <site site="r_ila-p1_split1" />
+            <geom geom="r_il_hip" sidesite="r_il_hip" />
+            <site site="r_ila-p2_split1" />
+            <site site="r_ila-p3_split1" />
+            <site site="r_ila-p4_split1" />
+        </spatial>
+        <spatial name="r_ila_split2">
+            <site site="r_ila-p1_split2" />
+            <geom geom="r_il_hip" sidesite="r_il_hip" />
+            <site site="r_ila-p2_split2" />
+            <site site="r_ila-p3_split2" />
+            <site site="r_ila-p4_split2" />
+        </spatial>
+        <spatial name="r_ilp_split1">
+            <site site="r_ilp-p1_split1" />
+            <geom geom="r_il_hip" sidesite="r_il_hip" />
+            <site site="r_ilp-p2_split1" />
+            <site site="r_ilp-p3_split1" />
+            <site site="r_ilp-p4_split1" />
+        </spatial>
+        <spatial name="r_ilp_split2">
+            <site site="r_ilp-p1_split2" />
+            <geom geom="r_il_hip" sidesite="r_il_hip" />
+            <site site="r_ilp-p2_split2" />
+            <site site="r_ilp-p3_split2" />
+            <site site="r_ilp-p4_split2" />
+        </spatial>
+        <spatial name="r_fmtl_split1">
+            <site site="r_fmtl-p1_split1" />
+            <site site="r_fmtl-p2_split1" />
+            <geom geom="r_fmtim_fmtl_knee" sidesite="r_fmtim_fmtl_knee" />
+            <site site="r_fmtl-p3_split1" />
+        </spatial>
+        <spatial name="r_fmtl_split2">
+            <site site="r_fmtl-p1_split2" />
+            <site site="r_fmtl-p2_split2" />
+            <geom geom="r_fmtim_fmtl_knee" sidesite="r_fmtim_fmtl_knee" />
+            <site site="r_fmtl-p3_split2" />
+        </spatial>
+        <spatial name="r_fmtim_split1">
+            <site site="r_fmtim-p1_split1" />
+            <site site="r_fmtim-p2_split1" />
+            <geom geom="r_fmtim_fmtl_knee" sidesite="r_fmtim_fmtl_knee" />
+            <site site="r_fmtim-p3_split1" />
+        </spatial>
+        <spatial name="r_fmtim_split2">
+            <site site="r_fmtim-p1_split2" />
+            <site site="r_fmtim-p2_split2" />
+            <geom geom="r_fmtim_fmtl_knee" sidesite="r_fmtim_fmtl_knee" />
+            <site site="r_fmtim-p3_split2" />
+        </spatial>
+        <spatial name="r_fmtm_split1">
+            <site site="r_fmtm-p1_split1" />
+            <site site="r_fmtm-p2_split1" />
+            <site site="r_fmtm-p3_split1" />
+        </spatial>
+        <spatial name="r_fmtm_split2">
+            <site site="r_fmtm-p1_split2" />
+            <site site="r_fmtm-p2_split2" />
+            <site site="r_fmtm-p3_split2" />
+        </spatial>
+        <spatial name="r_amb1_split1">
+            <site site="r_amb1-p1_split1" />
+            <site site="r_amb1-p2_split1" />
+            <site site="r_amb1-p3_split1" />
+        </spatial>
+        <spatial name="r_amb1_split2">
+            <site site="r_amb1-p1_split2" />
+            <site site="r_amb1-p2_split2" />
+            <site site="r_amb1-p3_split2" />
+        </spatial>
+        <spatial name="r_amb2_split1">
+            <site site="r_amb2-p1_split1" />
+            <site site="r_amb2-p2_split1" />
+            <site site="r_amb2-p3_split1" />
+            <geom geom="r_ambd_knee" sidesite="r_ambd_knee" />
+            <site site="r_amb2-p4_split1" />
+            <site site="r_amb2-p5_split1" />
+        </spatial>
+        <spatial name="r_amb2_split2">
+            <site site="r_amb2-p1_split2" />
+            <site site="r_amb2-p2_split2" />
+            <site site="r_amb2-p3_split2" />
+            <geom geom="r_ambd_knee" sidesite="r_ambd_knee" />
+            <site site="r_amb2-p4_split2" />
+            <site site="r_amb2-p5_split2" />
+        </spatial>
+        <spatial name="r_ilfba_split1">
+            <site site="r_ilfba-p1_split1" />
+            <geom geom="r_ilfb_hip" sidesite="r_ilfb_hip" />
+            <site site="r_ilfba-p2_split1" />
+            <geom geom="r_ilfb_hip" sidesite="r_ilfb_hip" />
+            <site site="r_ilfba-p3_split1" />
+        </spatial>
+        <spatial name="r_ilfba_split2">
+            <site site="r_ilfba-p1_split2" />
+            <geom geom="r_ilfb_hip" sidesite="r_ilfb_hip" />
+            <site site="r_ilfba-p2_split2" />
+            <geom geom="r_ilfb_hip" sidesite="r_ilfb_hip" />
+            <site site="r_ilfba-p3_split2" />
+        </spatial>
+        <spatial name="r_ilfbp_split1">
+            <site site="r_ilfbp-p1_split1" />
+            <geom geom="r_ilfb_hip" sidesite="r_ilfb_hip" />
+            <site site="r_ilfbp-p2_split1" />
+            <geom geom="r_ilfb_hip" sidesite="r_ilfb_hip" />
+            <site site="r_ilfbp-p3_split1" />
+        </spatial>
+        <spatial name="r_ilfbp_split2">
+            <site site="r_ilfbp-p1_split2" />
+            <geom geom="r_ilfb_hip" sidesite="r_ilfb_hip" />
+            <site site="r_ilfbp-p2_split2" />
+            <geom geom="r_ilfb_hip" sidesite="r_ilfb_hip" />
+            <site site="r_ilfbp-p3_split2" />
+        </spatial>
+        <spatial name="r_ife_split1">
+            <site site="r_ife-p1_split1" />
+            <site site="r_ife-p2_split1" />
+        </spatial>
+        <spatial name="r_ife_split2">
+            <site site="r_ife-p1_split2" />
+            <site site="r_ife-p2_split2" />
+        </spatial>
+        <spatial name="r_itca_split1">
+            <site site="r_itca-p1_split1" />
+            <site site="r_itca-p2_split1" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itca-p3_split1" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itca-p4_split1" />
+        </spatial>
+        <spatial name="r_itca_split2">
+            <site site="r_itca-p1_split2" />
+            <site site="r_itca-p2_split2" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itca-p3_split2" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itca-p4_split2" />
+        </spatial>
+        <spatial name="r_itcp_split1">
+            <site site="r_itcp-p1_split1" />
+            <site site="r_itcp-p2_split1" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itcp-p3_split1" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itcp-p4_split1" />
+        </spatial>
+        <spatial name="r_itcp_split2">
+            <site site="r_itcp-p1_split2" />
+            <site site="r_itcp-p2_split2" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itcp-p3_split2" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itcp-p4_split2" />
+        </spatial>
+        <spatial name="r_itcr_split1">
+            <site site="r_itcr-p1_split1" />
+            <geom geom="r_itcr_hip" sidesite="r_itcr_hip" />
+            <site site="r_itcr-p2_split1" />
+            <geom geom="r_itcr_femur" />
+            <site site="r_itcr-p3_split1" />
+        </spatial>
+        <spatial name="r_itcr_split2">
+            <site site="r_itcr-p1_split2" />
+            <geom geom="r_itcr_hip" sidesite="r_itcr_hip" />
+            <site site="r_itcr-p2_split2" />
+            <geom geom="r_itcr_femur" />
+            <site site="r_itcr-p3_split2" />
+        </spatial>
+        <spatial name="r_itm_split1">
+            <site site="r_itm-p1_split1" />
+            <site site="r_itm-p2_split1" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itm-p3_split1" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itm-p4_split1" />
+        </spatial>
+        <spatial name="r_itm_split2">
+            <site site="r_itm-p1_split2" />
+            <site site="r_itm-p2_split2" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itm-p3_split2" />
+            <geom geom="r_itc_itm_hip" sidesite="r_itc_itm_hip" />
+            <site site="r_itm-p4_split2" />
+        </spatial>
+        <spatial name="r_ifi_split1">
+            <site site="r_ifi-p1_split1" />
+            <site site="r_ifi-p2_split1" />
+            <site site="r_ifi-p3_split1" />
+        </spatial>
+        <spatial name="r_ifi_split2">
+            <site site="r_ifi-p1_split2" />
+            <site site="r_ifi-p2_split2" />
+            <site site="r_ifi-p3_split2" />
+        </spatial>
+        <spatial name="r_fclp_split1">
+            <site site="r_fclp-p1_split1" />
+            <site site="r_fclp-p2_split1" />
+            <site site="r_fclp-p3_split1" />
+            <site site="r_fclp-p4_split1" />
+        </spatial>
+        <spatial name="r_fclp_split2">
+            <site site="r_fclp-p1_split2" />
+            <site site="r_fclp-p2_split2" />
+            <site site="r_fclp-p3_split2" />
+            <site site="r_fclp-p4_split2" />
+        </spatial>
+        <spatial name="r_fcm_split1">
+            <site site="r_fcm-p1_split1" />
+            <site site="r_fcm-p4_split1" />
+        </spatial>
+        <spatial name="r_fcm_split2">
+            <site site="r_fcm-p1_split2" />
+            <site site="r_fcm-p4_split2" />
+        </spatial>
+        <spatial name="r_pifml_split1">
+            <site site="r_pifm+l-p1_split1" />
+            <geom geom="r_pifm_l_hip" />
+            <site site="r_pifm+l-p2_split1" />
+        </spatial>
+        <spatial name="r_pifml_split2">
+            <site site="r_pifm+l-p1_split2" />
+            <geom geom="r_pifm_l_hip" />
+            <site site="r_pifm+l-p2_split2" />
+        </spatial>
+        <spatial name="r_om_split1">
+            <site site="r_om-p1_split1" />
+            <site site="r_om-p2_split1" />
+            <site site="r_om-p3_split1" />
+            <site site="r_om-p4_split1" />
+            <site site="r_om-p5_split1" />
+        </spatial>
+        <spatial name="r_om_split2">
+            <site site="r_om-p1_split2" />
+            <site site="r_om-p2_split2" />
+            <site site="r_om-p3_split2" />
+            <site site="r_om-p4_split2" />
+            <site site="r_om-p5_split2" />
+        </spatial>
+        <spatial name="r_isf_split1">
+            <site site="r_isf-p1_split1" />
+            <site site="r_isf-p2_split1" />
+            <site site="r_isf-p3_split1" />
+        </spatial>
+        <spatial name="r_isf_split2">
+            <site site="r_isf-p1_split2" />
+            <site site="r_isf-p2_split2" />
+            <site site="r_isf-p3_split2" />
+        </spatial>
+        <spatial name="r_cfp_split1">
+            <site site="r_cfp-p1_split1" />
+            <geom geom="r_cfp_hip" sidesite="r_cfp_hip" />
+            <site site="r_cfp-p2_split1" />
+        </spatial>
+        <spatial name="r_cfp_split2">
+            <site site="r_cfp-p1_split2" />
+            <geom geom="r_cfp_hip" sidesite="r_cfp_hip" />
+            <site site="r_cfp-p2_split2" />
+        </spatial>
+        <spatial name="r_gl_split1">
+            <site site="r_gl-p1_split1" />
+            <site site="r_gl-p2_split1" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_gl-p3_split1" />
+            <site site="r_gl-p4_split1" />
+            <site site="r_gl-p5_split1" />
+            <geom geom="r_gastroc_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_gl-p6_split1" />
+            <site site="r_gl-p7_split1" />
+        </spatial>
+        <spatial name="r_gl_split2">
+            <site site="r_gl-p1_split2" />
+            <site site="r_gl-p2_split2" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_gl-p3_split2" />
+            <site site="r_gl-p4_split2" />
+            <site site="r_gl-p5_split2" />
+            <geom geom="r_gastroc_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_gl-p6_split2" />
+            <site site="r_gl-p7_split2" />
+        </spatial>
+        <spatial name="r_gim_split1">
+            <site site="r_gim-p1_split1" />
+            <site site="r_gim-p2_split1" />
+            <site site="r_gim-p3_split1" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_gim-p4_split1" />
+            <geom geom="r_gastroc_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_gim-p5_split1" />
+            <site site="r_gim-p6_split1" />
+        </spatial>
+        <spatial name="r_gim_split2">
+            <site site="r_gim-p1_split2" />
+            <site site="r_gim-p2_split2" />
+            <site site="r_gim-p3_split2" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_gim-p4_split2" />
+            <geom geom="r_gastroc_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_gim-p5_split2" />
+            <site site="r_gim-p6_split2" />
+        </spatial>
+        <spatial name="r_gm_split1">
+            <site site="r_gm-p1_split1" />
+            <site site="r_gm-p2_split1" />
+            <site site="r_gm-p3_split1" />
+            <geom geom="r_gastroc_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_gm-p4_split1" />
+            <site site="r_gm-p5_split1" />
+        </spatial>
+        <spatial name="r_gm_split2">
+            <site site="r_gm-p1_split2" />
+            <site site="r_gm-p2_split2" />
+            <site site="r_gm-p3_split2" />
+            <geom geom="r_gastroc_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_gm-p4_split2" />
+            <site site="r_gm-p5_split2" />
+        </spatial>
+        <spatial name="r_edl_split1">
+            <site site="r_edl-p1_split1" />
+            <site site="r_edl-p2_split1" />
+            <site site="r_edl-p3_split1" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_edl-p4_split1" />
+            <site site="r_edl-p5_split1" />
+            <site site="r_edl-p6_split1" />
+            <site site="r_edl-p7_split1" />
+            <geom geom="r_edl_toes" sidesite="r_edl_toes" />
+            <site site="r_edl-p8_split1" />
+            <site site="r_edl-p9_split1" />
+            <site site="r_edl-p10_split1" />
+            <site site="r_edl-p11_split1" />
+        </spatial>
+        <spatial name="r_edl_split2">
+            <site site="r_edl-p1_split2" />
+            <site site="r_edl-p2_split2" />
+            <site site="r_edl-p3_split2" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_edl-p4_split2" />
+            <site site="r_edl-p5_split2" />
+            <site site="r_edl-p6_split2" />
+            <site site="r_edl-p7_split2" />
+            <geom geom="r_edl_toes" sidesite="r_edl_toes" />
+            <site site="r_edl-p8_split2" />
+            <site site="r_edl-p9_split2" />
+            <site site="r_edl-p10_split2" />
+            <site site="r_edl-p11_split2" />
+        </spatial>
+        <spatial name="r_tcf_split1">
+            <site site="r_tcf-p1_split1" />
+            <site site="r_tcf-p2_split1" />
+            <site site="r_tcf-p3_split1" />
+            <site site="r_tcf-p4_split1" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_tcf-p5_split1" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_tcf-p6_split1" />
+        </spatial>
+        <spatial name="r_tcf_split2">
+            <site site="r_tcf-p1_split2" />
+            <site site="r_tcf-p2_split2" />
+            <site site="r_tcf-p3_split2" />
+            <site site="r_tcf-p4_split2" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_tcf-p5_split2" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_tcf-p6_split2" />
+        </spatial>
+        <spatial name="r_tct_split1">
+            <site site="r_tct-p1_split1" />
+            <site site="r_tct-p2_split1" />
+            <site site="r_tct-p3_split1" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_tct-p4_split1" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_tct-p5_split1" />
+        </spatial>
+        <spatial name="r_tct_split2">
+            <site site="r_tct-p1_split2" />
+            <site site="r_tct-p2_split2" />
+            <site site="r_tct-p3_split2" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_tct-p4_split2" />
+            <geom geom="r_edl_tc_ankle" sidesite="r_edl_tc_ankle" />
+            <site site="r_tct-p5_split2" />
+        </spatial>
+        <spatial name="r_fdl_split1">
+            <site site="r_fdl-p1_split1" />
+            <site site="r_fdl-p2_split1" />
+            <site site="r_fdl-p3_split1" />
+            <geom geom="r_fdl_fhl_ankle" sidesite="r_fdl_fhl_ankle" />
+            <site site="r_fdl-p4_split1" />
+            <site site="r_fdl-p5_split1" />
+            <site site="r_fdl-p6_split1" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fdl-p7_split1" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fdl-p8_split1" />
+            <site site="r_fdl-p9_split1" />
+            <site site="r_fdl-p10_split1" />
+            <site site="r_fdl-p11_split1" />
+            <site site="r_fdl-p12_split1" />
+            <site site="r_fdl-p13_split1" />
+        </spatial>
+        <spatial name="r_fdl_split2">
+            <site site="r_fdl-p1_split2" />
+            <site site="r_fdl-p2_split2" />
+            <site site="r_fdl-p3_split2" />
+            <geom geom="r_fdl_fhl_ankle" sidesite="r_fdl_fhl_ankle" />
+            <site site="r_fdl-p4_split2" />
+            <site site="r_fdl-p5_split2" />
+            <site site="r_fdl-p6_split2" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fdl-p7_split2" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fdl-p8_split2" />
+            <site site="r_fdl-p9_split2" />
+            <site site="r_fdl-p10_split2" />
+            <site site="r_fdl-p11_split2" />
+            <site site="r_fdl-p12_split2" />
+            <site site="r_fdl-p13_split2" />
+        </spatial>
+        <spatial name="r_fhl_split1">
+            <site site="r_fhl-p1_split1" />
+            <site site="r_fhl-p2_split1" />
+            <site site="r_fhl-p3_split1" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_fhl-p4_split1" />
+            <site site="r_fhl-p5_split1" />
+            <geom geom="r_fdl_fhl_ankle" sidesite="r_fdl_fhl_ankle" />
+            <site site="r_fhl-p6_split1" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fhl-p7_split1" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fhl-p8_split1" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fhl-p9_split1" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fhl-p10_split1" />
+            <site site="r_fhl-p11_split1" />
+            <site site="r_fhl-p12_split1" />
+            <site site="r_fhl-p13_split1" />
+            <site site="r_fhl-p14_split1" />
+            <site site="r_fhl-p15_split1" />
+        </spatial>
+        <spatial name="r_fhl_split2">
+            <site site="r_fhl-p1_split2" />
+            <site site="r_fhl-p2_split2" />
+            <site site="r_fhl-p3_split2" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_fhl-p4_split2" />
+            <site site="r_fhl-p5_split2" />
+            <geom geom="r_fdl_fhl_ankle" sidesite="r_fdl_fhl_ankle" />
+            <site site="r_fhl-p6_split2" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fhl-p7_split2" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fhl-p8_split2" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fhl-p9_split2" />
+            <geom geom="r_toe_flexors_deep" sidesite="r_toe_flexors_deep" />
+            <site site="r_fhl-p10_split2" />
+            <site site="r_fhl-p11_split2" />
+            <site site="r_fhl-p12_split2" />
+            <site site="r_fhl-p13_split2" />
+            <site site="r_fhl-p14_split2" />
+            <site site="r_fhl-p15_split2" />
+        </spatial>
+        <spatial name="r_fp_pd3_split1">
+            <site site="r_fp_pd3-p1_split1" />
+            <site site="r_fp_pd3-p2_split1" />
+            <site site="r_fp_pd3-p3_split1" />
+            <site site="r_fp_pd3-p4_split1" />
+            <geom geom="r_fps_deep_ankle" sidesite="r_fps_deep_ankle" />
+            <site site="r_fp_pd3-p5_split1" />
+            <site site="r_fp_pd3-p6_split1" />
+            <site site="r_fp_pd3-p7_split1" />
+            <site site="r_fp_pd3-p8_split1" />
+            <geom geom="r_toe_flexors_superficial" sidesite="r_toe_flexors_superficial" />
+            <site site="r_fp_pd3-p9_split1" />
+            <site site="r_fp_pd3-p10_split1" />
+            <site site="r_fp_pd3-p11_split1" />
+            <site site="r_fp_pd3-p12_split1" />
+            <site site="r_fp_pd3-p13_split1" />
+            <site site="r_fp_pd3-p14_split1" />
+        </spatial>
+        <spatial name="r_fp_pd3_split2">
+            <site site="r_fp_pd3-p1_split2" />
+            <site site="r_fp_pd3-p2_split2" />
+            <site site="r_fp_pd3-p3_split2" />
+            <site site="r_fp_pd3-p4_split2" />
+            <geom geom="r_fps_deep_ankle" sidesite="r_fps_deep_ankle" />
+            <site site="r_fp_pd3-p5_split2" />
+            <site site="r_fp_pd3-p6_split2" />
+            <site site="r_fp_pd3-p7_split2" />
+            <site site="r_fp_pd3-p8_split2" />
+            <geom geom="r_toe_flexors_superficial" sidesite="r_toe_flexors_superficial" />
+            <site site="r_fp_pd3-p9_split2" />
+            <site site="r_fp_pd3-p10_split2" />
+            <site site="r_fp_pd3-p11_split2" />
+            <site site="r_fp_pd3-p12_split2" />
+            <site site="r_fp_pd3-p13_split2" />
+            <site site="r_fp_pd3-p14_split2" />
+        </spatial>
+        <spatial name="r_fpd3_split1">
+            <site site="r_fpd3-p1_split1" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_fpd3-p2_split1" />
+            <site site="r_fpd3-p4_split1" />
+            <site site="r_fpd3-p5_split1" />
+            <site site="r_fpd3-p6_split1" />
+            <geom geom="r_fps_deep_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_fpd3-p7_split1" />
+            <site site="r_fpd3-p8_split1" />
+            <site site="r_fpd3-p9_split1" />
+            <site site="r_fpd3-p10_split1" />
+            <site site="r_fpd3-p11_split1" />
+            <geom geom="r_toe_flexors_superficial" sidesite="r_toe_flexors_superficial" />
+            <site site="r_fpd3-p12_split1" />
+            <site site="r_fpd3-p13_split1" />
+            <site site="r_fpd3-p14_split1" />
+            <site site="r_fpd3-p15_split1" />
+        </spatial>
+        <spatial name="r_fpd3_split2">
+            <site site="r_fpd3-p1_split2" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_fpd3-p2_split2" />
+            <site site="r_fpd3-p4_split2" />
+            <site site="r_fpd3-p5_split2" />
+            <site site="r_fpd3-p6_split2" />
+            <geom geom="r_fps_deep_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_fpd3-p7_split2" />
+            <site site="r_fpd3-p8_split2" />
+            <site site="r_fpd3-p9_split2" />
+            <site site="r_fpd3-p10_split2" />
+            <site site="r_fpd3-p11_split2" />
+            <geom geom="r_toe_flexors_superficial" sidesite="r_toe_flexors_superficial" />
+            <site site="r_fpd3-p12_split2" />
+            <site site="r_fpd3-p13_split2" />
+            <site site="r_fpd3-p14_split2" />
+            <site site="r_fpd3-p15_split2" />
+        </spatial>
+        <spatial name="r_fpd4_split1">
+            <site site="r_fpd4-p1_split1" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_fpd4-p2_split1" />
+            <site site="r_fpd4-p3_split1" />
+            <site site="r_fpd4-p4_split1" />
+            <site site="r_fpd4-p5_split1" />
+            <site site="r_fpd4-p6_split1" />
+            <geom geom="r_fps_deep_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_fpd4-p7_split1" />
+            <site site="r_fpd4-p8_split1" />
+            <site site="r_fpd4-p9_split1" />
+            <site site="r_fpd4-p10_split1" />
+            <geom geom="r_fpd4_toe" sidesite="r_fpd4_toe" />
+            <site site="r_fpd4-p12_split1" />
+            <site site="r_fpd4-p13_split1" />
+            <site site="r_fpd4-p14_split1" />
+            <site site="r_fpd4-p15_split1" />
+        </spatial>
+        <spatial name="r_fpd4_split2">
+            <site site="r_fpd4-p1_split2" />
+            <geom geom="r_deep_knee_flexors" />
+            <site site="r_fpd4-p2_split2" />
+            <site site="r_fpd4-p3_split2" />
+            <site site="r_fpd4-p4_split2" />
+            <site site="r_fpd4-p5_split2" />
+            <site site="r_fpd4-p6_split2" />
+            <geom geom="r_fps_deep_ankle" sidesite="r_gastroc_ankle" />
+            <site site="r_fpd4-p7_split2" />
+            <site site="r_fpd4-p8_split2" />
+            <site site="r_fpd4-p9_split2" />
+            <site site="r_fpd4-p10_split2" />
+            <geom geom="r_fpd4_toe" sidesite="r_fpd4_toe" />
+            <site site="r_fpd4-p12_split2" />
+            <site site="r_fpd4-p13_split2" />
+            <site site="r_fpd4-p14_split2" />
+            <site site="r_fpd4-p15_split2" />
+        </spatial>
+        <spatial name="r_fl_split1">
+            <site site="r_fl-p1_split1" />
+            <site site="r_fl-p2_split1" />
+            <site site="r_fl-p3_split1" />
+            <site site="r_fl-p4_split1" />
+            <site site="r_fl-p5_split1" />
+            <site site="r_fl-p6_split1" />
+            <site site="r_fl-p7_split1" />
+            <site site="r_fl-p8_split1" />
+            <site site="r_fl-p9_split1" />
+            <site site="r_fl-p10_split1" />
+            <geom geom="r_toe_flexors_superficial" sidesite="r_toe_flexors_superficial" />
+            <site site="r_fl-p12_split1" />
+            <site site="r_fl-p13_split1" />
+            <site site="r_fl-p14_split1" />
+            <site site="r_fl-p15_split1" />
+        </spatial>
+        <spatial name="r_fl_split2">
+            <site site="r_fl-p1_split2" />
+            <site site="r_fl-p2_split2" />
+            <site site="r_fl-p3_split2" />
+            <site site="r_fl-p4_split2" />
+            <site site="r_fl-p5_split2" />
+            <site site="r_fl-p6_split2" />
+            <site site="r_fl-p7_split2" />
+            <site site="r_fl-p8_split2" />
+            <site site="r_fl-p9_split2" />
+            <site site="r_fl-p10_split2" />
+            <geom geom="r_toe_flexors_superficial" sidesite="r_toe_flexors_superficial" />
+            <site site="r_fl-p12_split2" />
+            <site site="r_fl-p13_split2" />
+            <site site="r_fl-p14_split2" />
+            <site site="r_fl-p15_split2" />
+        </spatial>
+        <spatial name="l_ic_split1">
+            <site site="l_ic-p1_split1" />
+            <site site="l_ic-p2_split1" />
+            <geom geom="l_ic_knee" sidesite="l_ic_knee" />
+            <site site="l_ic-p3_split1" />
+        </spatial>
+        <spatial name="l_ic_split2">
+            <site site="l_ic-p1_split2" />
+            <site site="l_ic-p2_split2" />
+            <geom geom="l_ic_knee" sidesite="l_ic_knee" />
+            <site site="l_ic-p3_split2" />
+        </spatial>
+        <spatial name="l_ila_split1">
+            <site site="l_ila-p1_split1" />
+            <geom geom="l_il_hip" sidesite="l_il_hip" />
+            <site site="l_ila-p2_split1" />
+            <site site="l_ila-p3_split1" />
+            <site site="l_ila-p4_split1" />
+        </spatial>
+        <spatial name="l_ila_split2">
+            <site site="l_ila-p1_split2" />
+            <geom geom="l_il_hip" sidesite="l_il_hip" />
+            <site site="l_ila-p2_split2" />
+            <site site="l_ila-p3_split2" />
+            <site site="l_ila-p4_split2" />
+        </spatial>
+        <spatial name="l_ilp_split1">
+            <site site="l_ilp-p1_split1" />
+            <geom geom="l_il_hip" sidesite="l_il_hip" />
+            <site site="l_ilp-p2_split1" />
+            <site site="l_ilp-p3_split1" />
+            <site site="l_ilp-p4_split1" />
+        </spatial>
+        <spatial name="l_ilp_split2">
+            <site site="l_ilp-p1_split2" />
+            <geom geom="l_il_hip" sidesite="l_il_hip" />
+            <site site="l_ilp-p2_split2" />
+            <site site="l_ilp-p3_split2" />
+            <site site="l_ilp-p4_split2" />
+        </spatial>
+        <spatial name="l_fmtl_split1">
+            <site site="l_fmtl-p1_split1" />
+            <site site="l_fmtl-p2_split1" />
+            <geom geom="l_fmtim_fmtl_knee" sidesite="l_fmtim_fmtl_knee" />
+            <site site="l_fmtl-p3_split1" />
+        </spatial>
+        <spatial name="l_fmtl_split2">
+            <site site="l_fmtl-p1_split2" />
+            <site site="l_fmtl-p2_split2" />
+            <geom geom="l_fmtim_fmtl_knee" sidesite="l_fmtim_fmtl_knee" />
+            <site site="l_fmtl-p3_split2" />
+        </spatial>
+        <spatial name="l_fmtim_split1">
+            <site site="l_fmtim-p1_split1" />
+            <site site="l_fmtim-p2_split1" />
+            <geom geom="l_fmtim_fmtl_knee" sidesite="l_fmtim_fmtl_knee" />
+            <site site="l_fmtim-p3_split1" />
+        </spatial>
+        <spatial name="l_fmtim_split2">
+            <site site="l_fmtim-p1_split2" />
+            <site site="l_fmtim-p2_split2" />
+            <geom geom="l_fmtim_fmtl_knee" sidesite="l_fmtim_fmtl_knee" />
+            <site site="l_fmtim-p3_split2" />
+        </spatial>
+        <spatial name="l_amb1_split1">
+            <site site="l_amb1-p1_split1" />
+            <site site="l_amb1-p2_split1" />
+            <site site="l_amb1-p3_split1" />
+        </spatial>
+        <spatial name="l_amb1_split2">
+            <site site="l_amb1-p1_split2" />
+            <site site="l_amb1-p2_split2" />
+            <site site="l_amb1-p3_split2" />
+        </spatial>
+        <spatial name="l_amb2_split1">
+            <site site="l_amb2-p1_split1" />
+            <site site="l_amb2-p2_split1" />
+            <site site="l_amb2-p3_split1" />
+            <geom geom="l_ambd_knee" sidesite="l_ambd_knee" />
+            <site site="l_amb2-p4_split1" />
+            <site site="l_amb2-p5_split1" />
+        </spatial>
+        <spatial name="l_amb2_split2">
+            <site site="l_amb2-p1_split2" />
+            <site site="l_amb2-p2_split2" />
+            <site site="l_amb2-p3_split2" />
+            <geom geom="l_ambd_knee" sidesite="l_ambd_knee" />
+            <site site="l_amb2-p4_split2" />
+            <site site="l_amb2-p5_split2" />
+        </spatial>
+        <spatial name="l_ilfba_split1">
+            <site site="l_ilfba-p1_split1" />
+            <geom geom="l_ilfb_hip" sidesite="l_ilfb_hip" />
+            <site site="l_ilfba-p2_split1" />
+            <geom geom="l_ilfb_hip" sidesite="l_ilfb_hip" />
+            <site site="l_ilfba-p3_split1" />
+        </spatial>
+        <spatial name="l_ilfba_split2">
+            <site site="l_ilfba-p1_split2" />
+            <geom geom="l_ilfb_hip" sidesite="l_ilfb_hip" />
+            <site site="l_ilfba-p2_split2" />
+            <geom geom="l_ilfb_hip" sidesite="l_ilfb_hip" />
+            <site site="l_ilfba-p3_split2" />
+        </spatial>
+        <spatial name="l_ilfbp_split1">
+            <site site="l_ilfbp-p1_split1" />
+            <geom geom="l_ilfb_hip" sidesite="l_ilfb_hip" />
+            <site site="l_ilfbp-p2_split1" />
+            <geom geom="l_ilfb_hip" sidesite="l_ilfb_hip" />
+            <site site="l_ilfbp-p3_split1" />
+        </spatial>
+        <spatial name="l_ilfbp_split2">
+            <site site="l_ilfbp-p1_split2" />
+            <geom geom="l_ilfb_hip" sidesite="l_ilfb_hip" />
+            <site site="l_ilfbp-p2_split2" />
+            <geom geom="l_ilfb_hip" sidesite="l_ilfb_hip" />
+            <site site="l_ilfbp-p3_split2" />
+        </spatial>
+        <spatial name="l_fclp_split1">
+            <site site="l_fclp-p1_split1" />
+            <site site="l_fclp-p2_split1" />
+            <site site="l_fclp-p3_split1" />
+            <site site="l_fclp-p4_split1" />
+        </spatial>
+        <spatial name="l_fclp_split2">
+            <site site="l_fclp-p1_split2" />
+            <site site="l_fclp-p2_split2" />
+            <site site="l_fclp-p3_split2" />
+            <site site="l_fclp-p4_split2" />
+        </spatial>
+        <spatial name="l_fcm_split1">
+            <site site="l_fcm-p1_split1" />
+            <site site="l_fcm-p4_split1" />
+        </spatial>
+        <spatial name="l_fcm_split2">
+            <site site="l_fcm-p1_split2" />
+            <site site="l_fcm-p4_split2" />
+        </spatial>
+        <spatial name="l_pifml_split1">
+            <site site="l_pifm+l-p1_split1" />
+            <geom geom="l_pifm_l_hip" />
+            <site site="l_pifm+l-p2_split1" />
+        </spatial>
+        <spatial name="l_pifml_split2">
+            <site site="l_pifm+l-p1_split2" />
+            <geom geom="l_pifm_l_hip" />
+            <site site="l_pifm+l-p2_split2" />
+        </spatial>
+        <spatial name="l_cfp_split1">
+            <site site="l_cfp-p1_split1" />
+            <geom geom="l_cfp_hip" sidesite="l_cfp_hip" />
+            <site site="l_cfp-p2_split1" />
+        </spatial>
+        <spatial name="l_cfp_split2">
+            <site site="l_cfp-p1_split2" />
+            <geom geom="l_cfp_hip" sidesite="l_cfp_hip" />
+            <site site="l_cfp-p2_split2" />
+        </spatial>
+        <spatial name="l_gl_split1">
+            <site site="l_gl-p1_split1" />
+            <site site="l_gl-p2_split1" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_gl-p3_split1" />
+            <site site="l_gl-p4_split1" />
+            <site site="l_gl-p5_split1" />
+            <geom geom="l_gastroc_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_gl-p6_split1" />
+            <site site="l_gl-p7_split1" />
+        </spatial>
+        <spatial name="l_gl_split2">
+            <site site="l_gl-p1_split2" />
+            <site site="l_gl-p2_split2" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_gl-p3_split2" />
+            <site site="l_gl-p4_split2" />
+            <site site="l_gl-p5_split2" />
+            <geom geom="l_gastroc_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_gl-p6_split2" />
+            <site site="l_gl-p7_split2" />
+        </spatial>
+        <spatial name="l_gim_split1">
+            <site site="l_gim-p1_split1" />
+            <site site="l_gim-p2_split1" />
+            <site site="l_gim-p3_split1" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_gim-p4_split1" />
+            <geom geom="l_gastroc_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_gim-p5_split1" />
+            <site site="l_gim-p6_split1" />
+        </spatial>
+        <spatial name="l_gim_split2">
+            <site site="l_gim-p1_split2" />
+            <site site="l_gim-p2_split2" />
+            <site site="l_gim-p3_split2" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_gim-p4_split2" />
+            <geom geom="l_gastroc_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_gim-p5_split2" />
+            <site site="l_gim-p6_split2" />
+        </spatial>
+        <spatial name="l_gm_split1">
+            <site site="l_gm-p1_split1" />
+            <site site="l_gm-p2_split1" />
+            <site site="l_gm-p3_split1" />
+            <geom geom="l_gastroc_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_gm-p4_split1" />
+            <site site="l_gm-p5_split1" />
+        </spatial>
+        <spatial name="l_gm_split2">
+            <site site="l_gm-p1_split2" />
+            <site site="l_gm-p2_split2" />
+            <site site="l_gm-p3_split2" />
+            <geom geom="l_gastroc_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_gm-p4_split2" />
+            <site site="l_gm-p5_split2" />
+        </spatial>
+        <spatial name="l_edl_split1">
+            <site site="l_edl-p1_split1" />
+            <site site="l_edl-p2_split1" />
+            <site site="l_edl-p3_split1" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_edl-p4_split1" />
+            <site site="l_edl-p5_split1" />
+            <site site="l_edl-p6_split1" />
+            <site site="l_edl-p7_split1" />
+            <geom geom="l_edl_toes" sidesite="l_edl_toes" />
+            <site site="l_edl-p8_split1" />
+            <site site="l_edl-p9_split1" />
+            <site site="l_edl-p10_split1" />
+            <site site="l_edl-p11_split1" />
+        </spatial>
+        <spatial name="l_edl_split2">
+            <site site="l_edl-p1_split2" />
+            <site site="l_edl-p2_split2" />
+            <site site="l_edl-p3_split2" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_edl-p4_split2" />
+            <site site="l_edl-p5_split2" />
+            <site site="l_edl-p6_split2" />
+            <site site="l_edl-p7_split2" />
+            <geom geom="l_edl_toes" sidesite="l_edl_toes" />
+            <site site="l_edl-p8_split2" />
+            <site site="l_edl-p9_split2" />
+            <site site="l_edl-p10_split2" />
+            <site site="l_edl-p11_split2" />
+        </spatial>
+        <spatial name="l_tcf_split1">
+            <site site="l_tcf-p1_split1" />
+            <site site="l_tcf-p2_split1" />
+            <site site="l_tcf-p3_split1" />
+            <site site="l_tcf-p4_split1" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_tcf-p5_split1" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_tcf-p6_split1" />
+        </spatial>
+        <spatial name="l_tcf_split2">
+            <site site="l_tcf-p1_split2" />
+            <site site="l_tcf-p2_split2" />
+            <site site="l_tcf-p3_split2" />
+            <site site="l_tcf-p4_split2" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_tcf-p5_split2" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_tcf-p6_split2" />
+        </spatial>
+        <spatial name="l_tct_split1">
+            <site site="l_tct-p1_split1" />
+            <site site="l_tct-p2_split1" />
+            <site site="l_tct-p3_split1" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_tct-p4_split1" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_tct-p5_split1" />
+        </spatial>
+        <spatial name="l_tct_split2">
+            <site site="l_tct-p1_split2" />
+            <site site="l_tct-p2_split2" />
+            <site site="l_tct-p3_split2" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_tct-p4_split2" />
+            <geom geom="l_edl_tc_ankle" sidesite="l_edl_tc_ankle" />
+            <site site="l_tct-p5_split2" />
+        </spatial>
+        <spatial name="l_fdl_split1">
+            <site site="l_fdl-p1_split1" />
+            <site site="l_fdl-p2_split1" />
+            <site site="l_fdl-p3_split1" />
+            <geom geom="l_fdl_fhl_ankle" sidesite="l_fdl_fhl_ankle" />
+            <site site="l_fdl-p4_split1" />
+            <site site="l_fdl-p5_split1" />
+            <site site="l_fdl-p6_split1" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fdl-p7_split1" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fdl-p8_split1" />
+            <site site="l_fdl-p9_split1" />
+            <site site="l_fdl-p10_split1" />
+            <site site="l_fdl-p11_split1" />
+            <site site="l_fdl-p12_split1" />
+            <site site="l_fdl-p13_split1" />
+        </spatial>
+        <spatial name="l_fdl_split2">
+            <site site="l_fdl-p1_split2" />
+            <site site="l_fdl-p2_split2" />
+            <site site="l_fdl-p3_split2" />
+            <geom geom="l_fdl_fhl_ankle" sidesite="l_fdl_fhl_ankle" />
+            <site site="l_fdl-p4_split2" />
+            <site site="l_fdl-p5_split2" />
+            <site site="l_fdl-p6_split2" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fdl-p7_split2" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fdl-p8_split2" />
+            <site site="l_fdl-p9_split2" />
+            <site site="l_fdl-p10_split2" />
+            <site site="l_fdl-p11_split2" />
+            <site site="l_fdl-p12_split2" />
+            <site site="l_fdl-p13_split2" />
+        </spatial>
+        <spatial name="l_fhl_split1">
+            <site site="l_fhl-p1_split1" />
+            <site site="l_fhl-p2_split1" />
+            <site site="l_fhl-p3_split1" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_fhl-p4_split1" />
+            <site site="l_fhl-p5_split1" />
+            <geom geom="l_fdl_fhl_ankle" sidesite="l_fdl_fhl_ankle" />
+            <site site="l_fhl-p6_split1" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fhl-p7_split1" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fhl-p8_split1" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fhl-p9_split1" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fhl-p10_split1" />
+            <site site="l_fhl-p11_split1" />
+            <site site="l_fhl-p12_split1" />
+            <site site="l_fhl-p13_split1" />
+            <site site="l_fhl-p14_split1" />
+            <site site="l_fhl-p15_split1" />
+        </spatial>
+        <spatial name="l_fhl_split2">
+            <site site="l_fhl-p1_split2" />
+            <site site="l_fhl-p2_split2" />
+            <site site="l_fhl-p3_split2" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_fhl-p4_split2" />
+            <site site="l_fhl-p5_split2" />
+            <geom geom="l_fdl_fhl_ankle" sidesite="l_fdl_fhl_ankle" />
+            <site site="l_fhl-p6_split2" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fhl-p7_split2" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fhl-p8_split2" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fhl-p9_split2" />
+            <geom geom="l_toe_flexors_deep" sidesite="l_toe_flexors_deep" />
+            <site site="l_fhl-p10_split2" />
+            <site site="l_fhl-p11_split2" />
+            <site site="l_fhl-p12_split2" />
+            <site site="l_fhl-p13_split2" />
+            <site site="l_fhl-p14_split2" />
+            <site site="l_fhl-p15_split2" />
+        </spatial>
+        <spatial name="l_fp_pd3_split1">
+            <site site="l_fp_pd3-p1_split1" />
+            <site site="l_fp_pd3-p2_split1" />
+            <site site="l_fp_pd3-p3_split1" />
+            <site site="l_fp_pd3-p4_split1" />
+            <geom geom="l_fps_deep_ankle" sidesite="l_fps_deep_ankle" />
+            <site site="l_fp_pd3-p5_split1" />
+            <site site="l_fp_pd3-p6_split1" />
+            <site site="l_fp_pd3-p7_split1" />
+            <site site="l_fp_pd3-p8_split1" />
+            <geom geom="l_toe_flexors_superficial" sidesite="l_toe_flexors_superficial" />
+            <site site="l_fp_pd3-p9_split1" />
+            <site site="l_fp_pd3-p10_split1" />
+            <site site="l_fp_pd3-p11_split1" />
+            <site site="l_fp_pd3-p12_split1" />
+            <site site="l_fp_pd3-p13_split1" />
+            <site site="l_fp_pd3-p14_split1" />
+        </spatial>
+        <spatial name="l_fp_pd3_split2">
+            <site site="l_fp_pd3-p1_split2" />
+            <site site="l_fp_pd3-p2_split2" />
+            <site site="l_fp_pd3-p3_split2" />
+            <site site="l_fp_pd3-p4_split2" />
+            <geom geom="l_fps_deep_ankle" sidesite="l_fps_deep_ankle" />
+            <site site="l_fp_pd3-p5_split2" />
+            <site site="l_fp_pd3-p6_split2" />
+            <site site="l_fp_pd3-p7_split2" />
+            <site site="l_fp_pd3-p8_split2" />
+            <geom geom="l_toe_flexors_superficial" sidesite="l_toe_flexors_superficial" />
+            <site site="l_fp_pd3-p9_split2" />
+            <site site="l_fp_pd3-p10_split2" />
+            <site site="l_fp_pd3-p11_split2" />
+            <site site="l_fp_pd3-p12_split2" />
+            <site site="l_fp_pd3-p13_split2" />
+            <site site="l_fp_pd3-p14_split2" />
+        </spatial>
+        <spatial name="l_fpd3_split1">
+            <site site="l_fpd3-p1_split1" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_fpd3-p2_split1" />
+            <site site="l_fpd3-p4_split1" />
+            <site site="l_fpd3-p5_split1" />
+            <site site="l_fpd3-p6_split1" />
+            <geom geom="l_fps_deep_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_fpd3-p7_split1" />
+            <site site="l_fpd3-p8_split1" />
+            <site site="l_fpd3-p9_split1" />
+            <site site="l_fpd3-p10_split1" />
+            <site site="l_fpd3-p11_split1" />
+            <geom geom="l_toe_flexors_superficial" sidesite="l_toe_flexors_superficial" />
+            <site site="l_fpd3-p12_split1" />
+            <site site="l_fpd3-p13_split1" />
+            <site site="l_fpd3-p14_split1" />
+            <site site="l_fpd3-p15_split1" />
+        </spatial>
+        <spatial name="l_fpd3_split2">
+            <site site="l_fpd3-p1_split2" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_fpd3-p2_split2" />
+            <site site="l_fpd3-p4_split2" />
+            <site site="l_fpd3-p5_split2" />
+            <site site="l_fpd3-p6_split2" />
+            <geom geom="l_fps_deep_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_fpd3-p7_split2" />
+            <site site="l_fpd3-p8_split2" />
+            <site site="l_fpd3-p9_split2" />
+            <site site="l_fpd3-p10_split2" />
+            <site site="l_fpd3-p11_split2" />
+            <geom geom="l_toe_flexors_superficial" sidesite="l_toe_flexors_superficial" />
+            <site site="l_fpd3-p12_split2" />
+            <site site="l_fpd3-p13_split2" />
+            <site site="l_fpd3-p14_split2" />
+            <site site="l_fpd3-p15_split2" />
+        </spatial>
+        <spatial name="l_fpd4_split1">
+            <site site="l_fpd4-p1_split1" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_fpd4-p2_split1" />
+            <site site="l_fpd4-p3_split1" />
+            <site site="l_fpd4-p4_split1" />
+            <site site="l_fpd4-p5_split1" />
+            <site site="l_fpd4-p6_split1" />
+            <geom geom="l_fps_deep_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_fpd4-p7_split1" />
+            <site site="l_fpd4-p8_split1" />
+            <site site="l_fpd4-p9_split1" />
+            <site site="l_fpd4-p10_split1" />
+            <geom geom="l_fpd4_toe" sidesite="l_fpd4_toe" />
+            <site site="l_fpd4-p12_split1" />
+            <site site="l_fpd4-p13_split1" />
+            <site site="l_fpd4-p14_split1" />
+            <site site="l_fpd4-p15_split1" />
+        </spatial>
+        <spatial name="l_fpd4_split2">
+            <site site="l_fpd4-p1_split2" />
+            <geom geom="l_deep_knee_flexors" />
+            <site site="l_fpd4-p2_split2" />
+            <site site="l_fpd4-p3_split2" />
+            <site site="l_fpd4-p4_split2" />
+            <site site="l_fpd4-p5_split2" />
+            <site site="l_fpd4-p6_split2" />
+            <geom geom="l_fps_deep_ankle" sidesite="l_gastroc_ankle" />
+            <site site="l_fpd4-p7_split2" />
+            <site site="l_fpd4-p8_split2" />
+            <site site="l_fpd4-p9_split2" />
+            <site site="l_fpd4-p10_split2" />
+            <geom geom="l_fpd4_toe" sidesite="l_fpd4_toe" />
+            <site site="l_fpd4-p12_split2" />
+            <site site="l_fpd4-p13_split2" />
+            <site site="l_fpd4-p14_split2" />
+            <site site="l_fpd4-p15_split2" />
+        </spatial>
+        <spatial name="l_fl_split1">
+            <site site="l_fl-p1_split1" />
+            <site site="l_fl-p2_split1" />
+            <site site="l_fl-p3_split1" />
+            <site site="l_fl-p4_split1" />
+            <site site="l_fl-p5_split1" />
+            <site site="l_fl-p6_split1" />
+            <site site="l_fl-p7_split1" />
+            <site site="l_fl-p8_split1" />
+            <site site="l_fl-p9_split1" />
+            <site site="l_fl-p10_split1" />
+            <geom geom="l_toe_flexors_superficial" sidesite="l_toe_flexors_superficial" />
+            <site site="l_fl-p12_split1" />
+            <site site="l_fl-p13_split1" />
+            <site site="l_fl-p14_split1" />
+            <site site="l_fl-p15_split1" />
+        </spatial>
+        <spatial name="l_fl_split2">
+            <site site="l_fl-p1_split2" />
+            <site site="l_fl-p2_split2" />
+            <site site="l_fl-p3_split2" />
+            <site site="l_fl-p4_split2" />
+            <site site="l_fl-p5_split2" />
+            <site site="l_fl-p6_split2" />
+            <site site="l_fl-p7_split2" />
+            <site site="l_fl-p8_split2" />
+            <site site="l_fl-p9_split2" />
+            <site site="l_fl-p10_split2" />
+            <geom geom="l_toe_flexors_superficial" sidesite="l_toe_flexors_superficial" />
+            <site site="l_fl-p12_split2" />
+            <site site="l_fl-p13_split2" />
+            <site site="l_fl-p14_split2" />
+            <site site="l_fl-p15_split2" />
+        </spatial>
+        <spatial name="l_fmtm_split1">
+            <site site="l_fmtm-p1_split1" />
+            <site site="l_fmtm-p2_split1" />
+            <site site="l_fmtm-p3_split1" />
+        </spatial>
+        <spatial name="l_fmtm_split2">
+            <site site="l_fmtm-p1_split2" />
+            <site site="l_fmtm-p2_split2" />
+            <site site="l_fmtm-p3_split2" />
+        </spatial>
+        <spatial name="l_om_split1">
+            <site site="l_om-p1_split1" />
+            <site site="l_om-p2_split1" />
+            <site site="l_om-p3_split1" />
+            <site site="l_om-p4_split1" />
+            <site site="l_om-p5_split1" />
+        </spatial>
+        <spatial name="l_om_split2">
+            <site site="l_om-p1_split2" />
+            <site site="l_om-p2_split2" />
+            <site site="l_om-p3_split2" />
+            <site site="l_om-p4_split2" />
+            <site site="l_om-p5_split2" />
+        </spatial>
+        <spatial name="l_isf_split1">
+            <site site="l_isf-p1_split1" />
+            <site site="l_isf-p2_split1" />
+            <site site="l_isf-p3_split1" />
+        </spatial>
+        <spatial name="l_isf_split2">
+            <site site="l_isf-p1_split2" />
+            <site site="l_isf-p2_split2" />
+            <site site="l_isf-p3_split2" />
+        </spatial>
+        <spatial name="l_ife_split1">
+            <site site="l_ife-p1_split1" />
+            <site site="l_ife-p2_split1" />
+        </spatial>
+        <spatial name="l_ife_split2">
+            <site site="l_ife-p1_split2" />
+            <site site="l_ife-p2_split2" />
+        </spatial>
+        <spatial name="l_itca_split1">
+            <site site="l_itca-p1_split1" />
+            <site site="l_itca-p2_split1" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itca-p3_split1" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itca-p4_split1" />
+        </spatial>
+        <spatial name="l_itca_split2">
+            <site site="l_itca-p1_split2" />
+            <site site="l_itca-p2_split2" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itca-p3_split2" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itca-p4_split2" />
+        </spatial>
+        <spatial name="l_itcp_split1">
+            <site site="l_itcp-p1_split1" />
+            <site site="l_itcp-p2_split1" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itcp-p3_split1" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itcp-p4_split1" />
+        </spatial>
+        <spatial name="l_itcp_split2">
+            <site site="l_itcp-p1_split2" />
+            <site site="l_itcp-p2_split2" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itcp-p3_split2" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itcp-p4_split2" />
+        </spatial>
+        <spatial name="l_itcr_split1">
+            <site site="l_itcr-p1_split1" />
+            <geom geom="l_itcr_hip" sidesite="l_itcr_hip" />
+            <site site="l_itcr-p2_split1" />
+            <geom geom="l_itcr_femur" />
+            <site site="l_itcr-p3_split1" />
+        </spatial>
+        <spatial name="l_itcr_split2">
+            <site site="l_itcr-p1_split2" />
+            <geom geom="l_itcr_hip" sidesite="l_itcr_hip" />
+            <site site="l_itcr-p2_split2" />
+            <geom geom="l_itcr_femur" />
+            <site site="l_itcr-p3_split2" />
+        </spatial>
+        <spatial name="l_itm_split1">
+            <site site="l_itm-p1_split1" />
+            <site site="l_itm-p2_split1" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itm-p3_split1" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itm-p4_split1" />
+        </spatial>
+        <spatial name="l_itm_split2">
+            <site site="l_itm-p1_split2" />
+            <site site="l_itm-p2_split2" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itm-p3_split2" />
+            <geom geom="l_itc_itm_hip" sidesite="l_itc_itm_hip" />
+            <site site="l_itm-p4_split2" />
+        </spatial>
+        <spatial name="l_ifi_split1">
+            <site site="l_ifi-p1_split1" />
+            <site site="l_ifi-p2_split1" />
+            <site site="l_ifi-p3_split1" />
+        </spatial>
+        <spatial name="l_ifi_split2">
+            <site site="l_ifi-p1_split2" />
+            <site site="l_ifi-p2_split2" />
+            <site site="l_ifi-p3_split2" />
+        </spatial>
+    </tendon>
+</mujoco>

@@ -1,0 +1,53 @@
+# @package _global_
+defaults:
+- /freemusco/imitation/ostrich/multi/base
+- /freemusco/imitation/ostrich/multi/presets/musubi
+- _self_
+env:
+  motion_clip: '0001'
+  motion_loop: false
+  random_init: false
+  motion_clips:
+  - '0001'
+  - '0005'
+  - '0006'
+  - '0010'
+  - '0012'
+  - '0026'
+  - '0029'
+  - '0031'
+  - '0035'
+  - '0047'
+  - '0048'
+  - '0050'
+  - '0053'
+  - '0054'
+  - '0058'
+  - '0061'
+  - '0065'
+  - '0066'
+  - '0067'
+  - '0068'
+  - '0073'
+  - '0075'
+  - '0080'
+  - '0081'
+  - '0082'
+  - '0084'
+  - '0086'
+  - '0090'
+  - '0091'
+  - '0094'
+  - '0097'
+  - '0100'
+  - '0101'
+  - '0102'
+  - '0103'
+trainer:
+  max_iterations: 500
+experiment:
+  directory: freemusco/imitation/ostrich/multi/numbered/musubi
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<mujoco model="Human">
+  <compiler angle="radian" inertiafromgeom="true" meshdir="assets"/>
+  <option timestep="0.00833333333" integrator="implicitfast" cone="pyramidal"/>
+  <default>
+    <default class="joint_default">
+      <joint armature="0.02" type="ball" damping="5"/>
+    </default>
+  </default>
+  <include file="include/body.xml"/>
+  <include file="include/muscles.xml"/>
+</mujoco>

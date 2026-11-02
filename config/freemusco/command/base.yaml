@@ -1,0 +1,63 @@
+# @package _global_
+defaults:
+- /freemusco/base
+- _self_
+task: FreeMusco-OstrichCommand-FastMuscle-v0
+env:
+  motion_loop: true
+  reward:
+    alive: 0.05
+    tracking:
+      type: joint
+      pose:
+        weight: 3.0
+        mode: default
+        include_root: false
+      velocity:
+        weight: 0.02
+        mode: qvel
+        include_root: true
+    com_weight: 10.0
+    end_effector:
+      position_weight: 8.0
+      rotation_weight: 2.0
+      position_root_relative: true
+    combination:
+      type: product
+  loop_boundary_vel_extrapolate: false
+  loop_boundary_vel_from_first_frame: false
+  smooth_cycle: true
+  random_init: true
+  ghost_offset:
+  - 0.0
+  - 1.5
+  - 0.0
+  muscle:
+    force_scale: 1.0
+    length_range:
+    - 0.2
+    - 1.3
+    geometry:
+      backend: waypoint
+  activation_visualization:
+    enabled: true
+  observations:
+    previous_action: null
+    applied_torque: false
+  imitation_reward_threshold: 0.0
+  termination_height: 0.6
+  enable_early_termination: true
+  early_termination_time_threshold: 4
+  command_alive_reward: 0.05
+  command_upright_weight: 0.1
+  command_torso_height_weight: 0.0
+  point_goal_distance_min: 1.0
+  point_goal_distance_max: 5.0
+  point_goal_radius: 0.4
+  point_goal_progress_weight: 1.0
+  point_goal_facing_weight: 0.1
+  point_goal_bonus: 2.0
+  point_goal_stall_penalty_weight: 0.05
+  point_goal_min_progress_for_stall: 0.01
+trainer:
+  max_iterations: 1000

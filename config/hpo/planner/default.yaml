@@ -1,0 +1,21 @@
+# @package _global_
+
+planner:
+  platform: openai
+  model: null
+  reasoning_effort: high
+  sandbox: workspace-write
+  command: null
+  codex_config:
+    model_context_window: null
+    model_auto_compact_token_limit: null
+  host: null
+  auto_start_ollama: true
+  timeout_seconds: 1800.0
+  timeout_retries: 1
+  retry_delay_seconds: 15.0
+  agent: null
+  variant: null
+  output_format: default
+  pure: false
+  skip_permissions: true

@@ -1,0 +1,9 @@
+{
+  "name": "instantmimic-workflows",
+  "version": "0.2.5",
+  "description": "Public repository workflows for InstantMimic experiments.",
+  "skills": "./skills/",
+  "author": {
+    "name": "scripter36"
+  }
+}

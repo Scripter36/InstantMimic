@@ -1,0 +1,80 @@
+# @package _global_
+defaults:
+- _self_
+schema_version: 1
+seed: -1
+task: SNU-Run-v0
+env:
+  use_cuda_graph: true
+  use_parallelized_kernel_launch: true
+  use_optimized_kernel: true
+  sim:
+    mjcf_path: data/snu_humanoid/mjcf/humanoid.xml
+    hz: 120
+    integrator: implicitfast
+    render_interval: 4
+    njmax: 512
+    nconmax: 32
+  joint_coordinate_mjcf_path: data/snu_humanoid/mjcf/humanoid_pd.xml
+  scene:
+    num_envs: 4096
+  viewer:
+    resolution:
+    - 1080
+    - 1080
+  decimation: 4
+  episode_length_s: 10.0
+  terminate_on_nonfinite: true
+  activation_visualization:
+    enabled: true
+  muscle:
+    force_scale: 1.0
+    length_range:
+    - 0.2
+    - 1.3
+    geometry:
+      waypoint_attachment: single_body
+  heading_weight: 0.5
+  up_weight: 0.1
+  energy_cost_scale: 0.005
+  actions_cost_scale: 0.01
+  alive_reward_scale: 2.0
+  dof_vel_scale: 0.1
+  death_cost: -1.0
+  termination_height: 0.8
+  angular_velocity_scale: 0.25
+  log_dir: ''
+  observations:
+    previous_action: action
+    applied_torque: false
+trainer:
+  max_iterations: 1000
+experiment:
+  directory: snu_humanoid/run
+  logger:
+    type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+  name: ''
+  write_interval: 5
+  episode_metrics_interval: 5
+  checkpoint:
+    periodic:
+      interval: 200
+    best:
+      interval: 200
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+runtime:
+  act_cuda_graph: true
+  update_cuda_graph: true
+  compile: true
+  compile_mode: max-autotune-no-cudagraphs
+  mixed_precision: true
+play:
+  num_envs: 1
+  steps: null
+  action:
+    mode: mean
+  video:
+    enabled: false
+    length: 240

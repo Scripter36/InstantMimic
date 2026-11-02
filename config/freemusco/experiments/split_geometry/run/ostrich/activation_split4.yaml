@@ -1,0 +1,20 @@
+# @package _global_
+# Canonical FreeMusco configuration.
+defaults:
+  - /freemusco/run/ostrich/activation
+  - _self_
+
+env:
+  sim:
+    mjcf_path: data/freemusco/animal/ostrich/ostrich_split4.xml
+models:
+  actor:
+    distribution:
+      initial_log_std: -1.8
+      action_transform: none
+experiment:
+  directory: freemusco/experiments/split_geometry/run/ostrich/activation_split4
+  write_interval: 3
+  episode_metrics_interval: 3
+  writer_max_queue: 256
+  writer_flush_secs: 120

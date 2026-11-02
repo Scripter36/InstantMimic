@@ -1,0 +1,15 @@
+# @package _global_
+defaults:
+- backflip_musubi
+- _self_
+env:
+  sim:
+    mjcf_path: data/snu_humanoid/mjcf/snu_humanoid_ball_full_muscle.xml
+    njmax: 384
+    nconmax: 32
+experiment:
+  directory: snu_humanoid/imitation/backflip_musubi_full
+  write_interval: 10
+  episode_metrics_interval: 10
+  writer_max_queue: 256
+  writer_flush_secs: 120
