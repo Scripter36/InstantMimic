@@ -82,19 +82,17 @@ supported. With several clips, each episode starts from one of them.
 | `observations.joint_pose` | Joint rotation encoding: `qpos`, `6d` or `multi_hinge_local_quat` |
 | `observations.joint_velocity` | Joint velocity encoding: `qvel` (the default), `hinge_local_angvel` or `multi_hinge_local_angvel` |
 | `observations.include_root_target` | Add the reference root position and rotation (default `true`) |
-| `observations.future_mode` | How upcoming reference frames are encoded; see below |
+| `observations.future_mode` | How upcoming reference frames are encoded: `phc_v6` (the default) or `none`; see below |
 | `observations.future_frames` | How many upcoming reference frames the policy sees |
-| `observations.future_frame_step` | Spacing between those frames, in motion frames |
+| `observations.future_frame_step` | Spacing between those frames, in motion frames; the first is always the next frame |
 | `observations.previous_action` | `action` adds the previous action to the observation; `null` leaves it out |
 
-The default `future_mode`, `ee_future_root`, gives the position, rotation and
-velocities of each end effector in the upcoming reference frames, relative to
-the reference root of that frame. `phc_v6`, used by the humanoid tasks, follows
-the observation of [PHC](https://arxiv.org/abs/2305.06456) (Luo et al. 2023,
-*Perpetual Humanoid Control*): for each body it gives the difference from the
-reference in position, rotation, linear and angular velocity, plus the
-reference position and rotation, all in the character's heading frame. `none`
-leaves the upcoming frames out.
+`phc_v6` follows the observation of [PHC](https://arxiv.org/abs/2305.06456)
+(Luo et al. 2023, *Perpetual Humanoid Control*). For the root and every reward
+body, it gives the difference from the upcoming reference frame in position,
+rotation, linear and angular velocity, plus the reference position and
+rotation, all in the character's heading frame. `none` leaves the upcoming
+frames out.
 
 ## Resets
 

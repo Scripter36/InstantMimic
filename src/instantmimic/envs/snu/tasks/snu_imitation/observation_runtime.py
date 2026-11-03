@@ -9,18 +9,12 @@ import warp as wp
 
 from instantmimic.envs.config_access import get_block, get_value
 from instantmimic.envs.direct_rl_env import make_stream_aligned_cuda_graph_streams
-from instantmimic.envs.snu.tasks.snu_imitation import motion_reference
 from instantmimic.envs.snu.tasks.snu_imitation.future_observation_kernels import (
     FutureObservationKernelSpec,
     build_loop_cycle_transform_tables,
     future_observation_feature_dim,
-    future_observation_includes_pose,
-    future_observation_is_live,
-    future_observation_uses_cache,
-    future_observation_uses_immediate_next_frame,
-    future_observation_uses_phc_v6_features,
+    future_observation_uses_phc_v6,
     make_future_observation_kernel,
-    precompute_future_observation_block,
     resolve_future_observation_mode,
 )
 from instantmimic.envs.snu.tasks.snu_imitation.warp_utils import (
@@ -59,10 +53,8 @@ from instantmimic.utils.warp_kernels import expose_kernel_name
 class ObservationLayout:
     joint_q_count: int
     joint_v_count: int
-    num_ee: int
     num_future_pose_bodies: int
     num_future_frames: int
-    total_ee: int
     future_observation_mode: str
     joint_pos_ofs: int
     joint_vel_ofs: int
@@ -107,7 +99,6 @@ class ObservationRuntimeState:
     joint_position_count: int = 0
     root_position_xz: torch.Tensor | None = None
     root_yaw_inverse: torch.Tensor | None = None
-    future_precomputed: torch.Tensor | None = None
     loop_cycle_table_size: int = 0
     loop_cycle_transform_quat: torch.Tensor | None = None
     loop_cycle_transform_pos: torch.Tensor | None = None
@@ -148,7 +139,7 @@ def resolve_observation_settings(
         joint_velocity_mode=resolved_joint_velocity_mode,
         future_frames=int(get_value(observations, "future_frames")),
         future_frame_step=int(get_value(observations, "future_frame_step")),
-        future_mode=str(get_value(observations, "future_mode", "ee_future_root")),
+        future_mode=str(get_value(observations, "future_mode", "phc_v6")),
         include_root_target=bool(get_value(observations, "include_root_target", True)),
         include_joint_state=bool(get_value(observations, "include_joint_state", True)),
         body_source=str(get_value(observations, "body_source", "all")).lower(),
@@ -175,7 +166,6 @@ def make_observation_layout(
     nq: int,
     nv: int,
     nu: int,
-    num_ee: int,
     num_future_pose_bodies: int,
     num_future_frames: int,
     future_observation_mode: str,
@@ -198,7 +188,6 @@ def make_observation_layout(
     else:
         joint_q_count = 0
         joint_v_count = 0
-    total_ee = int(num_ee) * int(num_future_frames)
     resolved_future_observation_mode = resolve_future_observation_mode(
         future_observation_mode
     )
@@ -212,7 +201,6 @@ def make_observation_layout(
     future_obs_ofs = body_av_ofs + int(nbody) * 3
     future_obs_dim = future_observation_feature_dim(
         mode=resolved_future_observation_mode,
-        num_ee=int(num_ee),
         num_future_pose_bodies=int(num_future_pose_bodies),
         num_future_frames=int(num_future_frames),
     )
@@ -222,10 +210,8 @@ def make_observation_layout(
     return ObservationLayout(
         joint_q_count=joint_q_count,
         joint_v_count=joint_v_count,
-        num_ee=int(num_ee),
         num_future_pose_bodies=int(num_future_pose_bodies),
         num_future_frames=int(num_future_frames),
-        total_ee=total_ee,
         future_observation_mode=resolved_future_observation_mode,
         joint_pos_ofs=joint_pos_ofs,
         joint_vel_ofs=joint_vel_ofs,
@@ -251,7 +237,6 @@ def make_observation_kernels(
     nbody: int,
     nu: int,
     root_body_idx: int,
-    ee_body_idx: tuple[int, ...],
     future_pose_body_idx: tuple[int, ...],
     future_frame_step: int,
     loop_root_q: tuple[float, float, float, float],
@@ -271,7 +256,6 @@ def make_observation_kernels(
         int(nbody),
         int(nu),
         int(root_body_idx),
-        tuple(int(v) for v in ee_body_idx),
         tuple(int(v) for v in future_pose_body_idx),
         int(future_frame_step),
         tuple(float(v) for v in loop_root_q),
@@ -575,7 +559,6 @@ def make_observation_kernels(
             future_observation_mode=layout.future_observation_mode,
             num_future_frames=int(layout.num_future_frames),
             root_body_idx=int(root_body_idx),
-            ee_body_idx=tuple(int(v) for v in ee_body_idx),
             future_pose_body_idx=tuple(int(v) for v in future_pose_body_idx),
             future_frame_step=int(future_frame_step),
             loop_root_q=tuple(float(v) for v in loop_root_q),
@@ -930,7 +913,6 @@ __all__ = (
     "initialize_loop_cycle_transform_cache",
     "get_future_observation_mode",
     "build_observation_kernels_for_prev_action_dim",
-    "validate_future_observation_shape",
     "launch_future_observation",
     "build_joint_position_observation_indices",
     "configure_obs_joint_velocity_projection",
@@ -1039,31 +1021,21 @@ def initialize_observation_core(self, *, prev_action_dim: int) -> None:
             )
             self.reward_body_idx_tuple = reward_body_idx_tuple
         root_body_idx = int(self.root_body_idx)
-        if future_observation_uses_phc_v6_features(future_observation_mode):
-            if root_body_idx in reward_body_idx_tuple:
-                self.future_pose_body_idx = self.reward_body_idx
-                future_pose_body_idx_tuple = reward_body_idx_tuple
-            else:
-                self.future_pose_body_idx = torch.cat(
-                    (
-                        torch.tensor(
-                            [root_body_idx],
-                            device=self.device,
-                            dtype=self.reward_body_idx.dtype,
-                        ),
-                        self.reward_body_idx,
-                    ),
-                )
-                future_pose_body_idx_tuple = (root_body_idx, *reward_body_idx_tuple)
+        if root_body_idx in reward_body_idx_tuple:
+            self.future_pose_body_idx = self.reward_body_idx
+            future_pose_body_idx_tuple = reward_body_idx_tuple
         else:
-            self.future_pose_body_idx = self.reward_body_idx[
-                self.reward_body_idx != root_body_idx
-            ]
-            future_pose_body_idx_tuple = tuple(
-                body_idx
-                for body_idx in reward_body_idx_tuple
-                if int(body_idx) != root_body_idx
+            self.future_pose_body_idx = torch.cat(
+                (
+                    torch.tensor(
+                        [root_body_idx],
+                        device=self.device,
+                        dtype=self.reward_body_idx.dtype,
+                    ),
+                    self.reward_body_idx,
+                ),
             )
+            future_pose_body_idx_tuple = (root_body_idx, *reward_body_idx_tuple)
         self.future_pose_body_idx_tuple = tuple(
             int(v) for v in future_pose_body_idx_tuple
         )
@@ -1093,7 +1065,7 @@ def initialize_observation_core(self, *, prev_action_dim: int) -> None:
             device=self.device,
             dtype=torch.int32,
         )
-        if future_observation_includes_pose(future_observation_mode) and (
+        if future_observation_uses_phc_v6(future_observation_mode) and (
             self.future_pose_body_idx.numel() == 0
         ):
             raise ValueError(
@@ -1105,7 +1077,6 @@ def initialize_observation_core(self, *, prev_action_dim: int) -> None:
             nq=self.model.nq,
             nv=self.model.nv,
             nu=int(prev_action_dim),
-            num_ee=len(self.ee_body_idx),
             num_future_pose_bodies=len(self.future_pose_body_idx),
             num_future_frames=self.observation_settings.future_frames,
             future_observation_mode=future_observation_mode,
@@ -1122,63 +1093,6 @@ def initialize_observation_core(self, *, prev_action_dim: int) -> None:
         )
     with startup_profiler.phase("loop_cycle_cache"):
         initialize_loop_cycle_transform_cache(
-            self,
-        )
-    with startup_profiler.phase("future_obs_precompute"):
-        self.observation_runtime_state.future_precomputed = (
-            (
-                torch.cat(
-                    [
-                        precompute_future_observation_block(
-                            motion_qpos=self.motion_qpos[
-                                motion_reference.clip_frame_slice(self, clip_idx)
-                            ],
-                            reference_body_state=self.reference_body_state[
-                                motion_reference.clip_frame_slice(self, clip_idx)
-                            ],
-                            ee_body_idx=self.ee_body_idx,
-                            future_pose_body_idx=self.future_pose_body_idx,
-                            num_future_frames=self.observation_settings.future_frames,
-                            future_frame_step=self.observation_settings.future_frame_step,
-                            future_observation_mode=self._observation_layout.future_observation_mode,
-                            loop_root_quat=self.motion_clip_loop_root_quat[clip_idx],
-                            loop_root_pos=self.motion_clip_loop_root_pos[clip_idx],
-                            root_body_idx=(
-                                None
-                                if self.dof_roles.root_is_free
-                                else int(self.root_body_idx)
-                            ),
-                        )
-                        for clip_idx in range(self.motion_clip_count)
-                    ],
-                    dim=0,
-                ).contiguous()
-                if self._multi_motion_enabled
-                else precompute_future_observation_block(
-                    motion_qpos=self.motion_qpos,
-                    reference_body_state=self.reference_body_state,
-                    ee_body_idx=self.ee_body_idx,
-                    future_pose_body_idx=self.future_pose_body_idx,
-                    num_future_frames=self.observation_settings.future_frames,
-                    future_frame_step=self.observation_settings.future_frame_step,
-                    future_observation_mode=self._observation_layout.future_observation_mode,
-                    loop_root_quat=self.loop_root_quat,
-                    loop_root_pos=self.loop_root_pos,
-                    root_body_idx=(
-                        None if self.dof_roles.root_is_free else int(self.root_body_idx)
-                    ),
-                )
-            )
-            if (
-                self._observation_layout.future_obs_dim > 0
-                and future_observation_uses_cache(
-                    self._observation_layout.future_observation_mode
-                )
-            )
-            else None
-        )
-    with startup_profiler.phase("validate_future_obs"):
-        validate_future_observation_shape(
             self,
         )
     startup_profiler.log_summary(prefix="OBSERVATION_CORE_STARTUP_PROFILE")
@@ -1198,19 +1112,17 @@ def initialize_loop_cycle_transform_cache(self) -> None:
     max_cycles = 0
     if (
         self._observation_layout.future_obs_dim > 0
-        and future_observation_is_live(self._observation_layout.future_observation_mode)
+        and future_observation_uses_phc_v6(
+            self._observation_layout.future_observation_mode
+        )
         and int(self.motion_frame_count) > 0
     ):
         num_future_frames = max(0, self.observation_settings.future_frames)
         future_frame_step = self.observation_settings.future_frame_step
         if num_future_frames == 0:
             max_future_offset = 0
-        elif future_observation_uses_immediate_next_frame(
-            self._observation_layout.future_observation_mode
-        ):
-            max_future_offset = 1 + (num_future_frames - 1) * future_frame_step
         else:
-            max_future_offset = num_future_frames * future_frame_step
+            max_future_offset = 1 + (num_future_frames - 1) * future_frame_step
         try:
             max_episode_length = int(self.max_episode_length)
         except (AttributeError, KeyError, TypeError):
@@ -1263,11 +1175,6 @@ def build_observation_kernels_for_prev_action_dim(
         loop_root_t_tuple = tuple(
             float(v) for v in self.loop_root_pos.detach().cpu().tolist()
         )
-    ee_body_idx_tuple = getattr(self, "ee_body_idx_tuple", None)
-    if ee_body_idx_tuple is None:
-        ee_body_idx_tuple = tuple(
-            int(v) for v in self.ee_body_idx_i32.detach().cpu().tolist()
-        )
     future_pose_body_idx_tuple = getattr(self, "future_pose_body_idx_tuple", None)
     if future_pose_body_idx_tuple is None:
         future_pose_body_idx_tuple = tuple(
@@ -1279,7 +1186,6 @@ def build_observation_kernels_for_prev_action_dim(
         nbody=self.model.nbody,
         nu=int(prev_action_dim),
         root_body_idx=int(self.root_body_idx),
-        ee_body_idx=ee_body_idx_tuple,
         future_pose_body_idx=future_pose_body_idx_tuple,
         future_frame_step=self.observation_settings.future_frame_step,
         loop_root_q=loop_root_q_tuple,
@@ -1293,58 +1199,14 @@ def build_observation_kernels_for_prev_action_dim(
     )
 
 
-def validate_future_observation_shape(self):
-    if self.observation_runtime_state.future_precomputed is None:
-        return
-
-    expected_future_obs_width = self._observation_layout.future_obs_dim
-    if self.observation_runtime_state.future_precomputed.shape != (
-        self.motion_frame_count,
-        expected_future_obs_width,
-    ):
-        raise ValueError(
-            "future observation precompute shape mismatch: "
-            f"expected ({self.motion_frame_count}, {expected_future_obs_width}), "
-            f"got {tuple(self.observation_runtime_state.future_precomputed.shape)}"
-        )
-
-
 def launch_future_observation(self, target: torch.Tensor) -> None:
     if self.observation_runtime_state.kernels.future_obs is None:
         return
-    if future_observation_uses_cache(self._observation_layout.future_observation_mode):
-        assert self.observation_runtime_state.future_precomputed is not None
-        if self._multi_motion_enabled:
-            wp.launch(
-                self.observation_runtime_state.kernels.future_obs,
-                dim=(self.num_envs, self._observation_layout.future_obs_dim),
-                inputs=[
-                    self.observation_runtime_state.future_precomputed,
-                    self.motion_clip_idx,
-                    self.ref_frame_idx,
-                    self.motion_clip_start,
-                    self.motion_clip_length,
-                ],
-                outputs=[target],
-            )
-        else:
-            wp.launch(
-                self.observation_runtime_state.kernels.future_obs,
-                dim=(self.num_envs, self._observation_layout.future_obs_dim),
-                inputs=[
-                    self.observation_runtime_state.future_precomputed,
-                    self.ref_frame_idx,
-                ],
-                outputs=[target],
-            )
-        return
-
     if self._multi_motion_enabled:
         wp.launch(
             self.observation_runtime_state.kernels.future_obs,
             dim=(self.num_envs,),
             inputs=[
-                self.motion_qpos,
                 self.reference_body_state,
                 self.motion_clip_idx,
                 self.ref_frame_idx,
@@ -1355,35 +1217,20 @@ def launch_future_observation(self, target: torch.Tensor) -> None:
                 self.mjw_data.xpos,
                 self.mjw_data.xquat,
                 self.mjw_data.cvel,
-                self.observation_runtime_state.root_position_xz,
                 self.observation_runtime_state.root_yaw_inverse,
             ],
             outputs=[target],
         )
     else:
-        future_obs_dim = (self.num_envs,)
-        future_obs_inputs = [
-            self.motion_qpos,
-            self.reference_body_state,
-            self.ref_frame_idx,
-            self.observation_runtime_state.loop_cycle_transform_quat,
-            self.observation_runtime_state.loop_cycle_transform_pos,
-            self.mjw_data.xpos,
-            self.mjw_data.xquat,
-            self.mjw_data.cvel,
-            self.observation_runtime_state.root_position_xz,
-            self.observation_runtime_state.root_yaw_inverse,
-        ]
-        if future_observation_uses_phc_v6_features(
-            self._observation_layout.future_observation_mode
-        ):
-            future_obs_dim = (
+        layout = self._observation_layout
+        wp.launch(
+            self.observation_runtime_state.kernels.future_obs,
+            dim=(
                 self.num_envs,
-                int(self._observation_layout.num_future_frames),
-                int(self._observation_layout.num_future_pose_bodies),
-            )
-            future_obs_inputs = [
-                self.motion_qpos,
+                int(layout.num_future_frames),
+                int(layout.num_future_pose_bodies),
+            ),
+            inputs=[
                 self.reference_body_state,
                 self.ref_frame_idx,
                 self.future_pose_body_idx_i32,
@@ -1392,12 +1239,7 @@ def launch_future_observation(self, target: torch.Tensor) -> None:
                 self.mjw_data.xpos,
                 self.mjw_data.xquat,
                 self.mjw_data.cvel,
-                self.observation_runtime_state.root_position_xz,
                 self.observation_runtime_state.root_yaw_inverse,
-            ]
-        wp.launch(
-            self.observation_runtime_state.kernels.future_obs,
-            dim=future_obs_dim,
-            inputs=future_obs_inputs,
+            ],
             outputs=[target],
         )
