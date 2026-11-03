@@ -1,0 +1,5 @@
+/* Pygments marks YAML flow-sequence items such as [384, 384, 192] as
+   variables; colour them like the block-style values next to them. */
+.language-yaml.highlight .nv {
+  color: var(--md-code-hl-string-color);
+}
