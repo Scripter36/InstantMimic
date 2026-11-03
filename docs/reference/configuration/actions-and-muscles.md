@@ -8,14 +8,14 @@
 | `env.action.type` | The policy outputs | Used by |
 | --- | --- | --- |
 | `ctrl` | Controls for the model's MuJoCo actuators, such as PD targets | Humanoid PD imitation |
+| `musubi` | Not included in this release (see [MUSUBI](../../guides/muscle-control.md#musubi)) | Muscle-actuated tasks |
 | `mujoco_activation` | Activations for the model's MuJoCo muscle actuators | No included config |
 | `activation` | One excitation per muscle, clamped to $[0, 1]$ | Activation-output baselines |
 | `torque` | Joint torques | Direct-torque baselines |
 | `mass` | A pose or torque target that MuscleNN turns into muscle activations | [MASS](../../guides/muscle-control.md#mass-baseline) |
 
 `env.action.space` is the action size, which depends on the model. The
-[MUSUBI](../../guides/muscle-control.md#musubi) configs use action types that
-are not part of this release, so they can be inspected but not trained.
+MUSUBI configs can be inspected but not trained in this release.
 
 An action type comes with matching observation, model and agent settings, so
 switch between them by choosing another task config or by adding a preset to a
@@ -41,7 +41,7 @@ to the reference instead of the full command.
 `scale` maps the policy output to torques. A number scales every joint
 equally, a list gives one scale per joint, and `auto` uses the torque range the muscles can produce in the rest pose.
 `bounds.env_clip: true` clips the torque to what the muscles can produce in the
-current pose (the muscle-bounded baseline); `false` leaves it unconstrained.
+current pose (the muscle-bounded baseline), and `false` leaves it unconstrained.
 
 ### `mass`
 
@@ -74,7 +74,7 @@ current pose (the muscle-bounded baseline); `false` leaves it unconstrained.
 | `force_scale` | Multiplier on all muscle forces |
 | `length_range` | Range of normalized muscle length used for the force-length curves and observations |
 | `active_force` | Active force-length curve: `type: gaussian` (with `gamma`, `lmin`, `lmax`) or `type: mujoco` |
-| `passive_force` | Passive force-length curve: `type: exponential` (with `k_pe`, `e_mo`, `lmax`, `fpmax`) or `type: mujoco`; `env: true` applies it in the simulation |
+| `passive_force` | Passive force-length curve: `type: exponential` (with `k_pe`, `e_mo`, `lmax`, `fpmax`) or `type: mujoco`. `env: true` applies it in the simulation |
 | `force_velocity` | Force-velocity relation: `enabled`, `vmax`, `fvmax`, and `implicit` to integrate its damping implicitly |
 | `metadata_path` | Optional file with extra muscle metadata |
 
@@ -84,5 +84,5 @@ See [Muscle simulation and control](../../guides/muscle-control.md#simulation-de
 To print a task's full muscle settings:
 
 ```bash
-uv run train --config-name snu_humanoid/imitation/mass/walk_mass --cfg job --resolve
+uv run train --config-name snu_humanoid/imitation/walk_musubi --cfg job --resolve
 ```

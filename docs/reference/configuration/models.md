@@ -31,7 +31,7 @@ models:
 
 With `shared: true`, the value function is a separate output head on the
 actor's network. With `shared: false`, define `models.critic` with its own
-`architecture` and `layers`; its `activation` and `normalization` must match the
+`architecture` and `layers`. Its `activation` and `normalization` must match the
 actor's.
 
 ## Action distribution

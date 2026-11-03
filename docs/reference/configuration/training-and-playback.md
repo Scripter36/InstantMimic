@@ -47,7 +47,7 @@ environments, using the policy's mean action.
 | `termination.type` | `inherit` the training termination, `disabled`, or `phc_tracking` with a `distance` |
 | `objective` | The metric that defines the best policy, and whether to `maximize` or `minimize` it |
 | `thresholds` | Pass criteria such as `success_rate`, `ape_mean` or `consecutive_passes`, used to stop training early |
-| `execution` | `inline` pauses training to evaluate; `overlap` evaluates while training continues |
+| `execution` | `inline` pauses training to evaluate, and `overlap` evaluates while training continues |
 | `save_history` | Append every result to a history file in the run directory |
 
 Benchmark time is not counted as active training time.
@@ -61,7 +61,7 @@ clip for where the policy fails. A run uses one of the two.
 | --- | --- |
 | `trainer.max_iterations` | Number of training iterations |
 | `trainer.stopping` | Stop early: `type: benchmark` when the benchmark thresholds pass, `reward` or `episode_length` when the training average reaches `threshold`, or `time_budget` after `timeout_seconds` of active training (with `warmup_iterations: 0`) |
-| `trainer.initialization` | Start from a checkpoint: `type: resume` continues a run, `type: policy_init` starts a new run from a policy's weights; `checkpoint` is its path |
+| `trainer.initialization` | Start from a checkpoint: `type: resume` continues a run, `type: policy_init` starts a new run from a policy's weights. `checkpoint` is its path |
 | `trainer.recording.periodic` | Record a video every `interval` iterations, `length` steps long |
 | `trainer.post_training_playback` | Run playback, optionally with `video`, when training ends |
 
@@ -70,9 +70,9 @@ clip for where the policy fails. A run uses one of the two.
 | Key | Meaning |
 | --- | --- |
 | `experiment.directory` | Runs are written to `logs/ppo/<directory>/<start time>_ppo_custom_<name>/` |
-| `experiment.name` | Optional run name; defaults to the config name |
+| `experiment.name` | Optional run name, by default the config name |
 | `experiment.group` | Group name passed to W&B and MLflow |
-| `experiment.logger` | `type: tensorboard`, `wandb` or `mlflow`, with backend settings; see [experiment logging](../../getting-started/installation.md#experiment-logging) |
+| `experiment.logger` | `type: tensorboard`, `wandb` or `mlflow`, with backend settings (see [experiment logging](../../getting-started/installation.md#experiment-logging)) |
 | `experiment.write_interval` | Log training metrics every this many iterations |
 | `experiment.episode_metrics_interval` | Log episode statistics every this many iterations |
 | `experiment.checkpoint.periodic.interval` | Save a full checkpoint every this many iterations |
@@ -84,9 +84,9 @@ clip for where the policy fails. A run uses one of the two.
 | Key | Meaning |
 | --- | --- |
 | `compile`, `compile_mode` | Use `torch.compile` for the policy and the update, and its mode (default `max-autotune-no-cudagraphs`) |
-| `compile_update_fullgraph` | Compile the whole PPO update as one graph; needs `compile` and `update_cuda_graph` |
-| `act_cuda_graph`, `update_cuda_graph`, `shuffle_cuda_graph` | Capture action sampling, the PPO update and minibatch shuffling as CUDA graphs; `shuffle_cuda_graph` needs `update_cuda_graph` and an `agent.shuffle_mode` other than `off` |
-| `precision`, `loss_scale` | Policy network precision; see below |
+| `compile_update_fullgraph` | Compile the whole PPO update as one graph. Needs `compile` and `update_cuda_graph` |
+| `act_cuda_graph`, `update_cuda_graph`, `shuffle_cuda_graph` | Capture action sampling, the PPO update and minibatch shuffling as CUDA graphs. `shuffle_cuda_graph` needs `update_cuda_graph` and an `agent.shuffle_mode` other than `off` |
+| `precision`, `loss_scale` | Policy network precision (see below) |
 | `fail_on_nonfinite_update` | Stop if an update produces non-finite values |
 
 `compile_mode: reduce-overhead` and `max-autotune` let PyTorch capture its own
@@ -104,7 +104,7 @@ FP32. With `float16`, the loss is scaled dynamically on the GPU:
 step with non-finite gradients is skipped and halves the scale, and after 2,000
 finite steps the scale doubles again. Checkpoints save the scaler state, and
 CUDA graphs and compilation work at every precision. The included configs use
-`float32`; to train one in half precision:
+`float32`. To train one in half precision:
 
 ```bash
 uv run train --config-name humanoid/imitation/walk_pd \
@@ -119,13 +119,13 @@ affect playback:
 | Key | Meaning |
 | --- | --- |
 | `play.checkpoint` | The checkpoint to load (add it with `+play.checkpoint=...`) |
-| `play.steps` | Number of control steps; without it and without video, playback runs interactively |
+| `play.steps` | Number of control steps. Without it and without video, playback runs interactively |
 | `play.num_envs` | Number of environments to play |
-| `play.time_limit_policy` | `extend` lengthens the episode limit to cover `play.steps`; `respect` keeps the training limit |
+| `play.time_limit_policy` | `extend` lengthens the episode limit to cover `play.steps`, and `respect` keeps the training limit |
 | `play.done_policy` | When an episode ends: `reset_continue` or `stop` |
 | `play.action.mode` | `mean` (the default for evaluation) or `sample` |
 | `play.tracking` | Playback-only motion choice, start frame, deterministic reset and termination |
 | `play.viewer` | Interactive viewer: `backend: mujoco` or `viser` |
-| `play.camera` | Camera distance, azimuth and elevation, or several `views`; see [Video rendering](../../guides/rendering.md) |
+| `play.camera` | Camera distance, azimuth and elevation, or several `views` (see [Video rendering](../../guides/rendering.md)) |
 | `play.video` | `enabled`, `length`, `render_backend` (`auto`, `mujoco_gl` or `warp`), `encoder_backend` and `tile_envs` |
 | `play.use_cuda_graph` | Capture the playback step as a CUDA graph |

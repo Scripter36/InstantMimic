@@ -48,7 +48,7 @@ agent:
 | --- | --- |
 | `rollouts` | Control steps collected from every environment per iteration |
 | `learning_epochs` | Passes over the collected data per iteration |
-| `mini_batches` | Minibatches per pass; the number of transitions must divide evenly |
+| `mini_batches` | Minibatches per pass. The number of transitions must divide evenly by it |
 | `shuffle_mode` | Shuffle the data once per iteration (`per_update`), every pass (`per_epoch`), or not at all (`off`) |
 | `discount_factor`, `gae_lambda` | Discount and GAE λ, per control step |
 | `time_limit_bootstrap` | When an episode ends only because of the time limit, bootstrap its return from the value estimate |
@@ -56,10 +56,10 @@ agent:
 ## Optimizer and learning rate
 
 `optimizer.type` is `adam`, `adamw` or `muon`, each with the usual settings
-(`betas`, `eps` and `weight_decay`; `momentum`, `nesterov` and `ns_steps` for
-Muon).
+(`betas`, `eps` and `weight_decay`, plus `momentum`, `nesterov` and `ns_steps`
+for Muon).
 
-Muon updates the hidden weight matrices; the remaining parameters (input and
+Muon updates the hidden weight matrices. The remaining parameters (input and
 output layers, normalization layers and biases) use AdamW, configured under
 `optimizer.adamw`. Muon's own `eps` and `weight_decay` apply to the matrices
 only.
@@ -80,7 +80,7 @@ adjusted: `per_epoch` (the default), `per_update` or `per_minibatch`.
 | `value_loss_clip_mode` | How the clipped and unclipped value losses are combined: `clamp` or `max` |
 | `value_loss_scale` | Weight of the value loss |
 | `entropy_loss_scale` | Weight of the entropy bonus |
-| `grad_norm_clip` | Gradient norm limit; `separate_grad_norm_clip: true` clips actor and critic separately when they do not share a network |
+| `grad_norm_clip` | Gradient norm limit. `separate_grad_norm_clip: true` clips actor and critic separately when they do not share a network |
 | `kl_estimator` | How the KL for the scheduler is computed: `sampled` or `analytic` |
 
 ## Normalization
@@ -93,7 +93,7 @@ rewards with `RunningReturnScaler`.
 ## Optional blocks
 
 - `activation_regularization` adds a penalty on the policy mean for the muscle
-  activation baselines; see
-  [Muscle simulation and control](../../guides/muscle-control.md#direct-control-baselines).
+  activation baselines (see
+  [Muscle simulation and control](../../guides/muscle-control.md#direct-control-baselines)).
 - `latent_prior` turns the policy into the latent (VAE) policy used by the
   [AMASS tasks](../../data/amass-retargeting.md).

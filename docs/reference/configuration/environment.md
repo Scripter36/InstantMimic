@@ -3,8 +3,7 @@
 The `env` section belongs to the environment selected by `task`. This page
 describes the motion-imitation environment (`SNU-Imitation-v0`) used by the
 humanoid, SNU and AMASS imitation tasks. Tasks that select another
-environment define their own `env` keys; print their resolved config to see
-them. Actions and muscles are covered in
+environment define their own `env` keys, listed in their resolved config. Actions and muscles are covered in
 [Actions and muscles](actions-and-muscles.md).
 
 The humanoid walk, for example, resolves to (abridged):
@@ -51,7 +50,7 @@ env:
 | --- | --- |
 | `sim.mjcf_path` | The MuJoCo model |
 | `sim.hz` | Physics rate in Hz |
-| `decimation` | Physics steps per policy step; the policy runs at `hz / decimation` |
+| `decimation` | Physics steps per policy step. The policy runs at `hz / decimation` |
 | `sim.integrator` | `implicitfast`, `euler` or `rk4` |
 | `sim.njmax`, `sim.nconmax` | Constraint and contact capacity per environment |
 | `sim.iterations`, `sim.ls_iterations` | Solver and line-search iterations |
@@ -59,8 +58,8 @@ env:
 | `episode_length_s` | Maximum episode length in seconds |
 
 `use_cuda_graph`, `use_parallelized_kernel_launch` and `use_optimized_kernel`
-control how the simulation step is executed; see
-[Simulation](../simulation.md#configuration).
+control how the simulation step is executed (see
+[Simulation](../simulation.md#configuration)).
 
 ## Motion
 
@@ -82,10 +81,10 @@ supported. With several clips, each episode starts from one of them.
 | `observations.joint_pose` | Joint rotation encoding: `qpos`, `6d` or `multi_hinge_local_quat` |
 | `observations.joint_velocity` | Joint velocity encoding: `qvel` (the default), `hinge_local_angvel` or `multi_hinge_local_angvel` |
 | `observations.include_root_target` | Add the reference root position and rotation (default `true`) |
-| `observations.future_mode` | How upcoming reference frames are encoded: `phc_v6` (the default) or `none`; see below |
+| `observations.future_mode` | How upcoming reference frames are encoded: `phc_v6` (the default) or `none` (see below) |
 | `observations.future_frames` | How many upcoming reference frames the policy sees |
-| `observations.future_frame_step` | Spacing between those frames, in motion frames; the first is always the next frame |
-| `observations.previous_action` | `action` adds the previous action to the observation; `null` leaves it out |
+| `observations.future_frame_step` | Spacing between those frames, in motion frames. The first is always the next frame |
+| `observations.previous_action` | `action` adds the previous action to the observation, and `null` leaves it out |
 
 `phc_v6` follows the observation of [PHC](https://arxiv.org/abs/2305.06456)
 (Luo et al. 2023, *Perpetual Humanoid Control*). For the root and every reward
@@ -131,7 +130,7 @@ The tracking reward compares the character with the reference at every step.
 | `product` | Product of the per-term rewards `exp(-weight * error)` |
 | `weighted_sum` | Sum of the per-term rewards, weighted by `combination.weights` |
 | `raw_sum` | `reward.alive` minus the weighted errors |
-| `power_sum` | One reward from the total weighted error $E$: $\exp(-\beta E)$ for `q: 1`, and $(1 + (q - 1)\beta E)^{-1/(q-1)}$ otherwise. `beta` is $\beta$; `epsilon` is the smallest reward |
+| `power_sum` | One reward from the total weighted error $E$: $\exp(-\beta E)$ for `q: 1`, and $(1 + (q - 1)\beta E)^{-1/(q-1)}$ otherwise. `beta` is $\beta$, and `epsilon` is the smallest reward |
 
 In `product` and `weighted_sum`, `reward.alive` (default 0) sets a floor on
 each per-term reward, which becomes `alive + (1 - alive) * exp(-weight * error)`.
@@ -149,7 +148,7 @@ selects `torque`, `pd_target` or `auto` (the one that fits the action type).
 An episode ends when the time limit is reached, when the torso falls below
 `termination.min_torso_height`, or, with `termination.nonfinite: true`, when the
 simulation produces non-finite values. By default a clip loops when the
-episode outlasts it; with `termination.motion_end: true`, reaching the clip's
+episode outlasts it. With `termination.motion_end: true`, reaching the clip's
 last frame ends the episode instead.
 
 `termination.early` optionally ends episodes where the character has lost

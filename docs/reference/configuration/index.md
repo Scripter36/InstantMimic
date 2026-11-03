@@ -30,7 +30,7 @@ uv run train --config-name humanoid/imitation/walk_pd --cfg job --resolve
 | Section | Contents | Page |
 | --- | --- | --- |
 | `env` | Simulation, motion, observations, rewards, resets and termination | [Environment](environment.md) |
-| `env.action`, `env.muscle` | Action types, muscle model and MASS | [Actions and muscles](actions-and-muscles.md) |
+| `env.action`, `env.muscle` | Action types and the muscle model | [Actions and muscles](actions-and-muscles.md) |
 | `models` | Actor and critic networks and the action distribution | [Models](models.md) |
 | `agent` | PPO rollouts, losses and optimizer | [PPO](ppo.md) |
 | `trainer` | Iteration count, benchmark evaluation, stopping and resuming | [Training and playback](training-and-playback.md) |
@@ -64,7 +64,7 @@ Quote lists and mappings for the shell, for example
   12,288 transitions per iteration.
 - Episode, benchmark and playback lengths count **control steps** unless the
   key ends in `_s` or `_seconds`.
-- Physical values are in SI units (metres, seconds, kilograms, radians); keys in
+- Physical values are in SI units (metres, seconds, kilograms, radians), and keys in
   degrees end in `_deg`.
 - A range is written as a two-element list, `[min, max]`, with both ends
   included.
@@ -88,7 +88,7 @@ uv run python -m instantmimic.tools.validate_configs --allow-unprepared-assets -
 Each run saves its resolved config and model files in `run_bundle/` next to its
 checkpoints. `play` rebuilds the environment, model and agent from that bundle,
 so a checkpoint keeps playing even if the configs in `config/` change later.
-Overrides under `play.*` change playback only; overriding other sections at
+Overrides under `play.*` change playback only. Overriding other sections at
 playback time changes the restored config and prints a warning.
 
 Training from a checkpoint with `trainer.initialization` uses the config given
