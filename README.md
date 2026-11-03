@@ -82,9 +82,9 @@ and porting environments from other frameworks. See
 
 ## Documentation
 
-The [documentation](docs/index.md) covers installation, experiment logging,
-training and playback, video rendering, the configuration reference and the
-simulation runtime. To browse it locally:
+The [documentation](https://scripter36.github.io/InstantMimic/) covers
+installation, experiment logging, training and playback, video rendering, the
+configuration reference and the simulation runtime. To browse it locally:
 
 ```bash
 uv run --group docs mkdocs serve
