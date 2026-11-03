@@ -82,7 +82,7 @@ and porting environments from other frameworks. See
 
 ## Documentation
 
-The [documentation](https://scripter36.github.io/InstantMimic/) covers
+The [documentation](https://instantmimic.readthedocs.io/) covers
 installation, experiment logging, training and playback, video rendering, the
 configuration reference and the simulation runtime. To browse it locally:
 
