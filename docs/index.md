@@ -16,6 +16,8 @@ hyperparameter searches planned by an LLM agent.
 
 - [Training and playback](guides/training-and-playback.md): run directories,
   evaluation, checkpoints and resuming.
+- [Writing an environment](guides/writing-environments.md): the methods a task
+  implements, the order of a step and the state each method can rely on.
 - [Muscle simulation and control](guides/muscle-control.md): MUSUBI, its MASS
   and direct-control baselines, and the SNU and FreeMusco models.
 - [AMASS motions and latent policies](data/amass-retargeting.md): preparing
@@ -34,5 +36,5 @@ hyperparameter searches planned by an LLM agent.
 - [Simulation](reference/simulation.md): the MuJoCo Warp runtime and its kernels.
 - [HPO task schema](reference/hpo-task-schema.md): search task files.
 
-The included models and motions keep their own licenses; see
+The included models and motions keep their own licenses, listed in
 `data/README.md` and each data family's `PROVENANCE.md`.

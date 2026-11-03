@@ -3,3 +3,65 @@
 .language-yaml.highlight .nv {
   color: var(--md-code-hl-string-color);
 }
+
+/* Inline SVG diagrams. Shapes take their colours from these classes so the
+   diagrams follow the theme's fonts and colours. */
+.im-diagram {
+  margin: 1.5em 0;
+}
+.im-diagram svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 680px;
+  margin: 0 auto;
+  font-family: var(--md-text-font-family, sans-serif);
+  font-size: 13px;
+}
+.im-diagram text {
+  fill: var(--md-default-fg-color);
+}
+.im-diagram .im-code {
+  font-family: var(--md-code-font-family, monospace);
+  font-size: 12.5px;
+}
+.im-diagram .im-note,
+.im-diagram .im-caption {
+  fill: var(--md-default-fg-color--light);
+  font-size: 12px;
+}
+.im-diagram .im-hook {
+  fill: #eceefb;
+  stroke: var(--md-primary-fg-color, #4051b5);
+  stroke-width: 1.2;
+}
+.im-diagram .im-optional {
+  stroke-dasharray: 4 3;
+}
+.im-diagram .im-base {
+  fill: var(--md-code-bg-color, #f5f5f5);
+  stroke: var(--md-default-fg-color--lighter);
+  stroke-width: 1;
+}
+.im-diagram .im-physics {
+  fill: #fdecd7;
+  stroke: #d9822b;
+  stroke-width: 1;
+}
+.im-diagram .im-refresh {
+  fill: #dcf0e4;
+  stroke: #3d9a5f;
+  stroke-width: 1;
+}
+.im-diagram .im-line {
+  fill: none;
+  stroke: var(--md-default-fg-color--light);
+  stroke-width: 1.2;
+}
+.im-diagram .im-spine {
+  stroke: var(--md-default-fg-color--lightest);
+  stroke-width: 2;
+}
+.im-diagram .im-arrowhead {
+  fill: var(--md-default-fg-color--light);
+}

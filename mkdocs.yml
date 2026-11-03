@@ -31,6 +31,7 @@ nav:
       - First training run: getting-started/first-run.md
   - Guides:
       - Training and playback: guides/training-and-playback.md
+      - Writing an environment: guides/writing-environments.md
       - Muscle simulation and control: guides/muscle-control.md
       - AMASS motions and latent policies: data/amass-retargeting.md
       - BeyondMimic: guides/beyondmimic.md
