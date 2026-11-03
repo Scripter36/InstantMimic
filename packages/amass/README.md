@@ -8,4 +8,4 @@ From the repository root:
 uv run --project packages/amass python -m instantmimic_amass.prepare --help
 ```
 
-See [the AMASS guide](../../docs/data/amass-retargeting.md) for the data layout, PHC metadata provenance, preprocessing and training commands.
+See [the AMASS guide](https://instantmimic.readthedocs.io/en/latest/data/amass-retargeting/) for the data layout, PHC metadata provenance, preprocessing and training commands.

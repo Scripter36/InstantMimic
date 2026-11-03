@@ -44,6 +44,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/Scripter36/InstantMimic"
+Documentation = "https://instantmimic.readthedocs.io/"
 Repository = "https://github.com/Scripter36/InstantMimic"
 Issues = "https://github.com/Scripter36/InstantMimic/issues"
 

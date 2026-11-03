@@ -118,7 +118,7 @@ unchanged from the recorded source bundle. See
 `src/instantmimic/envs/unitree_g1/tasks/beyondmimic_tracking/` follows the
 public BeyondMimic motion-tracking task through mjlab's MuJoCo Warp
 implementation. Source identities and data preparation are documented in
-[the tracking guide](docs/guides/beyondmimic.md).
+[the tracking guide](https://instantmimic.readthedocs.io/en/latest/guides/beyondmimic/).
 
 BeyondMimic: https://github.com/HybridRobotics/whole_body_tracking, MIT:
 

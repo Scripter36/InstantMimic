@@ -13,6 +13,7 @@
 
 [![Project page](https://img.shields.io/badge/Project-Page-blue)](https://scripter36.github.io/projects/instantmimic/)
 [![arXiv](https://img.shields.io/badge/arXiv-2609.09821-b31b1b)](https://arxiv.org/abs/2609.09821)
+[![Docs](https://img.shields.io/readthedocs/instantmimic?label=docs)](https://instantmimic.readthedocs.io/)
 [![Checks](https://img.shields.io/github/actions/workflow/status/Scripter36/InstantMimic/checks.yml?branch=main&label=checks)](https://github.com/Scripter36/InstantMimic/actions/workflows/checks.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-green)](LICENSE)
 
@@ -25,22 +26,22 @@ learning, fast enough that a humanoid learns to walk, run or backflip in about
 one to two seconds of training on a single GPU. Simulation
 ([MuJoCo Warp](https://github.com/google-deepmind/mujoco_warp)), rollout
 collection and PPO updates all stay on the GPU and run as CUDA graphs. The
-[motion demonstrations](docs/reference/motion-demo.md) page lists the configs
+[motion demonstrations](https://instantmimic.readthedocs.io/en/latest/reference/motion-demo/) page lists the configs
 and timings behind the clips above.
 
 > [!NOTE]
 > Coming from the MUSUBI paper? See
-> [Muscle simulation and control](docs/guides/muscle-control.md).
+> [Muscle simulation and control](https://instantmimic.readthedocs.io/en/latest/guides/muscle-control/).
 
 ## What's included
 
 | Task | Example config | Guide |
 | --- | --- | --- |
-| Motion imitation with a PD humanoid: walk, run, spinkick, backflip and cartwheel | `humanoid/imitation/walk_pd` | [First run](docs/getting-started/first-run.md) |
-| Muscle-actuated characters: SNU humanoid, FreeMusco ostrich and Chimanoid | `snu_humanoid/imitation/walk_musubi` | [Muscle control](docs/guides/muscle-control.md) |
-| Latent policies trained on AMASS, and point-goal navigation on top of them | `humanoid/amass/imitation/phc_train_pd_vae` | [AMASS](docs/data/amass-retargeting.md) |
-| Unitree G1 motion tracking following BeyondMimic | `unitree_g1/beyondmimic/side_kick` | [BeyondMimic](docs/guides/beyondmimic.md) |
-| Hyperparameter searches planned by an LLM agent | `config/hpo/` | [HPO](docs/guides/hpo.md) |
+| Motion imitation with a PD humanoid: walk, run, spinkick, backflip and cartwheel | `humanoid/imitation/walk_pd` | [First run](https://instantmimic.readthedocs.io/en/latest/getting-started/first-run/) |
+| Muscle-actuated characters: SNU humanoid, FreeMusco ostrich and Chimanoid | `snu_humanoid/imitation/walk_musubi` | [Muscle control](https://instantmimic.readthedocs.io/en/latest/guides/muscle-control/) |
+| Latent policies trained on AMASS, and point-goal navigation on top of them | `humanoid/amass/imitation/phc_train_pd_vae` | [AMASS](https://instantmimic.readthedocs.io/en/latest/data/amass-retargeting/) |
+| Unitree G1 motion tracking following BeyondMimic | `unitree_g1/beyondmimic/side_kick` | [BeyondMimic](https://instantmimic.readthedocs.io/en/latest/guides/beyondmimic/) |
+| Hyperparameter searches planned by an LLM agent | `config/hpo/` | [HPO](https://instantmimic.readthedocs.io/en/latest/guides/hpo/) |
 
 ## Getting started
 
@@ -49,7 +50,7 @@ InstantMimic needs an NVIDIA GPU whose driver supports CUDA 12.8, and
 installs Python 3.12 if it is missing.
 
 If you use a coding agent, the quickest start is the
-[InstantMimic skill](docs/guides/assistant-workflows.md#start-without-a-checkout):
+[InstantMimic skill](https://instantmimic.readthedocs.io/en/latest/guides/assistant-workflows/#start-without-a-checkout):
 add it to your agent and tell it what to train. The agent sets up the
 repository and runs the training for you.
 
@@ -69,16 +70,16 @@ uv run play --config-name humanoid/imitation/walk_pd \
   +play.checkpoint='logs/ppo/humanoid/imitation/walk_pd/YOUR_RUN/checkpoints/best_agent.pt'
 ```
 
-On a machine without a display, [record a video](docs/guides/rendering.md)
+On a machine without a display, [record a video](https://instantmimic.readthedocs.io/en/latest/guides/rendering/)
 instead. The first run compiles its kernels before training starts, and later runs
 reuse them. Any setting can be overridden on the command line, for example
 `trainer.max_iterations=300`. The
-[configuration reference](docs/reference/configuration/index.md) describes them.
+[configuration reference](https://instantmimic.readthedocs.io/en/latest/reference/configuration/) describes them.
 
 When you work in the checkout with Codex or Claude Code, the
 `instantmimic-workflows` plugin adds skills for training, evaluation, profiling
 and porting environments from other frameworks. See
-[assistant workflows](docs/guides/assistant-workflows.md) to install it.
+[assistant workflows](https://instantmimic.readthedocs.io/en/latest/guides/assistant-workflows/) to install it.
 
 ## Documentation
 

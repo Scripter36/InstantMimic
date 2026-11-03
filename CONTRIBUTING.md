@@ -32,6 +32,6 @@ A few conventions:
 - When you modify third-party code or add data, keep the upstream copyright and
   license notices, and record the source and license of new data next to it.
 
-See [Development](docs/development.md) for the source layout and
-[Assistant workflows](docs/guides/assistant-workflows.md) for the optional
+See [Development](https://instantmimic.readthedocs.io/en/latest/development/) for the source layout and
+[Assistant workflows](https://instantmimic.readthedocs.io/en/latest/guides/assistant-workflows/) for the optional
 agent plugin.
