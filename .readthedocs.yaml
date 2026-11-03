@@ -15,4 +15,4 @@ build:
       - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --locked --only-group docs --no-install-project
     build:
       html:
-        - "${READTHEDOCS_VIRTUALENV_PATH}/bin/mkdocs" build --strict --site-dir "${READTHEDOCS_OUTPUT}/html"
+        - $READTHEDOCS_VIRTUALENV_PATH/bin/mkdocs build --strict --site-dir $READTHEDOCS_OUTPUT/html
