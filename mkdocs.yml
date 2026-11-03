@@ -1,6 +1,6 @@
 site_name: InstantMimic
 site_description: GPU-native character imitation, PPO and muscle control
-site_url: https://scripter36.github.io/InstantMimic/
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://instantmimic.readthedocs.io/en/latest/"]
 repo_url: https://github.com/Scripter36/InstantMimic
 repo_name: Scripter36/InstantMimic
 docs_dir: docs
