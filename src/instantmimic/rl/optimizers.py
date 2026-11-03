@@ -14,7 +14,7 @@ _MUON_DEFAULT_NS_COEFFICIENTS = (3.4445, -4.7750, 2.0315)
 _MUON_DEFAULT_EPS = 1.0e-7
 _MUON_DEFAULT_NS_STEPS = 5
 _MUON_COMPILE_MODE = "max-autotune-no-cudagraphs"
-_SUPPORTED_OPTIMIZER_NAMES = ("adam", "adamw", "sgd", "muon")
+_SUPPORTED_OPTIMIZER_NAMES = ("adam", "adamw", "muon")
 _COMPILED_MUON_NS_SINGLE = None
 _COMPILED_MUON_NS_BATCHED = None
 _LOGGER = logging.getLogger(__name__)
@@ -97,9 +97,7 @@ def resolve_optimizer_name(optimizer_name: str | None) -> str:
     key = "adam" if optimizer_name is None else str(optimizer_name).strip().lower()
     if key in _SUPPORTED_OPTIMIZER_NAMES:
         return key
-    supported = ", ".join(
-        name.upper() if name != "sgd" else "SGD" for name in _SUPPORTED_OPTIMIZER_NAMES
-    )
+    supported = ", ".join(name.upper() for name in _SUPPORTED_OPTIMIZER_NAMES)
     raise ValueError(
         f"Unsupported optimizer: {optimizer_name}. Use one of: {supported}."
     )
@@ -113,12 +111,6 @@ def validate_graph_optimizer_constraints(
 ) -> None:
     if not use_update_graph:
         return
-
-    if optimizer_name not in {"adam", "adamw", "muon"}:
-        raise ValueError(
-            "runtime.update_cuda_graph=true requires optimizer=Adam, AdamW, or Muon. "
-            "PyTorch SGD is not capturable in this path."
-        )
 
     if optimizer_name == "muon":
         if optimizer_kwargs.get("adamw_foreach") is True:
@@ -215,31 +207,6 @@ def build_optimizer(
             torch.optim.AdamW if resolved_name == "adamw" else torch.optim.Adam
         )
         return optimizer_cls(
-            _weight_decay_groups(
-                parameter_list,
-                kwargs["weight_decay"],
-                decay_vector_parameters=decay_vector_parameters,
-            ),
-            **kwargs,
-        )
-
-    if resolved_name == "sgd":
-        kwargs = {
-            "lr": float(learning_rate),
-            "momentum": float(local_kwargs.pop("momentum", 0.0)),
-            "dampening": float(local_kwargs.pop("dampening", 0.0)),
-            "weight_decay": float(local_kwargs.pop("weight_decay", 0.0)),
-            "nesterov": bool(local_kwargs.pop("nesterov", False)),
-        }
-        if "foreach" in local_kwargs:
-            kwargs["foreach"] = local_kwargs.pop("foreach")
-        if "fused" in local_kwargs:
-            kwargs["fused"] = local_kwargs.pop("fused")
-        if local_kwargs:
-            raise ValueError(
-                f"Unsupported optimizer_kwargs for SGD: {sorted(local_kwargs.keys())}"
-            )
-        return torch.optim.SGD(
             _weight_decay_groups(
                 parameter_list,
                 kwargs["weight_decay"],

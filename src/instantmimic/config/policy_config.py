@@ -48,14 +48,6 @@ class AdamWOptimizerConfig(AdamWCompanionConfig):
     type: Literal["adamw"]
 
 
-class SgdOptimizerConfig(PolicyMapping):
-    type: Literal["sgd"]
-    weight_decay: Number | None = None
-    momentum: Number | None = None
-    dampening: Number | None = None
-    nesterov: bool | None = None
-
-
 class MuonOptimizerConfig(PolicyMapping):
     type: Literal["muon"]
     momentum: Number | None = None
@@ -68,16 +60,12 @@ class MuonOptimizerConfig(PolicyMapping):
 
 
 type OptimizerConfig = Annotated[
-    AdamOptimizerConfig
-    | AdamWOptimizerConfig
-    | SgdOptimizerConfig
-    | MuonOptimizerConfig,
+    AdamOptimizerConfig | AdamWOptimizerConfig | MuonOptimizerConfig,
     Field(discriminator="type"),
 ]
 OPTIMIZER_MODELS = {
     "adam": AdamOptimizerConfig,
     "adamw": AdamWOptimizerConfig,
-    "sgd": SgdOptimizerConfig,
     "muon": MuonOptimizerConfig,
 }
 _OPTIMIZER_ADAPTER = TypeAdapter(OptimizerConfig)

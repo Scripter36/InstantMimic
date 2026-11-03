@@ -52,10 +52,6 @@ def initialize_optimizer_state(
     if isinstance(optimizer, (torch.optim.Adam, torch.optim.AdamW)):
         _initialize_adam_state(optimizer)
         return
-    if isinstance(optimizer, torch.optim.SGD):
-        # SGD creates its momentum buffer from the first gradient and is never
-        # graph captured.
-        return
     raise TypeError(f"cannot initialize state for optimizer {type(optimizer).__name__}")
 
 

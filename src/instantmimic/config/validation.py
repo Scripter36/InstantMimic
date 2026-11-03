@@ -663,7 +663,7 @@ def _validate_optimizer(value: object) -> None:
     optimizer = _closed(
         optimizer, path="agent.optimizer", allowed=fields, required={"type"}
     )
-    for key in ("weight_decay", "momentum", "dampening", "eps"):
+    for key in ("weight_decay", "momentum", "eps"):
         if key in optimizer:
             _number(optimizer[key], f"agent.optimizer.{key}", minimum=0)
     if "betas" in optimizer:
@@ -712,17 +712,6 @@ def _validate_optimizer(value: object) -> None:
                 )
         if "amsgrad" in adamw:
             _bool(adamw["amsgrad"], "agent.optimizer.adamw.amsgrad")
-    if optimizer_type == "sgd" and optimizer.get("nesterov") is True:
-        momentum = optimizer.get("momentum", 0.0)
-        if (
-            not isinstance(momentum, (int, float))
-            or isinstance(momentum, bool)
-            or momentum <= 0
-        ):
-            _error("agent.optimizer.momentum", "must be positive when nesterov=true")
-        dampening = optimizer.get("dampening", 0.0)
-        if dampening != 0:
-            _error("agent.optimizer.dampening", "must be zero when nesterov=true")
 
 
 def _validate_learning_rate(value: object) -> None:

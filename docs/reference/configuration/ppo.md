@@ -55,14 +55,14 @@ agent:
 
 ## Optimizer and learning rate
 
-`optimizer.type` is `adam`, `adamw`, `sgd` or `muon`, each with the usual
-settings (`betas`, `eps`, `weight_decay`, `momentum`, `nesterov`, …).
+`optimizer.type` is `adam`, `adamw` or `muon`, each with the usual settings
+(`betas`, `eps` and `weight_decay`; `momentum`, `nesterov` and `ns_steps` for
+Muon).
 
 Muon updates the hidden weight matrices; the remaining parameters (input and
 output layers, normalization layers and biases) use AdamW, configured under
 `optimizer.adamw`. Muon's own `eps` and `weight_decay` apply to the matrices
-only. `sgd` cannot be captured in a CUDA graph, so it needs
-`runtime.update_cuda_graph: false`.
+only.
 
 `learning_rate.initial` sets the starting rate. Without a `scheduler`, the rate
 stays constant. With `scheduler.type: kl_adaptive`, the rate is divided by

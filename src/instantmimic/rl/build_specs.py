@@ -186,7 +186,7 @@ class ModelRoleBuildSpec:
 class OptimizerBuildSpec:
     """Optimizer selection without parameters, tensors, or parameter grouping."""
 
-    type: Literal["adam", "adamw", "sgd", "muon"]
+    type: Literal["adam", "adamw", "muon"]
     kwargs: Mapping[str, PlainValue]
     capturable: bool
     companion_adamw_kwargs: Mapping[str, PlainValue] | None = None
@@ -338,8 +338,6 @@ def _lower_optimizer(
     optimizer_type = _string(raw.get("type"), "agent.optimizer.type")
     if optimizer_type not in schema_fields.OPTIMIZER_TYPES:
         raise ValueError(f"unsupported agent.optimizer.type: {optimizer_type!r}")
-    if capturable and optimizer_type == "sgd":
-        raise ValueError("SGD is incompatible with runtime.update_cuda_graph=true")
     _validate_optimizer(raw)
     optimizer = parse_optimizer(raw)
     kwargs = {
