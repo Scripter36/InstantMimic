@@ -71,7 +71,7 @@ runtime:
   compile_act_into: false
   compile_update_fullgraph: true
   compile_mode: max-autotune-no-cudagraphs
-  mixed_precision: true
+  precision: float32
   act_cuda_graph: true
   update_cuda_graph: true
   shuffle_cuda_graph: true

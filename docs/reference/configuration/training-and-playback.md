@@ -31,7 +31,7 @@ runtime:
   act_cuda_graph: true
   update_cuda_graph: true
   shuffle_cuda_graph: true
-  mixed_precision: true
+  precision: float32
 ```
 
 ## Benchmark evaluation
@@ -103,17 +103,13 @@ FP32. With `float16`, the loss is scaled dynamically on the GPU:
 `runtime.loss_scale` sets the starting scale (default 128, at most $2^{24}$), a
 step with non-finite gradients is skipped and halves the scale, and after 2,000
 finite steps the scale doubles again. Checkpoints save the scaler state, and
-CUDA graphs and compilation work at every precision. To try it on a config that
-does not set it:
+CUDA graphs and compilation work at every precision. The included configs use
+`float32`; to train one in half precision:
 
 ```bash
 uv run train --config-name humanoid/imitation/walk_pd \
-  +runtime.precision=float16 +runtime.loss_scale=128
+  runtime.precision=float16 +runtime.loss_scale=128
 ```
-
-Many included configs set `runtime.mixed_precision: true` instead, which runs
-only the PPO update under bfloat16 autocast. When both are set,
-`runtime.precision` takes precedence.
 
 ## Playback
 

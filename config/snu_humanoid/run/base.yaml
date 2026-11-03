@@ -69,7 +69,7 @@ runtime:
   update_cuda_graph: true
   compile: true
   compile_mode: max-autotune-no-cudagraphs
-  mixed_precision: true
+  precision: float32
 play:
   num_envs: 1
   steps: null

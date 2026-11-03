@@ -21,4 +21,4 @@ runtime:
   compile_act_into: false
   compile_update_fullgraph: true
   compile_mode: default
-  mixed_precision: false
+  precision: float32

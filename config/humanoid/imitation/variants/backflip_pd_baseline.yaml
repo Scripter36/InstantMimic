@@ -200,7 +200,7 @@ runtime:
   compile_act_into: true
   compile_update_fullgraph: true
   compile_mode: max-autotune-no-cudagraphs
-  mixed_precision: true
+  precision: float32
   nsys_nvtx_mode: launch
 play:
   num_envs: 1

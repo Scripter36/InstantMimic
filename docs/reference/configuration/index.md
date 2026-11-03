@@ -49,7 +49,7 @@ key with `+` to add one that the config does not define:
 
 ```bash
 uv run train --config-name humanoid/imitation/walk_pd \
-  trainer.max_iterations=300 +runtime.precision=float16
+  trainer.max_iterations=300 +experiment.group=walk-sweep
 ```
 
 Quote lists and mappings for the shell, for example

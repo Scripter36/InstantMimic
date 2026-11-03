@@ -159,7 +159,7 @@ runtime:
   compile: false
   compile_act_into: false
   compile_update_fullgraph: false
-  mixed_precision: false
+  precision: float32
 
 play:
   num_envs: 1
