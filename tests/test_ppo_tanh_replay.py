@@ -323,13 +323,16 @@ def test_raw_tanh_density_matches_gaussian_change_of_variables():
     )
 
 
+@pytest.mark.parametrize("squash", [False, True])
 @pytest.mark.parametrize("latent", [False, True])
 @pytest.mark.parametrize("analytic_kl", [False, True])
-def test_tanh_warmup_compiles_rollout_and_bootstrap_before_capture(latent, analytic_kl):
+def test_warmup_compiles_rollout_and_bootstrap_before_capture(
+    squash, latent, analytic_kl
+):
     torch._dynamo.reset()
     agent = _make_agent(
         latent=latent,
-        squash_actions=True,
+        squash_actions=squash,
         precision="float32",
         kl_estimator="analytic" if analytic_kl else "sampled",
         compile_update_fullgraph=False,

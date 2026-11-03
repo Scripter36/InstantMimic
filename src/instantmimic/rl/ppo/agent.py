@@ -1937,8 +1937,7 @@ class PPOAgent:
                             torch.zeros(
                                 self.num_envs, self._policy_aux_dim, device=self.device
                             )
-                            if self._uses_pre_squash_action_replay
-                            and self._policy_aux_dim > 0
+                            if self._policy_aux_dim > 0
                             else None
                         )
                         warmup_log_probs = torch.empty(
@@ -1974,17 +1973,16 @@ class PPOAgent:
                             out_policy_log_std=warmup_policy_log_std,
                             **warmup_collect_replay_kwargs,
                         )
-                        if self._uses_pre_squash_action_replay:
-                            # Bootstrap omits rollout-only outputs. Compile its
-                            # distinct signature before external CUDA capture.
-                            self._act_into_fn(
-                                warmup_obs,
-                                warmup_actions,
-                                warmup_log_probs,
-                                warmup_values,
-                                warmup_eps,
-                                policy_aux=warmup_collect_policy_aux,
-                            )
+                        # Bootstrap omits rollout-only outputs. Compile its
+                        # distinct signature before external CUDA capture.
+                        self._act_into_fn(
+                            warmup_obs,
+                            warmup_actions,
+                            warmup_log_probs,
+                            warmup_values,
+                            warmup_eps,
+                            policy_aux=warmup_collect_policy_aux,
+                        )
 
                 warmup_batch = self._update_batch_size
                 warmup_eval_obs = torch.zeros(
