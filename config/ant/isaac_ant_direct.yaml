@@ -1,0 +1,140 @@
+# @package _global_
+# Isaac Lab Isaac-Ant-Direct-v0 translated to the MuJoCo-Warp DirectRLEnv API.
+defaults:
+  - _self_
+
+schema_version: 1
+seed: 42
+task: "Isaac-Ant-Direct-v0"
+env:
+  seed: ${seed}
+  # This Ant asset has primitive collision geoms but no separate visual mesh.
+  character_render_mode: collision
+  sim:
+    mjcf_path: "data/ant/nv_ant.xml"
+    hz: 120
+    integrator: implicitfast
+    render_interval: 2
+    njmax: 200
+    nconmax: 50
+    iterations: 50
+  scene:
+    num_envs: 4096
+  viewer:
+    resolution: [1080, 1080]
+
+  use_cuda_graph: true
+  compile_mjw_step: false
+  terminate_on_nonfinite: true
+  use_parallelized_kernel_launch: true
+  use_optimized_kernel: true
+  use_native_task_kernels: true
+
+  decimation: 2
+  episode_length_s: 15.0
+  action_space: 8
+  observation_space: 36
+  action_scale: 0.5
+  joint_gears: [15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0]
+  heading_weight: 0.5
+  up_weight: 0.1
+  energy_cost_scale: 0.05
+  actions_cost_scale: 0.005
+  alive_reward_scale: 0.5
+  dof_vel_scale: 0.2
+  death_cost: -2.0
+  termination_height: 0.31
+  angular_velocity_scale: 1.0
+  contact_force_scale: 0.1
+  log_dir: ""
+
+models:
+  shared: false
+  actor:
+    architecture: mlp
+    layers: [400, 200, 100]
+    activation: elu
+    normalization: none
+    distribution:
+      std: parameter
+      parameterization: scalar
+      initial_log_std: 0.0
+      log_std_bounds: [-20.0, 2.0]
+      bound_mode: clamp
+      action_transform: none
+  critic:
+    architecture: mlp
+    layers: [400, 200, 100]
+    activation: elu
+    normalization: none
+
+agent:
+  class: PPO
+  rollouts: 32
+  discount_factor: 0.99
+  optimizer:
+    type: adam
+  time_limit_bootstrap: true
+  grad_norm_clip: 1.0
+  state_preprocessor: none
+  value_preprocessor: none
+  parameter_initialization: rsl_rl
+  learning_epochs: 5
+  mini_batches: 4
+  shuffle_mode: per_update
+  kl_estimator: analytic
+  gae_lambda: 0.95
+  learning_rate:
+    bounds: [1.0e-5, 1.0e-2]
+    initial: 5.0e-4
+    scheduler:
+      type: kl_adaptive
+      threshold: 0.01
+      factor: 1.5
+      update_mode: per_minibatch
+  ratio_clip: 0.2
+  value_clip: 0.2
+  clip_predicted_values: true
+  value_loss_clip_mode: max
+  entropy_loss_scale: 0.0
+  value_loss_scale: 1.0
+
+trainer:
+  max_iterations: 1000
+
+experiment:
+  directory: ant/isaac_ant_direct
+  logger:
+    type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+  name: ""
+  write_interval: 5
+  episode_metrics_interval: 5
+  checkpoint:
+    periodic:
+      interval: 50
+    best:
+      interval: 50
+      source: auto
+  writer_max_queue: 256
+  writer_flush_secs: 120
+
+runtime:
+  act_cuda_graph: true
+  update_cuda_graph: true
+  shuffle_cuda_graph: true
+  compile: true
+  compile_act_into: true
+  compile_update_fullgraph: true
+  compile_mode: max-autotune-no-cudagraphs
+  precision: float32
+
+play:
+  num_envs: 1
+  steps:
+  action:
+    mode: mean
+  video:
+    enabled: false
+    length: 300
+  time_limit_policy: respect
+  done_policy: stop

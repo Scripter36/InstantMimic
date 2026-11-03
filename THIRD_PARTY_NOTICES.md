@@ -17,6 +17,14 @@ hooks, construction order, several comments, the unseeded-environment warning
 and the startup banner's column alignment. Its module docstring records this
 origin. Upstream: https://github.com/isaac-sim/IsaacLab.
 
+`src/instantmimic/envs/snu/tasks/snu_run/snu_run_env.py` and the Ant task in
+`src/instantmimic/envs/ant/tasks/` reproduce Isaac Lab's locomotion environment
+(`isaaclab_tasks/direct/locomotion/locomotion_env.py`): their intermediate-state,
+reward and observation computations follow it with the math backend swapped, and
+their reward coefficients and termination thresholds are that benchmark's
+definition. The Ant task keeps Isaac Lab's id, `Isaac-Ant-Direct-v0`, so results
+can be compared with the original.
+
 The required BSD-3-Clause notice, conditions and disclaimer are reproduced below.
 
 ```

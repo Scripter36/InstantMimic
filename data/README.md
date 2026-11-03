@@ -1,13 +1,14 @@
 # Included models and motion data
 
-This distribution includes model and motion families used by imitation, MASS and MUSUBI
-configurations. Configuration paths are relative to the repository root.
+This distribution includes the models and motions its configurations use.
+Configuration paths are relative to the repository root.
 
 | Family | Included models | Included motion |
 | --- | --- | --- |
 | [Humanoid](humanoid/PROVENANCE.md) | Force-limited PD humanoid | Five MimicKit clips: walk, run, backflip, cartwheel and spinkick |
 | [SNU humanoid](snu_humanoid/PROVENANCE.md) | Base and StablePD models, hand/full-body variants and required includes/meshes | This group's `walk.bvh`, `run.bvh` and `backflip.bvh` |
 | [FreeMusco](freemusco/PROVENANCE.md) | Ostrich and Chimanoid, including 2×/4× muscle-count variants | Tracked reference arrays and local loop packs |
+| [Ant](ant/PROVENANCE.md) | Quadruped from Newton's `nv_ant.xml`, as used by Isaac Lab's Ant task | None; the task rewards forward progress |
 
 The corresponding provenance files record the source and license of each
 included file. MimicKit's license travels with its clips.

@@ -9,6 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 BUILTIN_TASK_MODULES = (
+    "instantmimic.envs.ant.tasks",
     "instantmimic.envs.freemusco.tasks",
     "instantmimic.envs.snu.tasks.snu_run",
     "instantmimic.envs.snu.tasks.snu_imitation",
