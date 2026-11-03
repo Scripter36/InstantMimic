@@ -336,6 +336,17 @@ class ActorCritic(nn.Module):
         }[precision]
         self.policy_mlp_bf16 = self.policy_mlp_dtype == torch.bfloat16
 
+    def _policy_mlp_dtype_in_effect(self, device_type: str) -> torch.dtype | None:
+        """Return the dtype the policy MLP must enforce, or None for plain FP32.
+
+        Explicit ``float32`` only needs its own context while an ambient autocast
+        is active; otherwise it takes the plain FP32 path with fused output heads.
+        """
+        dtype = self.policy_mlp_dtype
+        if dtype == torch.float32 and not torch.is_autocast_enabled(device_type):
+            return None
+        return dtype
+
     def _mlp_forward(self, module: nn.Module, inputs: torch.Tensor) -> torch.Tensor:
         """Keep FP32 master weights and FP32 policy/physics boundaries.
 
@@ -343,7 +354,7 @@ class ActorCritic(nn.Module):
         autocast context avoids retaining stale weight casts across optimizer
         steps and avoids no-grad casts leaking into gradient-enabled updates.
         """
-        if self.policy_mlp_dtype is None:
+        if self._policy_mlp_dtype_in_effect(inputs.device.type) is None:
             return module(inputs)
         with torch.autocast(
             device_type=inputs.device.type,
@@ -486,7 +497,7 @@ class ActorCritic(nn.Module):
         out_actions: torch.Tensor,
     ) -> None:
         assert self.policy_head is not None
-        if self.policy_mlp_dtype is not None:
+        if self._policy_mlp_dtype_in_effect(features.device.type) is not None:
             out_actions.copy_(self._standard_policy_mean_from_features(features))
             return
         torch.addmm(
@@ -1062,7 +1073,7 @@ class ActorCritic(nn.Module):
                 keepdim=True,
             )
         )
-        if self.policy_mlp_dtype is not None:
+        if self._policy_mlp_dtype_in_effect(features.device.type) is not None:
             out_values.copy_(self._mlp_forward(self.value_head, features))
             return
         torch.addmm(

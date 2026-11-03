@@ -547,6 +547,14 @@ def test_legacy_fp16_api_does_not_silently_enable_scaling(caplog):
     assert "loss scaling" in caplog.text
 
 
+def test_explicit_float32_takes_the_plain_path_outside_autocast():
+    network = _agent(precision="float32").network
+    # Same compiled graph as a network without a precision setting.
+    assert network._policy_mlp_dtype_in_effect("cpu") is None
+    with torch.autocast("cpu", dtype=torch.bfloat16):
+        assert network._policy_mlp_dtype_in_effect("cpu") == torch.float32
+
+
 @pytest.mark.parametrize("precision", ["float32", "bfloat16", "float16"])
 def test_explicit_precision_ignores_legacy_update_autocast(precision):
     agent = _agent(precision=precision, mixed_precision=True)
