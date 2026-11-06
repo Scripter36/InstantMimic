@@ -37,6 +37,16 @@ RESET_SETTING_START_HORIZON_STEPS = 7
 RESET_SETTING_FIXED_MOTION_IDX = 8
 RESET_SETTING_COUNT = 9
 
+# Slots of the reset motion selector stream. Warp passes scalar ``@wp.func``
+# arguments by value, so a helper that consumes a ``state`` argument advances
+# only its private copy. Every draw therefore derives its own counter-based
+# state from (seed, env, slot); slots must be distinct within one reset.
+RESET_DRAW_RANDOM_SAMPLE = 0
+RESET_DRAW_FRAME_OR_UNIT = 1
+RESET_DRAW_WITHIN_CHUNK = 2
+RESET_DRAW_PRE_FAILURE_OFFSET = 3
+RESET_DRAW_SLOT_COUNT = 4
+
 
 @dataclass(frozen=True)
 class AdaptiveSamplingConfig:
@@ -588,8 +598,23 @@ def valid_reset_start_count(clip_length: int, reset_start_horizon_steps: int) ->
 
 
 @wp.func
+def reset_uniform_draw(seed: int, env_idx: int, slot: int) -> float:
+    """Draw one uniform value from a counter-based (seed, env, slot) state.
+
+    Each draw owns its ``wp.rand_init`` state. Passing an existing ``state``
+    into a helper would advance only the helper's by-value copy, so a caller
+    that kept drawing afterwards would repeat the helper's first value.
+    ``slot`` must be distinct for every draw of one reset and
+    ``RESET_DRAW_SLOT_COUNT`` must exceed the largest slot.
+    """
+    state = wp.rand_init(seed, env_idx * RESET_DRAW_SLOT_COUNT + slot)
+    return wp.randf(state)
+
+
+@wp.func
 def sample_adaptive_frame(
-    state: wp.uint32,
+    seed: int,
+    env_idx: int,
     random_init: int,
     adaptive_enabled: int,
     adaptive_random_sample_prob: float,
@@ -610,12 +635,18 @@ def sample_adaptive_frame(
 
     use_uniform = adaptive_enabled == 0 or adaptive_unit_count <= 0
     if adaptive_enabled == 1 and adaptive_random_sample_prob > 0.0:
-        use_uniform = use_uniform or (wp.randf(state) < adaptive_random_sample_prob)
+        use_uniform = use_uniform or (
+            reset_uniform_draw(seed, env_idx, RESET_DRAW_RANDOM_SAMPLE)
+            < adaptive_random_sample_prob
+        )
 
     if use_uniform:
-        return int(wp.randf(state) * float(valid_start_count))
+        return int(
+            reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
+            * float(valid_start_count)
+        )
 
-    u = wp.randf(state)
+    u = reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
     lo = int(0)
     hi = int(adaptive_unit_count - 1)
     while lo < hi:
@@ -637,17 +668,20 @@ def sample_adaptive_frame(
     end = start + adaptive_chunk_size
     if end > valid_start_count:
         end = valid_start_count
-    local = int(wp.randf(state) * float(end - start))
+    local = int(
+        reset_uniform_draw(seed, env_idx, RESET_DRAW_WITHIN_CHUNK) * float(end - start)
+    )
     return start + local
 
 
 @wp.func
 def sample_adaptive_unit(
-    state: wp.uint32,
+    seed: int,
+    env_idx: int,
     adaptive_cdf: wp.array(dtype=float),
     adaptive_unit_count: int,
 ) -> int:
-    u = wp.randf(state)
+    u = reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
     lo = int(0)
     hi = int(adaptive_unit_count - 1)
     while lo < hi:
@@ -679,7 +713,8 @@ def _find_clip_from_global_unit(
 
 @wp.func
 def _global_unit_to_global_frame_for_clip(
-    state: wp.uint32,
+    seed: int,
+    env_idx: int,
     clip_idx: int,
     global_unit_idx: int,
     adaptive_chunk_size: int,
@@ -700,13 +735,16 @@ def _global_unit_to_global_frame_for_clip(
         return clip_valid_end - 1
     if end > clip_valid_end:
         end = clip_valid_end
-    local = int(wp.randf(state) * float(end - start))
+    local = int(
+        reset_uniform_draw(seed, env_idx, RESET_DRAW_WITHIN_CHUNK) * float(end - start)
+    )
     return start + local
 
 
 @wp.func
 def _global_unit_to_global_frame(
-    state: wp.uint32,
+    seed: int,
+    env_idx: int,
     global_unit_idx: int,
     adaptive_chunk_size: int,
     reset_start_horizon_steps: int,
@@ -721,7 +759,8 @@ def _global_unit_to_global_frame(
         clip_unit_count,
     )
     return _global_unit_to_global_frame_for_clip(
-        state,
+        seed,
+        env_idx,
         clip_idx,
         global_unit_idx,
         adaptive_chunk_size,
@@ -775,7 +814,6 @@ def reset_from_motion_multi_select_kernel(
     fixed_motion_idx = reset_sampling_settings[RESET_SETTING_FIXED_MOTION_IDX]
 
     seed = reset_seed[0] + common_step_counter[0]
-    state = wp.rand_init(seed, env_idx)
     clip_idx = int(0)
     local_frame_idx = int(0)
     global_frame_idx = int(0)
@@ -808,7 +846,10 @@ def reset_from_motion_multi_select_kernel(
                 clip_length[clip_idx],
                 reset_start_horizon_steps,
             )
-            local_frame_idx = int(wp.randf(state) * float(valid_start_count))
+            local_frame_idx = int(
+                reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
+                * float(valid_start_count)
+            )
             global_frame_idx = clip_start[clip_idx] + local_frame_idx
             if adaptive_chunk_size > 1:
                 global_unit_idx = clip_unit_start[clip_idx] + (
@@ -820,12 +861,16 @@ def reset_from_motion_multi_select_kernel(
             use_uniform = adaptive_enabled == 0 or adaptive_unit_count <= 0
             if adaptive_enabled == 1 and adaptive_random_sample_prob > 0.0:
                 use_uniform = use_uniform or (
-                    wp.randf(state) < adaptive_random_sample_prob
+                    reset_uniform_draw(seed, env_idx, RESET_DRAW_RANDOM_SAMPLE)
+                    < adaptive_random_sample_prob
                 )
 
             if use_uniform:
                 if adaptive_unit_count > 0:
-                    global_unit_idx = int(wp.randf(state) * float(adaptive_unit_count))
+                    global_unit_idx = int(
+                        reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
+                        * float(adaptive_unit_count)
+                    )
                     if global_unit_idx >= adaptive_unit_count:
                         global_unit_idx = adaptive_unit_count - 1
                     clip_idx = _find_clip_from_global_unit(
@@ -834,7 +879,8 @@ def reset_from_motion_multi_select_kernel(
                         clip_unit_count,
                     )
                     global_frame_idx = _global_unit_to_global_frame_for_clip(
-                        state,
+                        seed,
+                        env_idx,
                         clip_idx,
                         global_unit_idx,
                         adaptive_chunk_size,
@@ -846,14 +892,18 @@ def reset_from_motion_multi_select_kernel(
                     local_frame_idx = global_frame_idx - clip_start[clip_idx]
                 else:
                     sampled_global_frame_idx = int(
-                        wp.randf(state) * float(total_motion_frame_count)
+                        reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
+                        * float(total_motion_frame_count)
                     )
                     clip_idx = frame_to_clip_idx[sampled_global_frame_idx]
                     valid_start_count = valid_reset_start_count(
                         clip_length[clip_idx],
                         reset_start_horizon_steps,
                     )
-                    local_frame_idx = int(wp.randf(state) * float(valid_start_count))
+                    local_frame_idx = int(
+                        reset_uniform_draw(seed, env_idx, RESET_DRAW_WITHIN_CHUNK)
+                        * float(valid_start_count)
+                    )
                     global_frame_idx = clip_start[clip_idx] + local_frame_idx
                     if adaptive_chunk_size > 1:
                         global_unit_idx = clip_unit_start[clip_idx] + (
@@ -863,7 +913,8 @@ def reset_from_motion_multi_select_kernel(
                         global_unit_idx = clip_unit_start[clip_idx] + local_frame_idx
             else:
                 global_unit_idx = sample_adaptive_unit(
-                    state,
+                    seed,
+                    env_idx,
                     adaptive_cdf,
                     adaptive_unit_count,
                 )
@@ -873,7 +924,8 @@ def reset_from_motion_multi_select_kernel(
                     clip_unit_count,
                 )
                 global_frame_idx = _global_unit_to_global_frame_for_clip(
-                    state,
+                    seed,
+                    env_idx,
                     clip_idx,
                     global_unit_idx,
                     adaptive_chunk_size,
@@ -897,7 +949,10 @@ def reset_from_motion_multi_select_kernel(
         and adaptive_enabled == 1
         and adaptive_pre_failure_window_steps > 0
     ):
-        offset = int(wp.randf(state) * float(adaptive_pre_failure_window_steps))
+        offset = int(
+            reset_uniform_draw(seed, env_idx, RESET_DRAW_PRE_FAILURE_OFFSET)
+            * float(adaptive_pre_failure_window_steps)
+        )
         local_frame_idx = local_frame_idx - offset
         if local_frame_idx < 0:
             local_frame_idx = 0
@@ -992,7 +1047,10 @@ def reset_from_motion_multi_kernel(
                 clip_length[clip_idx],
                 reset_start_horizon_steps,
             )
-            local_frame_idx = int(wp.randf(state) * float(valid_start_count))
+            local_frame_idx = int(
+                reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
+                * float(valid_start_count)
+            )
             global_frame_idx = clip_start[clip_idx] + local_frame_idx
             if adaptive_chunk_size > 1:
                 global_unit_idx = clip_unit_start[clip_idx] + (
@@ -1004,12 +1062,16 @@ def reset_from_motion_multi_kernel(
             use_uniform = adaptive_enabled == 0 or adaptive_unit_count <= 0
             if adaptive_enabled == 1 and adaptive_random_sample_prob > 0.0:
                 use_uniform = use_uniform or (
-                    wp.randf(state) < adaptive_random_sample_prob
+                    reset_uniform_draw(seed, env_idx, RESET_DRAW_RANDOM_SAMPLE)
+                    < adaptive_random_sample_prob
                 )
 
             if use_uniform:
                 if adaptive_unit_count > 0:
-                    global_unit_idx = int(wp.randf(state) * float(adaptive_unit_count))
+                    global_unit_idx = int(
+                        reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
+                        * float(adaptive_unit_count)
+                    )
                     if global_unit_idx >= adaptive_unit_count:
                         global_unit_idx = adaptive_unit_count - 1
                     clip_idx = _find_clip_from_global_unit(
@@ -1018,7 +1080,8 @@ def reset_from_motion_multi_kernel(
                         clip_unit_count,
                     )
                     global_frame_idx = _global_unit_to_global_frame(
-                        state,
+                        seed,
+                        env_idx,
                         global_unit_idx,
                         adaptive_chunk_size,
                         reset_start_horizon_steps,
@@ -1030,14 +1093,18 @@ def reset_from_motion_multi_kernel(
                     local_frame_idx = global_frame_idx - clip_start[clip_idx]
                 else:
                     sampled_global_frame_idx = int(
-                        wp.randf(state) * float(total_motion_frame_count)
+                        reset_uniform_draw(seed, env_idx, RESET_DRAW_FRAME_OR_UNIT)
+                        * float(total_motion_frame_count)
                     )
                     clip_idx = frame_to_clip_idx[sampled_global_frame_idx]
                     valid_start_count = valid_reset_start_count(
                         clip_length[clip_idx],
                         reset_start_horizon_steps,
                     )
-                    local_frame_idx = int(wp.randf(state) * float(valid_start_count))
+                    local_frame_idx = int(
+                        reset_uniform_draw(seed, env_idx, RESET_DRAW_WITHIN_CHUNK)
+                        * float(valid_start_count)
+                    )
                     global_frame_idx = clip_start[clip_idx] + local_frame_idx
                     if adaptive_chunk_size > 1:
                         global_unit_idx = clip_unit_start[clip_idx] + (
@@ -1047,7 +1114,8 @@ def reset_from_motion_multi_kernel(
                         global_unit_idx = clip_unit_start[clip_idx] + local_frame_idx
             else:
                 global_unit_idx = sample_adaptive_unit(
-                    state,
+                    seed,
+                    env_idx,
                     adaptive_cdf,
                     adaptive_unit_count,
                 )
@@ -1057,7 +1125,8 @@ def reset_from_motion_multi_kernel(
                     clip_unit_count,
                 )
                 global_frame_idx = _global_unit_to_global_frame(
-                    state,
+                    seed,
+                    env_idx,
                     global_unit_idx,
                     adaptive_chunk_size,
                     reset_start_horizon_steps,
@@ -1127,13 +1196,13 @@ def reset_from_motion_select_kernel(
         return
 
     seed = reset_seed[0] + common_step_counter[0]
-    state = wp.rand_init(seed, env_idx)
     fi = start_frame_idx
     if analysis_reset_override_enabled[env_idx]:
         fi = analysis_reset_override_start_frame_idx[env_idx]
     elif fi < 0:
         fi = sample_adaptive_frame(
-            state,
+            seed,
+            env_idx,
             random_init,
             adaptive_enabled,
             adaptive_random_sample_prob,
@@ -1144,7 +1213,10 @@ def reset_from_motion_select_kernel(
             reset_start_horizon_steps,
         )
         if adaptive_enabled == 1 and adaptive_pre_failure_window_steps > 0:
-            offset = int(wp.randf(state) * float(adaptive_pre_failure_window_steps))
+            offset = int(
+                reset_uniform_draw(seed, env_idx, RESET_DRAW_PRE_FAILURE_OFFSET)
+                * float(adaptive_pre_failure_window_steps)
+            )
             fi = fi - offset
             if fi < 0:
                 fi = 0
@@ -1245,7 +1317,8 @@ def reset_from_motion_kernel(
     fi = start_frame_idx
     if fi < 0:
         fi = sample_adaptive_frame(
-            state,
+            seed,
+            env_idx,
             random_init,
             adaptive_enabled,
             adaptive_random_sample_prob,

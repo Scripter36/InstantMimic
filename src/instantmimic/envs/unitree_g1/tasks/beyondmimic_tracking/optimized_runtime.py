@@ -17,6 +17,7 @@ from .optimized_kernels import (
     command_target_kernel,
     increment_motion_and_mark_end_kernel,
     interval_push_kernel,
+    observation_group_count,
     observation_kernel,
     reset_reference_state_kernel,
     reward_kernel,
@@ -274,7 +275,10 @@ def capture_collision_force(env: Any, substep_idx: int) -> None:
 def get_observations(env: Any) -> dict[str, torch.Tensor]:
     wp.launch(
         observation_kernel,
-        dim=env.num_envs,
+        dim=(
+            env.num_envs,
+            observation_group_count(ACTION_DIM, len(TRACKED_BODY_NAMES)),
+        ),
         inputs=[
             env.optimized_runtime_state.views.seed,
             env.common_step_counter,

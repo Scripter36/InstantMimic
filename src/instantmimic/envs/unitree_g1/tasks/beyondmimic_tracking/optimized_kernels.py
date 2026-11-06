@@ -54,7 +54,24 @@ def _write_vec4(
 
 
 @wp.func
-def _uniform(state: wp.uint32, lower: float, upper: float) -> float:
+def _slot_uniform(
+    seed: int,
+    env_idx: int,
+    slot_count: int,
+    slot: int,
+    lower: float,
+    upper: float,
+) -> float:
+    """Draw one uniform value from a counter-based (seed, env, slot) state.
+
+    Each draw derives and consumes its own ``wp.rand_init`` state. Warp passes
+    scalar ``@wp.func`` arguments by value, so a helper taking an existing
+    ``state`` would advance only its private copy and silently repeat the
+    caller's previous draw. ``slot`` must be distinct for every draw of one
+    kernel launch, and ``slot_count`` must exceed the largest slot so two
+    environments never share an offset.
+    """
+    state = wp.rand_init(seed, env_idx * slot_count + slot)
     return lower + (upper - lower) * wp.randf(state)
 
 
@@ -136,6 +153,19 @@ def collision_history_kernel(
     ]
 
 
+def observation_group_count(action_dim: int, tracked_body_count: int) -> int:
+    """Return the per-environment work groups consumed by ``observation_kernel``.
+
+    Groups partition one actor/critic observation row pair: one group per
+    command joint, anchor position axis, anchor orientation component, IMU
+    axis, joint row element, tracked body position axis, and tracked body
+    orientation component. The launch uses environments outermost and these
+    groups innermost, so neighbouring lanes in a warp write neighbouring
+    elements of one environment's row.
+    """
+    return 2 * action_dim + 15 + 9 * tracked_body_count
+
+
 @wp.kernel(enable_backward=False)
 def observation_kernel(
     seed: wp.array(dtype=int),
@@ -166,87 +196,122 @@ def observation_kernel(
     action_dim: int,
     tracked_body_count: int,
 ):
-    env_idx = wp.tid()
+    env_idx, group_idx = wp.tid()
     frame_idx = int(time_steps[env_idx])
-    state = wp.rand_init(
-        seed[0] + common_step_counter[0] * 17 + 1009,
-        env_idx,
-    )
 
-    for joint_idx in range(action_dim):
+    command_end = 2 * action_dim
+    anchor_position_group = action_dim
+    anchor_orientation_group = anchor_position_group + 3
+    imu_linear_group = anchor_orientation_group + 6
+    imu_angular_group = imu_linear_group + 3
+    joint_group = imu_angular_group + 3
+    body_position_group = joint_group + action_dim
+    body_orientation_group = body_position_group + 3 * tracked_body_count
+    actor_joint_base = command_end + 15
+    critic_body_position_base = command_end + 9
+    critic_body_orientation_base = critic_body_position_base + 3 * tracked_body_count
+    critic_imu_base = critic_body_orientation_base + 6 * tracked_body_count
+    critic_joint_base = critic_imu_base + 6
+    # One counter slot per corruption draw, ordered like the reference
+    # observation-noise columns (anchor pos/orientation, IMU linear/angular,
+    # then each joint's position and velocity).
+    noise_slot_count = 15 + 2 * action_dim
+
+    if group_idx < action_dim:
+        joint_idx = group_idx
         command_position = motion_joint_position[frame_idx, joint_idx]
         command_velocity = motion_joint_velocity[frame_idx, joint_idx]
         actor_observation[env_idx, joint_idx] = command_position
         actor_observation[env_idx, action_dim + joint_idx] = command_velocity
         critic_observation[env_idx, joint_idx] = command_position
         critic_observation[env_idx, action_dim + joint_idx] = command_velocity
-
-    robot_anchor_position = _read_vec3(xpos, env_idx, anchor_body_id)
-    robot_anchor_quaternion = _read_vec4(xquat, env_idx, anchor_body_id)
-    reference_anchor_position = _read_vec3(
-        motion_body_position, frame_idx, motion_anchor_body_index
-    )
-    reference_anchor_quaternion = _read_vec4(
-        motion_body_quaternion, frame_idx, motion_anchor_body_index
-    )
-    anchor_position = _quat_apply_inverse(
-        robot_anchor_quaternion,
-        reference_anchor_position - robot_anchor_position,
-    )
-    anchor_orientation = _normalized_rotation_columns(
-        _quat_multiply(
-            _quat_inverse(robot_anchor_quaternion),
-            reference_anchor_quaternion,
+    elif group_idx < anchor_orientation_group:
+        position_axis = group_idx - anchor_position_group
+        position_robot_position = _read_vec3(xpos, env_idx, anchor_body_id)
+        position_robot_quaternion = _read_vec4(xquat, env_idx, anchor_body_id)
+        position_reference_position = _read_vec3(
+            motion_body_position, frame_idx, motion_anchor_body_index
         )
-    )
-    for axis in range(3):
-        actor_value = anchor_position[axis]
-        if corruption_enabled == 1:
-            actor_value += _uniform(state, -0.25, 0.25)
-        actor_observation[env_idx, 58 + axis] = actor_value
-        critic_observation[env_idx, 58 + axis] = anchor_position[axis]
-    for component in range(6):
-        actor_value = anchor_orientation[component]
-        if corruption_enabled == 1:
-            actor_value += _uniform(state, -0.05, 0.05)
-        actor_observation[env_idx, 61 + component] = actor_value
-        critic_observation[env_idx, 61 + component] = anchor_orientation[component]
-
-    for body_order in range(tracked_body_count):
-        body_id = body_ids[body_order]
-        body_position = _quat_apply_inverse(
-            robot_anchor_quaternion,
-            _read_vec3(xpos, env_idx, body_id) - robot_anchor_position,
+        anchor_position = _quat_apply_inverse(
+            position_robot_quaternion,
+            position_reference_position - position_robot_position,
         )
-        body_orientation = _normalized_rotation_columns(
+        position_value = anchor_position[position_axis]
+        if corruption_enabled == 1:
+            position_value += _slot_uniform(
+                seed[0] + common_step_counter[0] * 17 + 1009,
+                env_idx,
+                noise_slot_count,
+                position_axis,
+                -0.25,
+                0.25,
+            )
+        actor_observation[env_idx, command_end + position_axis] = position_value
+        critic_observation[env_idx, command_end + position_axis] = anchor_position[
+            position_axis
+        ]
+    elif group_idx < imu_linear_group:
+        orientation_component = group_idx - anchor_orientation_group
+        orientation_robot_quaternion = _read_vec4(xquat, env_idx, anchor_body_id)
+        orientation_reference_quaternion = _read_vec4(
+            motion_body_quaternion, frame_idx, motion_anchor_body_index
+        )
+        anchor_orientation = _normalized_rotation_columns(
             _quat_multiply(
-                _quat_inverse(robot_anchor_quaternion),
-                _read_vec4(xquat, env_idx, body_id),
+                _quat_inverse(orientation_robot_quaternion),
+                orientation_reference_quaternion,
             )
         )
-        for axis in range(3):
-            critic_observation[env_idx, 67 + body_order * 3 + axis] = body_position[
-                axis
-            ]
-        for component in range(6):
-            critic_observation[env_idx, 109 + body_order * 6 + component] = (
-                body_orientation[component]
-            )
-
-    for axis in range(3):
-        linear_velocity = sensordata[env_idx, imu_linear_address + axis]
-        angular_velocity = sensordata[env_idx, imu_angular_address + axis]
-        actor_linear = linear_velocity
-        actor_angular = angular_velocity
+        orientation_value = anchor_orientation[orientation_component]
         if corruption_enabled == 1:
-            actor_linear += _uniform(state, -0.5, 0.5)
-            actor_angular += _uniform(state, -0.2, 0.2)
-        actor_observation[env_idx, 67 + axis] = actor_linear
-        actor_observation[env_idx, 70 + axis] = actor_angular
-        critic_observation[env_idx, 193 + axis] = linear_velocity
-        critic_observation[env_idx, 196 + axis] = angular_velocity
-
-    for joint_idx in range(action_dim):
+            orientation_value += _slot_uniform(
+                seed[0] + common_step_counter[0] * 17 + 1009,
+                env_idx,
+                noise_slot_count,
+                3 + orientation_component,
+                -0.05,
+                0.05,
+            )
+        actor_observation[env_idx, command_end + 3 + orientation_component] = (
+            orientation_value
+        )
+        critic_observation[env_idx, command_end + 3 + orientation_component] = (
+            anchor_orientation[orientation_component]
+        )
+    elif group_idx < imu_angular_group:
+        linear_axis = group_idx - imu_linear_group
+        linear_velocity = sensordata[env_idx, imu_linear_address + linear_axis]
+        linear_value = linear_velocity
+        if corruption_enabled == 1:
+            linear_value += _slot_uniform(
+                seed[0] + common_step_counter[0] * 17 + 1009,
+                env_idx,
+                noise_slot_count,
+                9 + linear_axis,
+                -0.5,
+                0.5,
+            )
+        actor_observation[env_idx, command_end + 9 + linear_axis] = linear_value
+        critic_observation[env_idx, critic_imu_base + linear_axis] = linear_velocity
+    elif group_idx < joint_group:
+        angular_axis = group_idx - imu_angular_group
+        angular_velocity = sensordata[env_idx, imu_angular_address + angular_axis]
+        angular_value = angular_velocity
+        if corruption_enabled == 1:
+            angular_value += _slot_uniform(
+                seed[0] + common_step_counter[0] * 17 + 1009,
+                env_idx,
+                noise_slot_count,
+                12 + angular_axis,
+                -0.2,
+                0.2,
+            )
+        actor_observation[env_idx, command_end + 12 + angular_axis] = angular_value
+        critic_observation[env_idx, critic_imu_base + 3 + angular_axis] = (
+            angular_velocity
+        )
+    elif group_idx < body_position_group:
+        joint_idx = group_idx - joint_group
         joint_position = (
             qpos[env_idx, joint_qpos_indices[joint_idx]]
             - default_joint_position[joint_idx]
@@ -255,14 +320,63 @@ def observation_kernel(
         actor_joint_position = joint_position + encoder_bias[env_idx, joint_idx]
         actor_joint_velocity = joint_velocity
         if corruption_enabled == 1:
-            actor_joint_position += _uniform(state, -0.01, 0.01)
-            actor_joint_velocity += _uniform(state, -0.5, 0.5)
-        actor_observation[env_idx, 73 + joint_idx] = actor_joint_position
-        actor_observation[env_idx, 102 + joint_idx] = actor_joint_velocity
-        actor_observation[env_idx, 131 + joint_idx] = action[env_idx, joint_idx]
-        critic_observation[env_idx, 199 + joint_idx] = joint_position
-        critic_observation[env_idx, 228 + joint_idx] = joint_velocity
-        critic_observation[env_idx, 257 + joint_idx] = action[env_idx, joint_idx]
+            actor_joint_position += _slot_uniform(
+                seed[0] + common_step_counter[0] * 17 + 1009,
+                env_idx,
+                noise_slot_count,
+                15 + 2 * joint_idx,
+                -0.01,
+                0.01,
+            )
+            actor_joint_velocity += _slot_uniform(
+                seed[0] + common_step_counter[0] * 17 + 1009,
+                env_idx,
+                noise_slot_count,
+                16 + 2 * joint_idx,
+                -0.5,
+                0.5,
+            )
+        actor_observation[env_idx, actor_joint_base + joint_idx] = actor_joint_position
+        actor_observation[env_idx, actor_joint_base + action_dim + joint_idx] = (
+            actor_joint_velocity
+        )
+        actor_observation[env_idx, actor_joint_base + 2 * action_dim + joint_idx] = (
+            action[env_idx, joint_idx]
+        )
+        critic_observation[env_idx, critic_joint_base + joint_idx] = joint_position
+        critic_observation[env_idx, critic_joint_base + action_dim + joint_idx] = (
+            joint_velocity
+        )
+        critic_observation[env_idx, critic_joint_base + 2 * action_dim + joint_idx] = (
+            action[env_idx, joint_idx]
+        )
+    elif group_idx < body_orientation_group:
+        body_element = group_idx - body_position_group
+        body_order = body_element // 3
+        body_axis = body_element % 3
+        body_robot_position = _read_vec3(xpos, env_idx, anchor_body_id)
+        body_robot_quaternion = _read_vec4(xquat, env_idx, anchor_body_id)
+        body_position = _quat_apply_inverse(
+            body_robot_quaternion,
+            _read_vec3(xpos, env_idx, body_ids[body_order]) - body_robot_position,
+        )
+        critic_observation[env_idx, critic_body_position_base + body_element] = (
+            body_position[body_axis]
+        )
+    else:
+        orientation_body_element = group_idx - body_orientation_group
+        orientation_body_order = orientation_body_element // 6
+        orientation_body_component = orientation_body_element % 6
+        orientation_body_robot_quaternion = _read_vec4(xquat, env_idx, anchor_body_id)
+        body_orientation = _normalized_rotation_columns(
+            _quat_multiply(
+                _quat_inverse(orientation_body_robot_quaternion),
+                _read_vec4(xquat, env_idx, body_ids[orientation_body_order]),
+            )
+        )
+        critic_observation[
+            env_idx, critic_body_orientation_base + orientation_body_element
+        ] = body_orientation[orientation_body_component]
 
 
 @wp.kernel(enable_backward=False)
@@ -623,29 +737,111 @@ def reset_reference_state_kernel(
     if not reset_mask[env_idx]:
         return
     frame_idx = int(time_steps[env_idx])
-    state = wp.rand_init(
-        seed[0] + common_step_counter[0] * 43 + salt,
-        env_idx,
-    )
+    reset_seed = seed[0] + common_step_counter[0] * 43 + salt
+    reset_slot_count = 12 + action_dim
     position_delta = wp.vec3(
-        _uniform(state, reset_position_bounds[0, 0], reset_position_bounds[0, 1]),
-        _uniform(state, reset_position_bounds[1, 0], reset_position_bounds[1, 1]),
-        _uniform(state, reset_position_bounds[2, 0], reset_position_bounds[2, 1]),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            0,
+            reset_position_bounds[0, 0],
+            reset_position_bounds[0, 1],
+        ),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            1,
+            reset_position_bounds[1, 0],
+            reset_position_bounds[1, 1],
+        ),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            2,
+            reset_position_bounds[2, 0],
+            reset_position_bounds[2, 1],
+        ),
     )
     euler_delta = wp.vec3(
-        _uniform(state, reset_euler_bounds[0, 0], reset_euler_bounds[0, 1]),
-        _uniform(state, reset_euler_bounds[1, 0], reset_euler_bounds[1, 1]),
-        _uniform(state, reset_euler_bounds[2, 0], reset_euler_bounds[2, 1]),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            3,
+            reset_euler_bounds[0, 0],
+            reset_euler_bounds[0, 1],
+        ),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            4,
+            reset_euler_bounds[1, 0],
+            reset_euler_bounds[1, 1],
+        ),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            5,
+            reset_euler_bounds[2, 0],
+            reset_euler_bounds[2, 1],
+        ),
     )
     root_velocity_delta = wp.vec3(
-        _uniform(state, reset_velocity_bounds[0, 0], reset_velocity_bounds[0, 1]),
-        _uniform(state, reset_velocity_bounds[1, 0], reset_velocity_bounds[1, 1]),
-        _uniform(state, reset_velocity_bounds[2, 0], reset_velocity_bounds[2, 1]),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            6,
+            reset_velocity_bounds[0, 0],
+            reset_velocity_bounds[0, 1],
+        ),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            7,
+            reset_velocity_bounds[1, 0],
+            reset_velocity_bounds[1, 1],
+        ),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            8,
+            reset_velocity_bounds[2, 0],
+            reset_velocity_bounds[2, 1],
+        ),
     )
     angular_velocity_delta = wp.vec3(
-        _uniform(state, reset_velocity_bounds[3, 0], reset_velocity_bounds[3, 1]),
-        _uniform(state, reset_velocity_bounds[4, 0], reset_velocity_bounds[4, 1]),
-        _uniform(state, reset_velocity_bounds[5, 0], reset_velocity_bounds[5, 1]),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            9,
+            reset_velocity_bounds[3, 0],
+            reset_velocity_bounds[3, 1],
+        ),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            10,
+            reset_velocity_bounds[4, 0],
+            reset_velocity_bounds[4, 1],
+        ),
+        _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            11,
+            reset_velocity_bounds[5, 0],
+            reset_velocity_bounds[5, 1],
+        ),
     )
     half_roll = 0.5 * euler_delta[0]
     half_pitch = 0.5 * euler_delta[1]
@@ -701,8 +897,11 @@ def reset_reference_state_kernel(
     for component in range(4):
         qpos[env_idx, 3 + component] = root_quaternion[component]
     for joint_idx in range(action_dim):
-        joint_position = motion_joint_position[frame_idx, joint_idx] + _uniform(
-            state,
+        joint_position = motion_joint_position[frame_idx, joint_idx] + _slot_uniform(
+            reset_seed,
+            env_idx,
+            reset_slot_count,
+            12 + joint_idx,
             reset_joint_bounds[0],
             reset_joint_bounds[1],
         )
@@ -827,12 +1026,13 @@ def interval_push_kernel(
     push_time_left[env_idx] = remaining
     if remaining >= 1.0e-6:
         return
-    state = wp.rand_init(
-        seed[0] + common_step_counter[0] * 59 + 4001,
+    push_seed = seed[0] + common_step_counter[0] * 59 + 4001
+    push_slot_count = 7
+    push_time_left[env_idx] = _slot_uniform(
+        push_seed,
         env_idx,
-    )
-    push_time_left[env_idx] = _uniform(
-        state,
+        push_slot_count,
+        0,
         push_interval_bounds[0],
         push_interval_bounds[1],
     )
@@ -849,14 +1049,56 @@ def interval_push_kernel(
         cvel[env_idx, root_body_id, 5],
     ) - wp.cross(angular_world, root_subtree_com - root_position)
     linear_world += wp.vec3(
-        _uniform(state, push_velocity_bounds[0, 0], push_velocity_bounds[0, 1]),
-        _uniform(state, push_velocity_bounds[1, 0], push_velocity_bounds[1, 1]),
-        _uniform(state, push_velocity_bounds[2, 0], push_velocity_bounds[2, 1]),
+        _slot_uniform(
+            push_seed,
+            env_idx,
+            push_slot_count,
+            1,
+            push_velocity_bounds[0, 0],
+            push_velocity_bounds[0, 1],
+        ),
+        _slot_uniform(
+            push_seed,
+            env_idx,
+            push_slot_count,
+            2,
+            push_velocity_bounds[1, 0],
+            push_velocity_bounds[1, 1],
+        ),
+        _slot_uniform(
+            push_seed,
+            env_idx,
+            push_slot_count,
+            3,
+            push_velocity_bounds[2, 0],
+            push_velocity_bounds[2, 1],
+        ),
     )
     angular_world += wp.vec3(
-        _uniform(state, push_velocity_bounds[3, 0], push_velocity_bounds[3, 1]),
-        _uniform(state, push_velocity_bounds[4, 0], push_velocity_bounds[4, 1]),
-        _uniform(state, push_velocity_bounds[5, 0], push_velocity_bounds[5, 1]),
+        _slot_uniform(
+            push_seed,
+            env_idx,
+            push_slot_count,
+            4,
+            push_velocity_bounds[3, 0],
+            push_velocity_bounds[3, 1],
+        ),
+        _slot_uniform(
+            push_seed,
+            env_idx,
+            push_slot_count,
+            5,
+            push_velocity_bounds[4, 0],
+            push_velocity_bounds[4, 1],
+        ),
+        _slot_uniform(
+            push_seed,
+            env_idx,
+            push_slot_count,
+            6,
+            push_velocity_bounds[5, 0],
+            push_velocity_bounds[5, 1],
+        ),
     )
     root_quaternion = wp.vec4(
         qpos[env_idx, 3],
