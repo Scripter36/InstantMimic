@@ -27,6 +27,7 @@ from instantmimic.rendering.muscle_overlay import (
 from instantmimic.rendering.render_model import clone_playback_render_model
 from instantmimic.utils.mjw_kernels.private import mul_quat, rot_vec_quat, smooth
 from instantmimic.utils.mjw_model import put_model
+from instantmimic.utils.torch_warp_capture import warp_stream_from_torch
 
 logger = logging.getLogger(__name__)
 
@@ -738,7 +739,7 @@ class MujocoWarpPlaybackRenderer:
             if smooth_valid_t.is_cuda:
                 torch_stream = torch.cuda.current_stream(smooth_valid_t.device)
                 with wp.ScopedStream(
-                    wp.stream_from_torch(torch_stream),
+                    warp_stream_from_torch(torch_stream),
                     sync_enter=False,
                     sync_exit=False,
                 ):

@@ -152,7 +152,6 @@ experiment:
 runtime:
   compile: true
   compile_act_into: false
-  compile_update_fullgraph: true
   compile_mode: max-autotune-no-cudagraphs
   precision: float32
   nsys_nvtx_mode: launch

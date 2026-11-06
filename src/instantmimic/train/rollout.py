@@ -28,7 +28,10 @@ from instantmimic.rl.runtime import (
     agent_observation_output_views,
     copy_agent_observation_into,
 )
-from instantmimic.utils.torch_warp_capture import capture_warp_graph
+from instantmimic.utils.torch_warp_capture import (
+    capture_warp_graph,
+    warp_stream_from_torch,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _TrainFullVideoPrepareStep = Callable[[int], None]
@@ -427,7 +430,7 @@ class RolloutRuntime:
             return
         assert rl_torch_stream is not None
         self.torch_stream = rl_torch_stream
-        self.wp_stream = wp.stream_from_torch(self.torch_stream)
+        self.wp_stream = warp_stream_from_torch(self.torch_stream)
         if self.use_step_rollout_graphs:
             _LOGGER.info(
                 "Detailed Nsight mode: will capture %d rollout step graphs on first rollout "

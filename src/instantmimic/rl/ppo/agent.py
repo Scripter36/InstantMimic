@@ -34,15 +34,20 @@ from instantmimic.rl.optimizers import (
     validate_graph_optimizer_constraints,
 )
 from instantmimic.rl.sampling import fill_gaussian_noise_kernel, increment_seed_kernel
+from instantmimic.rl.update_compile import update_fullgraph_compile_enabled
 from instantmimic.utils.policy_mean_contract import register_policy_mean_methods
 from instantmimic.utils.startup_profiler import StartupProfiler
-from instantmimic.utils.torch_warp_capture import capture_warp_graph
+from instantmimic.utils.torch_warp_capture import (
+    capture_warp_graph,
+    warp_stream_from_torch,
+)
 
 from .initial_state import InitialStateLearner
 from .loss_scaler import CapturableLossScaler
 from .losses import ppo_loss_terms
 
 _LOGGER = logging.getLogger(__name__)
+_LR_SCHEDULE_CONSTANT_NAMES = ("kl_high", "kl_low", "factor", "min_lr", "max_lr")
 
 _UPDATE_KL_METRIC_INDEX = 4
 
@@ -270,7 +275,7 @@ class RolloutBuffer:
             target_wp_stream = wp_stream
             if target_wp_stream is None:
                 current_torch_stream = torch.cuda.current_stream(self.device)
-                target_wp_stream = wp.stream_from_torch(current_torch_stream)
+                target_wp_stream = warp_stream_from_torch(current_torch_stream)
             with wp.ScopedStream(target_wp_stream, sync_enter=False, sync_exit=False):
                 wp.launch(
                     _compute_gae_kernel,
@@ -408,7 +413,6 @@ class PPOAgent:
         compile: bool = False,
         compile_mode: str = "max-autotune-no-cudagraphs",
         compile_act_into: bool = True,
-        compile_update_fullgraph: bool = False,
         use_update_graph: bool = False,
         use_shuffle_graph: bool = False,
         update_torch_stream: torch.cuda.Stream | None = None,
@@ -767,6 +771,10 @@ class PPOAgent:
             self._optimizer_lr_wp: list[Any | None] = []
             self._lr_kl_tensor: torch.Tensor | None = None
             self._lr_kl_wp = None
+            self._lr_schedule_constants: dict[
+                torch.dtype,
+                dict[str, torch.Tensor],
+            ] = {}
             self._refresh_optimizer_lr_wrappers()
         with init_profiler.phase("optimizer_graph_state_init"):
             if self._use_update_graph:
@@ -849,10 +857,9 @@ class PPOAgent:
         )
         self._compile_enabled = bool(compile and hasattr(torch, "compile"))
         self._compile_mode = compile_mode
-        self._compile_update_fullgraph = bool(
-            compile_update_fullgraph
-            and self._compile_enabled
-            and self._use_update_graph
+        self._compile_update_fullgraph = update_fullgraph_compile_enabled(
+            compile_enabled=self._compile_enabled,
+            update_graph_enabled=self._use_update_graph,
         )
         self._compiled_update_uses_return_path = False
         self._compiled_update_capture_prewarmed = False
@@ -1087,7 +1094,7 @@ class PPOAgent:
             )
             self._policy_log_std_frozen = False
             self._update_wp_stream = (
-                wp.stream_from_torch(self._update_torch_stream)
+                warp_stream_from_torch(self._update_torch_stream)
                 if self._use_update_graph and self._update_torch_stream is not None
                 else None
             )
@@ -1199,6 +1206,7 @@ class PPOAgent:
         self._optimizer_lr_wp = []
         self._lr_kl_tensor = None
         self._lr_kl_wp = None
+        self._lr_schedule_constants = {}
         self._update_graph = None
         self._detailed_update_prepare_graph = None
         self._detailed_update_epoch_prepare_graphs = None
@@ -1720,27 +1728,92 @@ class PPOAgent:
         self._optimizer_lr_wp = []
         self._lr_kl_tensor = None
         self._lr_kl_wp = None
-        if not self._use_update_graph:
-            return
-        self._lr_kl_tensor = torch.empty(1, device=self.device, dtype=torch.float32)
-        self._lr_kl_wp = wp.from_torch(self._lr_kl_tensor, dtype=wp.float32)
-        for group in self.optimizer.param_groups:
-            group_lr = group["lr"]
-            if torch.is_tensor(group_lr):
-                if group_lr.numel() != 1:
-                    raise ValueError("Tensor lr must be 1-element")
-                if group_lr.device != self.device or group_lr.dtype != torch.float32:
-                    group_lr = group_lr.to(device=self.device, dtype=torch.float32)
-                    group["lr"] = group_lr
-                self._optimizer_lr_wp.append(
-                    wp.from_torch(group_lr.reshape(1), dtype=wp.float32)
-                )
-            else:
-                self._optimizer_lr_wp.append(None)
+        if self._use_update_graph:
+            self._lr_kl_tensor = torch.empty(1, device=self.device, dtype=torch.float32)
+            self._lr_kl_wp = wp.from_torch(self._lr_kl_tensor, dtype=wp.float32)
+            for group in self.optimizer.param_groups:
+                group_lr = group["lr"]
+                if torch.is_tensor(group_lr):
+                    if group_lr.numel() != 1:
+                        raise ValueError("Tensor lr must be 1-element")
+                    if (
+                        group_lr.device != self.device
+                        or group_lr.dtype != torch.float32
+                    ):
+                        group_lr = group_lr.to(device=self.device, dtype=torch.float32)
+                        group["lr"] = group_lr
+                    self._optimizer_lr_wp.append(
+                        wp.from_torch(group_lr.reshape(1), dtype=wp.float32)
+                    )
+                else:
+                    self._optimizer_lr_wp.append(None)
+        # Refresh after the normalization above: the constants are allocated
+        # per learning-rate dtype, so a float64 tensor LR normalized to float32
+        # must produce float32 constants. This runs at construction and on
+        # resume, never inside a capture.
+        self._refresh_lr_schedule_constants()
 
     def _update_learning_rate(self, kl_mean: torch.Tensor | float) -> None:
+        """Apply the KL learning-rate schedule in device arithmetic.
+
+        The schedule constants are device tensors allocated per learning-rate
+        dtype at construction, so a captured minibatch reads them instead of
+        moving a Python scalar onto the device inside the capture window; such
+        a host-to-device copy aborts capture.
+        """
         if self.kl_threshold <= 0.0 or self._update_mode == "value_bootstrap":
             return
+        self._apply_learning_rate_schedule(kl_mean)
+
+    def _lr_schedule_values(self) -> tuple[float, ...]:
+        """The KL-schedule constants this agent currently schedules with."""
+        return (
+            self.kl_threshold * 2.0,
+            self.kl_threshold / 2.0,
+            self.lr_factor,
+            self.min_learning_rate,
+            self.max_learning_rate,
+        )
+
+    def _refresh_lr_schedule_constants(self) -> None:
+        """Allocate or update the device scalars the KL schedule reads.
+
+        One tensor per constant and per optimizer learning-rate dtype, created
+        before any capture. The update path only reads them, so a captured
+        minibatch never creates a tensor or mutates a guarded mapping. Call this
+        outside capture after changing a schedule value (construction, resume).
+        """
+        optimizer = getattr(self, "optimizer", None)
+        constants_by_dtype = getattr(self, "_lr_schedule_constants", None)
+        if constants_by_dtype is None:
+            constants_by_dtype = {}
+            self._lr_schedule_constants = constants_by_dtype
+        if optimizer is None:
+            constants_by_dtype.clear()
+            return
+        dtypes = {
+            group["lr"].dtype
+            for group in optimizer.param_groups
+            if torch.is_tensor(group["lr"])
+        }
+        # Optimizer construction leaves the learning rate a Python float and
+        # graph preparation promotes it to float32. Allocate that dtype eagerly
+        # so a caller that installs a tensor LR between the two never has to
+        # create a schedule scalar from inside the update path.
+        dtypes.add(torch.float32)
+        values = self._lr_schedule_values()
+        for dtype in dtypes:
+            constants = constants_by_dtype.get(dtype)
+            if constants is None:
+                constants = {
+                    name: torch.zeros((), device=self.device, dtype=dtype)
+                    for name in _LR_SCHEDULE_CONSTANT_NAMES
+                }
+                constants_by_dtype[dtype] = constants
+            for name, value in zip(_LR_SCHEDULE_CONSTANT_NAMES, values, strict=True):
+                constants[name].fill_(float(value))
+
+    def _apply_learning_rate_schedule(self, kl_mean: torch.Tensor | float) -> None:
         for group_idx, group in enumerate(self.optimizer.param_groups):
             group_lr = group["lr"]
             if torch.is_tensor(group_lr):
@@ -1783,11 +1856,12 @@ class PPOAgent:
                     kl = torch.tensor(
                         kl_mean, device=group_lr.device, dtype=group_lr.dtype
                     )
-                high = group_lr.new_tensor(self.kl_threshold * 2.0)
-                low = group_lr.new_tensor(self.kl_threshold / 2.0)
-                factor = group_lr.new_tensor(self.lr_factor)
-                min_lr = group_lr.new_tensor(self.min_learning_rate)
-                max_lr = group_lr.new_tensor(self.max_learning_rate)
+                constants = self._lr_schedule_constants[group_lr.dtype]
+                high = constants["kl_high"]
+                low = constants["kl_low"]
+                factor = constants["factor"]
+                min_lr = constants["min_lr"]
+                max_lr = constants["max_lr"]
                 decreased = torch.maximum(group_lr / factor, min_lr)
                 increased = torch.minimum(group_lr * factor, max_lr)
                 increase_condition = kl < low
@@ -4481,15 +4555,13 @@ class PPOAgent:
     def _prewarm_compiled_update_capture_path(self) -> None:
         """Warm every compiled callable reachable from the captured update.
 
-        ``compile_update_fullgraph`` only decides whether the update wrappers
-        are compiled into one graph. It must not gate the eager warmup: with
-        ``runtime.compile`` and the update graph enabled but fullgraph off, the
-        model evaluation callables are still compiled, and the update loop first
-        reaches some of them (the no-grad + autocast specialization used by
-        ``_recompute_old_policy``) inside capture. Inductor would then compile
-        and autotune there, and its benchmarking allocations invalidate the
-        capturing stream. Warm the real update path first in every case; the
-        wrapper compilation below keeps its own fullgraph gate.
+        The update wrappers compile because runtime.compile and the update CUDA
+        graph are both enabled; that is also what makes the warmup mandatory.
+        The update loop first reaches some compiled model callables (the no-grad
+        + autocast specialization used by _recompute_old_policy) inside capture.
+        Inductor would then compile and autotune there, and its benchmarking
+        allocations invalidate the capturing stream. Warm the real update path
+        first.
         """
         if not (self._compile_enabled and self._use_update_graph):
             return

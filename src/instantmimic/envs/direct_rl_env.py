@@ -71,7 +71,10 @@ from instantmimic.utils.project_paths import resolve_project_path
 from instantmimic.utils.spaces import sample_space, spec_to_gym_space
 from instantmimic.utils.startup_profiler import StartupProfiler, startup_nvtx_range
 from instantmimic.utils.timer import Timer
-from instantmimic.utils.torch_warp_capture import capture_warp_graph
+from instantmimic.utils.torch_warp_capture import (
+    capture_warp_graph,
+    warp_stream_from_torch,
+)
 
 from .direct_rl_env_cfg import DirectRLEnvCfg, SimulationCfg
 from .direct_rl_rendering import DirectRLRenderRuntime
@@ -238,7 +241,7 @@ def make_stream_aligned_cuda_graph_streams(
 ) -> tuple[torch.cuda.Stream, Any]:
     wp.init()
     torch_stream = torch.cuda.Stream(device=device)
-    wp_stream = wp.stream_from_torch(torch_stream)
+    wp_stream = warp_stream_from_torch(torch_stream)
     return torch_stream, wp_stream
 
 

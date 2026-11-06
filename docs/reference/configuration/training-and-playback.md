@@ -27,7 +27,6 @@ experiment:
       source: auto
 runtime:
   compile: true
-  compile_update_fullgraph: true
   act_cuda_graph: true
   update_cuda_graph: true
   shuffle_cuda_graph: true
@@ -84,7 +83,6 @@ clip for where the policy fails. A run uses one of the two.
 | Key | Meaning |
 | --- | --- |
 | `compile`, `compile_mode` | Use `torch.compile` for the policy and the update, and its mode (default `max-autotune-no-cudagraphs`) |
-| `compile_update_fullgraph` | Compile the whole PPO update as one graph. Needs `compile` and `update_cuda_graph` |
 | `act_cuda_graph`, `update_cuda_graph`, `shuffle_cuda_graph` | Capture action sampling, the PPO update and minibatch shuffling as CUDA graphs. `shuffle_cuda_graph` needs `update_cuda_graph` and an `agent.shuffle_mode` other than `off` |
 | `precision`, `loss_scale` | Policy network precision (see below) |
 | `fail_on_nonfinite_update` | Stop if an update produces non-finite values |
@@ -93,6 +91,20 @@ clip for where the policy fails. A run uses one of the two.
 CUDA graphs, so they cannot be combined with `act_cuda_graph` or
 `update_cuda_graph`. The GPU is chosen by the process environment, for example
 `CUDA_VISIBLE_DEVICES=1 uv run train ...`.
+
+`runtime.compile` together with `runtime.update_cuda_graph` compiles the PPO
+update wrappers and captures them in one external CUDA graph. The two settings
+are one execution mode, so there is no separate full-graph switch; the compile
+strictness is fixed per learner. PPO compiles its update wrappers
+(`_run_update_minibatch`, `_prepare_update_views_compiled`,
+`_evaluate_old_policy_minibatch` and `_obs_scale_update_into`) and the
+fast-muscle MuscleNN training runtime
+compiles its minibatch body with the default `fullgraph=False`, so Dynamo may
+break those graphs and compiled regions interleave with eager ones inside the
+captured update. Warp muscle dynamics and feasible torque bounds reach every
+compiled region through opaque `torch.library` custom operators. The retired
+`compile_update_fullgraph` key is rejected rather than ignored; delete it from
+a configuration that still sets it.
 
 ### Reduced precision
 

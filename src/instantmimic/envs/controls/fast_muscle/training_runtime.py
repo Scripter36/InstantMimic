@@ -24,6 +24,7 @@ from instantmimic.muscle.parsing.mjcf import (
 from instantmimic.muscle.runtime_specs import MuscleLayerRuntimeSpec
 from instantmimic.rl.optimizers import build_optimizer
 from instantmimic.utils.startup_profiler import startup_nvtx_wrapped
+from instantmimic.utils.torch_warp_capture import warp_stream_from_torch
 
 from .bindings import FastMuscleSimulationBindings
 from .config_models import (
@@ -1461,12 +1462,17 @@ class FastMuscleTrainingMixin:
     def configure_musclenn_update_runtime(
         self,
         *,
-        compile_update_fullgraph: bool,
+        update_fullgraph_compile: bool,
         compile_mode: str,
         use_update_graph: bool,
         use_shuffle_graph: bool,
     ) -> None:
-        """Mirror the PPO update runtime for the auxiliary MuscleNN optimizer."""
+        """Mirror the PPO update runtime for the auxiliary MuscleNN optimizer.
+
+        update_fullgraph_compile is the caller's derived condition (runtime
+        compile together with the update graph); this runtime additionally
+        requires its own capture support below.
+        """
         optimizer = getattr(self, "_musclenn_optimizer", None)
         optimizer_capturable = bool(
             optimizer is not None
@@ -1486,7 +1492,7 @@ class FastMuscleTrainingMixin:
             )
         )
         runtime_signature = (
-            bool(compile_update_fullgraph and graph_enabled),
+            bool(update_fullgraph_compile and graph_enabled),
             str(compile_mode),
             graph_enabled,
             bool(use_shuffle_graph and graph_enabled),
@@ -1505,7 +1511,7 @@ class FastMuscleTrainingMixin:
 
         self._invalidate_musclenn_update_graphs()
         self._musclenn_compile_update_fullgraph = bool(
-            compile_update_fullgraph and graph_enabled
+            update_fullgraph_compile and graph_enabled
         )
         self._musclenn_compile_mode = str(compile_mode)
         self._musclenn_use_update_graph = graph_enabled
@@ -1542,7 +1548,7 @@ class FastMuscleTrainingMixin:
         if self.device.type != "cuda":
             return nullcontext()
         return wp.ScopedStream(
-            wp.stream_from_torch(torch.cuda.current_stream(self.device)),
+            warp_stream_from_torch(torch.cuda.current_stream(self.device)),
             sync_enter=False,
             sync_exit=False,
         )

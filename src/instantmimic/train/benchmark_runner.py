@@ -42,7 +42,10 @@ from instantmimic.utils.policy_mean_contract import (
     matches_policy_mean_bound_callable,
     matches_policy_mean_methods,
 )
-from instantmimic.utils.torch_warp_capture import capture_warp_graph
+from instantmimic.utils.torch_warp_capture import (
+    capture_warp_graph,
+    warp_stream_from_torch,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _BUILTIN_ROLLOUT_METRICS = {
@@ -2035,7 +2038,7 @@ class RolloutBenchmarkRunner:
             else None
         )
         self._wp_stream = (
-            wp.stream_from_torch(self._torch_stream)
+            warp_stream_from_torch(self._torch_stream)
             if self._torch_stream is not None
             else None
         )

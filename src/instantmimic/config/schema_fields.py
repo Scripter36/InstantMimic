@@ -43,7 +43,7 @@ RULE_REQUIRES_COMPILE = "requires_compile"
 RULE_SHUFFLE_NEEDS_UPDATE_GRAPH = "shuffle_needs_update_graph"
 RULE_TORCH_GRAPH_CONFLICT = "torch_graph_conflict"
 
-_COMPILE_DEPENDENT_FIELDS = ("compile_act_into", "compile_update_fullgraph")
+_COMPILE_DEPENDENT_FIELDS = ("compile_act_into",)
 
 
 def runtime_rule_violations(
@@ -52,7 +52,7 @@ def runtime_rule_violations(
     """Every cross-field rule the `runtime` block breaks, as `(path, rule)`.
 
     `rule` is one of the `RULE_*` constants above. The caller turns it into its
-    own message, and reports in the order returned: the two `compile` dependents
+    own message, and reports in the order returned: the `compile` dependents
     first, then the shuffle graph, then the compile-mode conflict.
 
     An absent `compile_mode` means `DEFAULT_COMPILE_MODE`, which is what the

@@ -228,7 +228,6 @@ def test_tanh_rollout_and_update_cuda_graph_replay_keeps_raw_storage(
         precision="float32",
         learning_rate=1e-12,
         compile=True,
-        compile_update_fullgraph=fullgraph_update,
         use_update_graph=True,
     )
     with torch.no_grad():
@@ -266,7 +265,6 @@ def test_tanh_compile_warmup_precedes_rollout_buffer_allocation(
         precision="float32",
         learning_rate=1e-12,
         compile=True,
-        compile_update_fullgraph=fullgraph_update,
     )
     with torch.no_grad():
         agent.network.policy_head.weight.zero_()
@@ -335,7 +333,6 @@ def test_warmup_compiles_rollout_and_bootstrap_before_capture(
         squash_actions=squash,
         precision="float32",
         kl_estimator="analytic" if analytic_kl else "sampled",
-        compile_update_fullgraph=False,
     )
     compilations = []
 

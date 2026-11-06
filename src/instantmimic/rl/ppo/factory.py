@@ -81,7 +81,6 @@ def build_ppo_agent_from_spec(
             "compile": spec.runtime.compile,
             "compile_mode": spec.runtime.compile_mode,
             "compile_act_into": spec.runtime.compile_act_into,
-            "compile_update_fullgraph": spec.runtime.compile_update_fullgraph,
             "use_update_graph": spec.runtime.update_cuda_graph,
             "use_shuffle_graph": spec.runtime.shuffle_cuda_graph,
             "update_torch_stream": update_torch_stream,

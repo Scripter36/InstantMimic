@@ -45,7 +45,6 @@ def _agent(device: str, shuffle_mode: str, *, detailed: bool = False):
         },
         compile=graph,
         compile_act_into=False,
-        compile_update_fullgraph=True,
         compile_mode="max-autotune-no-cudagraphs",
         use_update_graph=graph,
         use_shuffle_graph=graph,

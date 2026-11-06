@@ -24,7 +24,10 @@ from instantmimic.envs.snu.tasks.snu_imitation.adaptive_sampling import (
     resolve_adaptive_sampling_config,
     solve_rank_exponent_for_target_ess,
 )
-from instantmimic.utils.torch_warp_capture import capture_warp_graph
+from instantmimic.utils.torch_warp_capture import (
+    capture_warp_graph,
+    warp_stream_from_torch,
+)
 
 _LOGGER = logging.getLogger(__name__)
 __all__ = (
@@ -967,7 +970,7 @@ def update_adaptive_sampling_distribution_after_rollout(
         elif torch_stream is None:
             torch_stream = torch.cuda.current_stream(self.device)
         elif wp_stream is None:
-            wp_stream = wp.stream_from_torch(torch_stream)
+            wp_stream = warp_stream_from_torch(torch_stream)
         torch_stream.wait_stream(torch.cuda.current_stream(self.device))
         if graph is None:
             with wp.ScopedStream(wp_stream, sync_enter=False, sync_exit=False):
@@ -1020,7 +1023,7 @@ def update_motion_plr_distribution_after_policy_update(
         elif torch_stream is None:
             torch_stream = torch.cuda.current_stream(self.device)
         elif wp_stream is None:
-            wp_stream = wp.stream_from_torch(torch_stream)
+            wp_stream = warp_stream_from_torch(torch_stream)
         torch_stream.wait_stream(torch.cuda.current_stream(self.device))
         if graph is None:
             with wp.ScopedStream(wp_stream, sync_enter=False, sync_exit=False):

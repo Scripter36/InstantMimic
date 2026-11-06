@@ -114,6 +114,7 @@ from instantmimic.utils.project_paths import (
     resolve_project_log_root,
 )
 from instantmimic.utils.startup_profiler import StartupProfiler, startup_nvtx_range
+from instantmimic.utils.torch_warp_capture import warp_stream_from_torch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -890,7 +891,7 @@ def _play_checkpoint(
         torch.cuda.Stream(device=device) if device.type == "cuda" else None
     )
     play_wp_stream = (
-        wp.stream_from_torch(play_torch_stream)
+        warp_stream_from_torch(play_torch_stream)
         if play_torch_stream is not None
         else None
     )

@@ -267,7 +267,6 @@ def test_cpu_checkpoint_resumes_capture_and_two_gpu_replays(
         use_update_graph=True,
         use_shuffle_graph=True,
         compile=True,
-        compile_update_fullgraph=True,
     )
     # CPU and CUDA use different policy/shuffle RNG backends. Initialize those
     # new CUDA streams explicitly; this test isolates optimizer continuation.

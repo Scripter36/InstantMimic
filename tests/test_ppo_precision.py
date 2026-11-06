@@ -204,7 +204,6 @@ def test_compiled_fp16_scaler_and_policy_update(precision):
         agent = _agent(
             precision=precision,
             compile=True,
-            compile_update_fullgraph=True,
             compile_act_into=True,
         )
         for _ in range(2):
@@ -279,7 +278,6 @@ def test_fp16_cuda_graph_replay_skips_overflow(detailed, optimizer):
         precision="float16",
         optimizer_name=optimizer,
         compile=True,
-        compile_update_fullgraph=True,
         use_update_graph=True,
         detailed_nvtx=detailed,
     )
@@ -357,7 +355,6 @@ def test_fp16_cuda_graph_can_resume_a_cpu_optimizer_checkpoint(tmp_path):
         precision="float16",
         use_update_graph=True,
         compile=True,
-        compile_update_fullgraph=True,
     )
     # CPU uses Torch noise; CUDA uses Warp noise. The full-resume contract
     # requires an explicit initial Warp seed when crossing that RNG backend.

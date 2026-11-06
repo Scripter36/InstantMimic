@@ -41,7 +41,6 @@ def _check_scheduler(device, mode, *, detailed=False):
         value_preprocessor=None,
         compile=graph,
         compile_act_into=False,
-        compile_update_fullgraph=True,
         use_update_graph=graph,
         update_torch_stream=torch.cuda.Stream() if graph else None,
         detailed_nvtx=detailed,

@@ -1739,8 +1739,19 @@ _RUNTIME_RULE_MESSAGES = {
     ),
 }
 
+_REMOVED_RUNTIME_KEYS = {
+    "compile_update_fullgraph": (
+        "was removed; full update compilation is implied by runtime.compile "
+        "together with runtime.update_cuda_graph"
+    ),
+}
+
 
 def _validate_runtime(value: object) -> Mapping[str, object]:
+    if isinstance(value, Mapping):
+        for removed, message in _REMOVED_RUNTIME_KEYS.items():
+            if removed in value:
+                _error(f"runtime.{removed}", message)
     runtime = _closed(value, path="runtime", allowed=schema_fields.RUNTIME_FIELDS)
     try:
         RuntimeConfig.from_mapping(runtime)

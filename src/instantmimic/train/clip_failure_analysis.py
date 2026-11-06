@@ -174,7 +174,6 @@ def prepare_analysis_runtime_cfg(
             "shuffle_cuda_graph": False,
             "compile": bool(compile),
             "compile_act_into": False,
-            "compile_update_fullgraph": False,
         },
     )
     runtime_cfg = runtime.execution_config

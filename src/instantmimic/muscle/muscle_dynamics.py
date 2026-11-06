@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import copy
 import logging
 import os
 import tempfile
@@ -104,6 +105,13 @@ from .reference import (
 )
 from .runtime_specs import (
     MuscleLayerRuntimeSpec,
+)
+from .warp_custom_ops import (
+    muscle_torque_bounds,
+    muscle_torque_cached_lbs_forward,
+    muscle_torque_forward,
+    register_warp_op_layer,
+    warp_op_key,
 )
 from .waypoint_wrap import (
     WaypointWrapping,
@@ -299,6 +307,14 @@ class _SegmentProjectionTerms(NamedTuple):
 
 
 class _WarpMuscleDynamicsFromActivation(torch.autograd.Function):
+    """Uncompiled reference for the activation-to-torque gradient.
+
+    Runtime callers go through the dispatcher operators in warp_custom_ops,
+    which compile into strict fullgraph traces. This Function keeps the same
+    Warp forward and backward available outside Dynamo, and the parity tests
+    compare operator gradients against it.
+    """
+
     @staticmethod
     def forward(
         ctx,
@@ -381,48 +397,6 @@ class _WarpMuscleDynamicsFromActivationCachedLBSForce(torch.autograd.Function):
         return grad_activation, None, None, None, None, None
 
 
-@torch.compiler.disable
-def _warp_muscle_dynamics_from_activation_eager(
-    activation: torch.Tensor,
-    raw_context: torch.Tensor,
-    layer: MuscleDynamicsLayer,
-    *,
-    include_passive_force: bool,
-) -> torch.Tensor:
-    """Keep Warp custom autograd outside Dynamo fullgraph traces.
-
-    Coordinator training can compile the surrounding tensor math while the
-    Warp-backed muscle forward/backward remains eager and capture-safe.
-    """
-
-    return _WarpMuscleDynamicsFromActivation.apply(
-        activation,
-        raw_context,
-        layer,
-        include_passive_force,
-    )
-
-
-@torch.compiler.disable
-def _warp_muscle_dynamics_from_activation_cached_lbs_force_eager(
-    activation: torch.Tensor,
-    raw_context: torch.Tensor,
-    unit_force_magnitude: torch.Tensor,
-    passive_force_magnitude: torch.Tensor,
-    layer: MuscleDynamicsLayer,
-    *,
-    include_passive_force: bool,
-) -> torch.Tensor:
-    return _WarpMuscleDynamicsFromActivationCachedLBSForce.apply(
-        activation,
-        raw_context,
-        unit_force_magnitude,
-        passive_force_magnitude,
-        layer,
-        include_passive_force,
-    )
-
-
 class MuscleDynamicsLayer(nn.Module):
     """Differentiable projection from muscle activations to joint torques.
 
@@ -483,6 +457,29 @@ class MuscleDynamicsLayer(nn.Module):
             muscle_count=muscle_count,
         )
 
+    def __copy__(self) -> MuscleDynamicsLayer:
+        """Shallow copy with its own dispatcher handle.
+
+        The copied _warp_op_key names the original layer. Registering at copy
+        time keeps the key allocation, which Dynamo cannot trace, out of the
+        copy's first compiled loss.
+        """
+        clone = type(self).__new__(type(self))
+        clone.__dict__.update(self.__dict__)
+        register_warp_op_layer(clone)
+        return clone
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> MuscleDynamicsLayer:
+        """Deep copy with its own dispatcher handle."""
+        clone = type(self).__new__(type(self))
+        memo[id(self)] = clone
+        # Copy the whole instance dict at once so parameters, buffers, modules
+        # and their registry dicts stay mutually consistent, as in the default
+        # pickling-based deep copy.
+        clone.__dict__.update(copy.deepcopy(self.__dict__, memo))
+        register_warp_op_layer(clone)
+        return clone
+
     #: Which implementation `forward` runs. "auto" keeps the historical choice
     #: -- Warp on CUDA, the Torch reference elsewhere -- and the two named
     #: values pin one of them, which is how the equivalence tests put the same
@@ -492,6 +489,9 @@ class MuscleDynamicsLayer(nn.Module):
     @startup_nvtx_wrapped("muscle_dynamics_layer:init")
     def __init__(self, spec: MuscleLayerRuntimeSpec) -> None:
         super().__init__()
+        # Register the dispatcher handle now: a compiled loss must read a plain
+        # int at trace time, never allocate a key inside the traced graph.
+        warp_op_key(self)
         self._forward_backend = "auto"
         init_profile_records: list[tuple[str, float]] = []
         init_profile_start = perf_counter()
@@ -3314,20 +3314,20 @@ class MuscleDynamicsLayer(nn.Module):
             if lbs_unit_force_magnitude is not None:
                 if lbs_passive_force_magnitude is None:
                     lbs_passive_force_magnitude = raw_context.new_empty(0)
-                mean = _warp_muscle_dynamics_from_activation_cached_lbs_force_eager(
+                mean = muscle_torque_cached_lbs_forward(
                     activation,
                     raw_context,
                     lbs_unit_force_magnitude,
                     lbs_passive_force_magnitude,
-                    self,
-                    include_passive_force=include_passive_force,
+                    warp_op_key(self),
+                    include_passive_force,
                 )
             else:
-                mean = _warp_muscle_dynamics_from_activation_eager(
+                mean = muscle_torque_forward(
                     activation,
                     raw_context,
-                    self,
-                    include_passive_force=include_passive_force,
+                    warp_op_key(self),
+                    include_passive_force,
                 )
             return mean
 
@@ -6529,11 +6529,21 @@ class MuscleDynamicsLayer(nn.Module):
         missing_transformed_waypoints = (
             transformed_waypoints is None or transformed_waypoints.numel() == 0
         )
-        if missing_unit_force and self.muscle_force_velocity_enabled:
-            # The native backward rebuilds the unit force without the
-            # force-velocity factor; the generic geometry path applies it.
-            use_native_lbs_backward = False
         if use_native_lbs_backward:
+            if missing_unit_force and self.muscle_force_velocity_enabled:
+                # The native rebuild omits the force-velocity factor, so build
+                # the factor-scaled unit force exactly as the forward did and
+                # keep the native adjoint. Recomputing it from the same
+                # context yields the tensor the eager Function cached, without
+                # holding a view of scratch a later forward may rewrite.
+                geometry, _, _ = self._prepare_warp_waypoint_geometry(
+                    raw_context,
+                    include_passive_force_magnitude=False,
+                    compute_force_magnitudes=True,
+                    apply_force_velocity=True,
+                )
+                unit_force_magnitude = geometry["unit_force_magnitude"]
+                missing_unit_force = False
             workspace, subtree_com, cdof = (
                 self._prepare_warp_native_tile_backward_geometry(
                     raw_context,
@@ -6974,9 +6984,10 @@ class MuscleDynamicsLayer(nn.Module):
                 f"expected {self.context_dim}, got {raw_context.shape[-1]}."
             )
         if self._supports_warp_muscle_dynamics_forward(raw_context.device):
-            return self._compute_activation_torque_bounds_warp(
-                raw_context,
-                select_active=True,
+            return muscle_torque_bounds(
+                raw_context.float(),
+                warp_op_key(self),
+                True,
             )
         geometry = self._compute_waypoint_geometry(raw_context)
         unit_force_magnitude = geometry.unit_force_magnitude

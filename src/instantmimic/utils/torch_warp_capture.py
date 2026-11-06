@@ -1,12 +1,75 @@
-"""Torch-owned capture storage with Warp graph execution."""
+"""Torch-owned capture storage with Warp graph execution.
+
+Also owns the process-wide Warp stream registry: Warp registers an external
+CUDA stream handle when a wp.Stream wraps it and unregisters the handle when
+that wrapper is collected. Two wrappers for one handle therefore race, and
+dropping either makes the next capture fail with "Warp error: unknown stream".
+Every long-lived Warp stream in first-party code comes from
+warp_stream_from_torch, so a handle has exactly one wrapper and it stays alive
+for the process lifetime.
+"""
 
 import ctypes
 import warnings
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from typing import Any
 
 import torch
 import warp as wp
+
+# Wrappers this module owns, keyed by CUDA stream handle. An entry is never
+# replaced: replacing it would collect the previous wrapper and unregister the
+# handle under every other wrapper sharing it.
+_WARP_STREAMS: dict[int, Any] = {}
+
+
+def stream_handle(stream: Any) -> int:
+    """CUDA handle of a Warp or torch stream; the default stream is 0."""
+    handle = getattr(stream, "cuda_stream", None)
+    return 0 if handle is None else int(handle)
+
+
+def warp_stream_for_handle(
+    handle: int,
+    current: Any,
+    create: Callable[[int], Any],
+) -> Any:
+    """The one Warp stream for a CUDA handle.
+
+    current is Warp's stream for the device. A handle already in the registry
+    always returns the retained wrapper, even when Warp's current stream is a
+    later duplicate for the same handle: handing back the duplicate would leave
+    the caller holding a wrapper the registry does not retain, and collecting
+    it would unregister the handle under the cached stream.
+
+    Otherwise the first wrapper for the handle wins. When Warp already owns a
+    stream for the handle, that wrapper is adopted and retained here rather
+    than creating a second registration of the same handle.
+    """
+    cached = _WARP_STREAMS.get(int(handle))
+    if cached is not None:
+        return cached
+    if current is not None and stream_handle(current) == int(handle):
+        _WARP_STREAMS[int(handle)] = current
+        return current
+    created = create(int(handle))
+    _WARP_STREAMS[int(handle)] = created
+    return created
+
+
+def warp_stream_from_torch(torch_stream: Any) -> Any:
+    """The persistent wp.Stream for a torch CUDA stream's handle."""
+    warp_device = wp.get_device(str(torch_stream.device))
+    handle = stream_handle(torch_stream)
+
+    def create(created_handle: int) -> Any:
+        stream = wp.Stream(warp_device, cuda_stream=created_handle)
+        # Keep the torch stream alive as long as this wrapper exists.
+        stream._torch_stream = torch_stream
+        return stream
+
+    return warp_stream_for_handle(handle, wp.get_stream(warp_device), create)
 
 
 class _TorchOwnedWarpGraph(wp.Graph):

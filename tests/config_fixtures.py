@@ -116,7 +116,6 @@ def valid_config() -> dict[str, object]:
             "shuffle_cuda_graph": True,
             "compile": True,
             "compile_act_into": True,
-            "compile_update_fullgraph": True,
             "compile_mode": "max-autotune-no-cudagraphs",
             "mixed_precision": True,
             "fail_on_nonfinite_update": True,

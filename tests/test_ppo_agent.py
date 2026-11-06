@@ -141,3 +141,68 @@ def test_detailed_update_operations_match_the_fused_update_on_cpu(shuffle, kl):
     torch.testing.assert_close(
         fused.buffer.advantages, detailed.buffer.advantages, rtol=0, atol=0
     )
+
+
+def test_kl_schedule_constants_are_preallocated_and_stable() -> None:
+    agent = _agent()
+    agent.kl_threshold = 0.02
+    agent.lr_factor = 1.5
+    agent.min_learning_rate = 1.0e-6
+    agent.max_learning_rate = 1.0e-2
+    for group in agent.optimizer.param_groups:
+        group["lr"] = torch.tensor(1.0e-4, dtype=torch.float32)
+    agent._refresh_optimizer_lr_wrappers()
+
+    constants_by_dtype = agent._lr_schedule_constants
+    constants = constants_by_dtype[torch.float32]
+    tensor_ids = {name: id(tensor) for name, tensor in constants.items()}
+    attributes = set(agent.__dict__)
+
+    agent._update_learning_rate(torch.tensor(0.5))
+    agent._update_learning_rate(torch.tensor(1.0e-4))
+
+    # Nothing the update path touches may be created or replaced: a new
+    # attribute, dict entry or tensor would invalidate Dynamo's guards and
+    # force a recompile inside the captured update.
+    assert agent._lr_schedule_constants is constants_by_dtype
+    assert set(agent.__dict__) == attributes
+    assert set(constants_by_dtype) == {torch.float32}
+    assert {name: id(tensor) for name, tensor in constants.items()} == tensor_ids
+    assert float(constants["kl_high"]) == pytest.approx(0.04)
+    assert float(constants["kl_low"]) == pytest.approx(0.01)
+    assert float(constants["factor"]) == pytest.approx(1.5)
+    assert float(constants["min_lr"]) == pytest.approx(1.0e-6)
+    assert float(constants["max_lr"]) == pytest.approx(1.0e-2)
+
+    # A configuration change refreshes values in place, keeping identity.
+    agent.kl_threshold = 0.01
+    agent._refresh_lr_schedule_constants()
+    assert float(constants["kl_high"]) == pytest.approx(0.02)
+    assert float(constants["kl_low"]) == pytest.approx(0.005)
+    assert {name: id(tensor) for name, tensor in constants.items()} == tensor_ids
+
+
+def test_lr_schedule_constants_follow_tensor_lr_normalization() -> None:
+    agent = _agent()
+    # The capture path normalizes tensor LRs to float32 while it builds the
+    # Warp handles; reproduce that configuration on CPU.
+    agent._use_update_graph = True
+    agent.kl_threshold = 0.02
+    agent.lr_factor = 1.5
+    agent.min_learning_rate = 1.0e-6
+    agent.max_learning_rate = 1.0e-2
+    for group in agent.optimizer.param_groups:
+        group["lr"] = torch.tensor(1.0e-4, dtype=torch.float64)
+
+    agent._refresh_optimizer_lr_wrappers()
+
+    lr_dtypes = {group["lr"].dtype for group in agent.optimizer.param_groups}
+    assert lr_dtypes == {torch.float32}
+    # The constants are allocated from the normalized LRs. Refreshing them
+    # before normalization left a float64 entry and scheduling raised
+    # KeyError(torch.float32).
+    assert set(agent._lr_schedule_constants) == {torch.float32}
+    agent._update_learning_rate(torch.tensor(0.5))
+    for group in agent.optimizer.param_groups:
+        assert isinstance(group["lr"], torch.Tensor)
+        assert group["lr"].dtype == torch.float32

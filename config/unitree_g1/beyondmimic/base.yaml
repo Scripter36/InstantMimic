@@ -158,7 +158,6 @@ runtime:
   shuffle_cuda_graph: false
   compile: false
   compile_act_into: false
-  compile_update_fullgraph: false
   precision: float32
 
 play:

@@ -10,7 +10,6 @@ from instantmimic.rl.ppo.agent import PPOAgent
 def _bare_agent(
     *,
     compile_enabled: bool,
-    compile_update_fullgraph: bool,
     use_update_graph: bool = True,
     compiled_model_functions_warmed: bool = True,
     capture_prewarmed: bool = False,
@@ -18,7 +17,6 @@ def _bare_agent(
     agent = object.__new__(PPOAgent)
     agent.device = torch.device("cpu")
     agent._compile_enabled = compile_enabled
-    agent._compile_update_fullgraph = compile_update_fullgraph
     agent._use_update_graph = use_update_graph
     agent._compiled_model_functions_warmed = compiled_model_functions_warmed
     agent._compiled_update_capture_prewarmed = capture_prewarmed
@@ -31,10 +29,9 @@ def _bare_agent(
     return agent
 
 
-def test_prewarm_runs_update_warmup_without_fullgraph_compile() -> None:
+def test_prewarm_runs_the_warmup_that_the_implied_fullgraph_compile_needs() -> None:
     agent = _bare_agent(
         compile_enabled=True,
-        compile_update_fullgraph=False,
     )
 
     agent._prewarm_compiled_update_capture_path()
@@ -48,7 +45,6 @@ def test_prewarm_runs_update_warmup_without_fullgraph_compile() -> None:
 def test_prewarm_skips_everything_when_compile_disabled() -> None:
     agent = _bare_agent(
         compile_enabled=False,
-        compile_update_fullgraph=False,
         compiled_model_functions_warmed=False,
     )
 
@@ -64,7 +60,6 @@ def test_prewarm_skips_everything_when_compile_disabled() -> None:
 def test_prewarm_warms_model_callables_before_update_warmup() -> None:
     agent = _bare_agent(
         compile_enabled=True,
-        compile_update_fullgraph=False,
         compiled_model_functions_warmed=False,
     )
     order: list[str] = []
@@ -80,7 +75,6 @@ def test_prewarm_warms_model_callables_before_update_warmup() -> None:
 def test_prewarm_does_not_repeat_a_completed_update_warmup() -> None:
     agent = _bare_agent(
         compile_enabled=True,
-        compile_update_fullgraph=False,
         capture_prewarmed=True,
     )
 
@@ -93,7 +87,6 @@ def test_prewarm_does_not_repeat_a_completed_update_warmup() -> None:
 def test_prewarm_requires_the_captured_update_path() -> None:
     agent = _bare_agent(
         compile_enabled=True,
-        compile_update_fullgraph=False,
         use_update_graph=False,
         compiled_model_functions_warmed=False,
     )
@@ -108,7 +101,6 @@ def test_prewarm_requires_the_captured_update_path() -> None:
 def test_prewarm_preserves_permutations_and_generator_state() -> None:
     agent = _bare_agent(
         compile_enabled=True,
-        compile_update_fullgraph=False,
     )
     agent._epoch_permutations = [
         torch.arange(8, dtype=torch.int32),
@@ -146,7 +138,6 @@ def test_prewarm_preserves_permutations_and_generator_state() -> None:
 def test_preserve_sampling_state_restores_generator_permutations_and_rng() -> None:
     agent = _bare_agent(
         compile_enabled=True,
-        compile_update_fullgraph=False,
     )
     agent._epoch_permutations = [torch.arange(6, dtype=torch.int32)]
     agent._shuffle_generator = torch.Generator().manual_seed(7)
