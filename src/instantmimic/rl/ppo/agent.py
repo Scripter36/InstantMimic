@@ -7,7 +7,7 @@ import inspect
 import logging
 import math
 from collections.abc import Callable, Generator, Mapping, Sequence
-from contextlib import nullcontext, suppress
+from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from typing import Any
 
@@ -4435,11 +4435,66 @@ class PPOAgent:
         )
         self._compiled_update_wrappers_ready = True
 
+    @contextmanager
+    def _preserve_update_prewarm_sampling_state(
+        self,
+    ) -> Generator[None, None, None]:
+        """Keep the capture prewarm from advancing sampling RNG or permutations.
+
+        ``_refresh_epoch_permutations`` runs before the update warmup snapshots
+        its own state, so its shuffle draw would otherwise survive the warmup
+        restore. Preserve the surrounding state so a run that prewarms draws
+        exactly the same permutations as one that does not.
+        """
+        shuffle_generator = getattr(self, "_shuffle_generator", None)
+        shuffle_generator_state = (
+            shuffle_generator.get_state() if shuffle_generator is not None else None
+        )
+        epoch_permutations = getattr(self, "_epoch_permutations", None)
+        saved_epoch_permutations = (
+            [permutation.detach().clone() for permutation in epoch_permutations]
+            if epoch_permutations is not None
+            else None
+        )
+        cpu_rng_state = torch.get_rng_state()
+        cuda_rng_state = (
+            torch.cuda.get_rng_state(self.device)
+            if self.device.type == "cuda"
+            else None
+        )
+        try:
+            yield
+        finally:
+            if shuffle_generator_state is not None and shuffle_generator is not None:
+                shuffle_generator.set_state(shuffle_generator_state)
+            if saved_epoch_permutations is not None and epoch_permutations is not None:
+                for permutation, saved_permutation in zip(
+                    epoch_permutations,
+                    saved_epoch_permutations,
+                    strict=True,
+                ):
+                    permutation.copy_(saved_permutation)
+            torch.set_rng_state(cpu_rng_state)
+            if cuda_rng_state is not None:
+                torch.cuda.set_rng_state(cuda_rng_state, self.device)
+
     def _prewarm_compiled_update_capture_path(self) -> None:
-        if not self._compile_update_fullgraph:
+        """Warm every compiled callable reachable from the captured update.
+
+        ``compile_update_fullgraph`` only decides whether the update wrappers
+        are compiled into one graph. It must not gate the eager warmup: with
+        ``runtime.compile`` and the update graph enabled but fullgraph off, the
+        model evaluation callables are still compiled, and the update loop first
+        reaches some of them (the no-grad + autocast specialization used by
+        ``_recompute_old_policy``) inside capture. Inductor would then compile
+        and autotune there, and its benchmarking allocations invalidate the
+        capturing stream. Warm the real update path first in every case; the
+        wrapper compilation below keeps its own fullgraph gate.
+        """
+        if not (self._compile_enabled and self._use_update_graph):
             return
         self._compile_update_wrappers_if_needed()
-        if self._compile_enabled and (not self._compiled_model_functions_warmed):
+        if not self._compiled_model_functions_warmed:
             with self._nvtx_range("ppo_warmup_compiled_model_functions"):
                 self._warmup_compiled_functions(
                     warmup_act_into=self._warmup_compiled_act_into
@@ -4447,55 +4502,19 @@ class PPOAgent:
             self._compiled_model_functions_warmed = True
         if self._compiled_update_capture_prewarmed:
             return
-        saved_cpu_rng = torch.get_rng_state().clone()
-        saved_cuda_rng = (
-            torch.cuda.get_rng_state(self.device).clone()
-            if self.device.type == "cuda"
-            else None
-        )
-        saved_shuffle_rng = (
-            self._shuffle_generator.get_state().clone()
-            if self._shuffle_generator is not None
-            else None
-        )
-        components: list[tuple[str, Callable[[], Any]]] = []
-        for index, permutation in enumerate(self._epoch_permutations or []):
-            saved = permutation.detach().clone()
-            components.append(
-                (
-                    f"epoch permutation {index}",
-                    lambda permutation=permutation, saved=saved: permutation.copy_(
-                        saved
-                    ),
+        with self._preserve_update_prewarm_sampling_state():
+            try:
+                with self._nvtx_range("ppo_prewarm_compiled_update_capture"):
+                    self._refresh_epoch_permutations()
+                    self._warmup_compiled_update_minibatch()
+            except Exception as error:
+                # Drain pending update-stream work before the sampling state is
+                # restored by the surrounding context manager.
+                self._restore_warmup_components(
+                    [("pending prewarm work", self._synchronize_warmup_work)],
+                    error=error,
                 )
-            )
-        components.append(
-            ("CPU random state", lambda: torch.set_rng_state(saved_cpu_rng))
-        )
-        if saved_cuda_rng is not None:
-            components.append(
-                (
-                    "CUDA random state",
-                    lambda: torch.cuda.set_rng_state(saved_cuda_rng, self.device),
-                )
-            )
-        if saved_shuffle_rng is not None:
-            components.append(
-                (
-                    "shuffle random state",
-                    lambda: self._shuffle_generator.set_state(saved_shuffle_rng),
-                )
-            )
-        try:
-            with self._nvtx_range("ppo_prewarm_compiled_update_capture"):
-                self._refresh_epoch_permutations()
-                self._warmup_compiled_update_minibatch()
-        except Exception as error:
-            self._restore_warmup_components(
-                [("pending prewarm work", self._synchronize_warmup_work), *components],
-                error=error,
-            )
-            raise
+                raise
         self._compiled_update_capture_prewarmed = True
 
     def _update_eager(self) -> dict[str, float]:

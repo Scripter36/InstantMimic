@@ -370,10 +370,25 @@ def _stage(agent, name):
         return agent._warmup_compiled_prepare_update_views, "_prepare_update_views_fn"
     # Enter the setup phase after wrapper compilation. The callbacks retain
     # the actual eager PPO work so this unit isolates the transaction boundary.
+    agent._compile_enabled = True
     agent._compile_update_fullgraph = True
     agent._compiled_update_wrappers_ready = True
     agent._compiled_model_functions_warmed = True
-    return agent._prewarm_compiled_update_capture_path, "_run_update_epoch_loops"
+    # CPU agents do not build update streams, but the capture prewarm is gated
+    # on the captured update path rather than on fullgraph compilation.
+    agent._update_scaled_obs = torch.zeros(
+        agent.rollouts * agent.num_envs, agent.obs_dim
+    )
+    previous_use_update_graph = agent._use_update_graph
+
+    def invoke_prewarm():
+        agent._use_update_graph = True
+        try:
+            return agent._prewarm_compiled_update_capture_path()
+        finally:
+            agent._use_update_graph = previous_use_update_graph
+
+    return invoke_prewarm, "_run_update_epoch_loops"
 
 
 @pytest.mark.parametrize("optimizer_name", ["adamw", "muon"])
@@ -404,7 +419,7 @@ def test_setup_stage_failure_preserves_the_live_boundary(
 
 @pytest.mark.parametrize("optimizer_name", ["adamw", "muon"])
 @pytest.mark.parametrize("stage", ["observations", "views", "prewarm"])
-def test_setup_stage_success_preserves_next_update_and_authored_shuffle_consumption(
+def test_setup_stage_success_preserves_next_update_and_shuffle_budget(
     optimizer_name, stage
 ):
     agent = _agent(optimizer_name, initialized=True)
@@ -414,16 +429,13 @@ def test_setup_stage_success_preserves_next_update_and_authored_shuffle_consumpt
     pointers = {name: value.data_ptr() for name, value in _tensors(agent).items()}
     reference = _agent(optimizer_name, initialized=True)
     _stage(reference, stage)
-    if stage == "prewarm":
-        reference._refresh_epoch_permutations()
-        before["rng"] = torch.get_rng_state().clone()
-        for index, permutation in enumerate(reference._epoch_permutations):
-            before["tensors"][f"permutation.{index}"] = permutation.clone()
     torch.set_rng_state(entry_rng)
     invoke()
     _unchanged(agent, before)
     if stage == "prewarm":
-        # Once prepared, a second call must not consume another shuffle.
+        # Prewarming must not consume the authored shuffle draw: the first
+        # real update starts from the permutations and RNG it entered with.
+        # Once prepared, a second call must not consume another shuffle either.
         prepared = _snapshot(agent)
         invoke()
         _unchanged(agent, prepared)
