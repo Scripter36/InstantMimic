@@ -542,7 +542,11 @@ def run_training(cfg: SemanticConfig) -> None:
     runtime_plan = orchestration.runtime
     use_torch_act_graph = bool(runtime_plan.act_cuda_graph)
     use_torch_update_graph = bool(runtime_plan.update_cuda_graph)
-    use_torch_shuffle_graph = bool(runtime_plan.shuffle_cuda_graph)
+    # PPO captures its epoch-permutation shuffle inside the update graph;
+    # the other learners never shuffle on device.
+    use_torch_shuffle_graph = bool(
+        use_torch_update_graph and cfg.agent.get("class") == "PPO"
+    )
     nsys_nvtx_mode = str(runtime_plan.nsys_nvtx_mode or "launch").strip().lower()
     detailed_nsys_nvtx = nsys_nvtx_mode == "detailed"
     time_limit_bootstrap = bool(cfg.agent.get("time_limit_bootstrap", False))
@@ -572,22 +576,6 @@ def run_training(cfg: SemanticConfig) -> None:
             "graph capture for the main training rollout path."
         )
 
-    compile_act_into = bool(
-        cfg.runtime.get(
-            "compile_act_into",
-            compile_requested and not use_torch_act_graph,
-        )
-    )
-    if compile_requested and use_torch_act_graph and compile_act_into:
-        _LOGGER.info(
-            "runtime.compile_act_into=true with rollout Warp graph capture can be unstable; "
-            "keeping compiled act_into because it was explicitly requested."
-        )
-    elif compile_requested and use_torch_act_graph and not compile_act_into:
-        _LOGGER.info(
-            "runtime.act_cuda_graph=true: leaving act_into eager inside the Warp rollout graph."
-        )
-
     if compile_requested and (use_torch_act_graph or use_torch_update_graph):
         _LOGGER.info(
             "runtime.compile=true with CUDA graph capture enabled "
@@ -601,11 +589,6 @@ def run_training(cfg: SemanticConfig) -> None:
             "trainer.nsys_nvtx_mode=detailed: keeping CUDA graphs enabled and "
             "blocking inside NVTX launch ranges so Nsight Systems shows wall-time "
             "for rollout/PPO phases."
-        )
-    if use_torch_shuffle_graph and not use_torch_update_graph:
-        _LOGGER.info(
-            "Torch minibatch shuffle graph requested without captured PPO update graph; "
-            "the agent will fall back to eager permutation refresh."
         )
     if reward_stop_threshold is not None:
         _LOGGER.info(

@@ -251,7 +251,11 @@ class TrainingOrchestrationPlan:
         cls,
         cfg: SemanticConfig,
     ) -> TrainingOrchestrationPlan:
-        benchmark = TrainingBenchmarkPlan.from_semantic_trainer(cfg.trainer)
+        benchmark = TrainingBenchmarkPlan.from_semantic_trainer(
+            cfg.trainer,
+            env_use_cuda_graph=bool(cfg.env.get("use_cuda_graph", False)),
+            compile=bool(cfg.runtime.get("compile", False)),
+        )
         stopping = TrainingStoppingPlan.from_semantic_config(cfg, benchmark)
         return cls(
             schedule=TrainingSchedule.from_semantic_config(

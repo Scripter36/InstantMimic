@@ -181,6 +181,48 @@ def external_step_capture_window(env: Any, *, unroll_solver_iterations: bool = F
             scratch.unroll_solver_iterations = previous
 
 
+def _env_graph_capture_supported(device: torch.device) -> bool:
+    """Env step graphs record torch and Warp work together, which needs CUDA."""
+    return torch.device(device).type == "cuda"
+
+
+def _cuda_current_stream_is_capturing(device: torch.device) -> bool:
+    with torch.cuda.device(device):
+        return bool(torch.cuda.is_current_stream_capturing())
+
+
+def _warp_stream_is_capturing(stream: Any | None) -> bool:
+    return bool(stream is not None and getattr(stream, "is_capturing", False))
+
+
+def _warp_device_is_capturing(device: torch.device) -> bool:
+    return bool(getattr(wp.get_device(str(device)), "is_capturing", False))
+
+
+def _current_stream_is_capturing(
+    device: torch.device,
+    wp_stream: Any | None = None,
+) -> bool:
+    """Whether an outer torch or Warp capture already records step work.
+
+    Warp and torch work captured by an outer graph must run directly: CUDA
+    forbids starting a nested capture on a stream that is already recording.
+    A Warp-only capture need not have torch's current stream active, so both
+    the environment's Warp graph stream and the current Warp device are
+    consulted in addition to torch's current stream.
+    """
+
+    if torch.device(device).type != "cuda":
+        return False
+    # Read Warp's host-side capture flags first. Querying torch's current
+    # stream calls into CUDA, and while a blocking stream captures in global
+    # mode that query on the legacy stream itself fails with
+    # cudaErrorStreamCaptureImplicit.
+    if _warp_stream_is_capturing(wp_stream) or _warp_device_is_capturing(device):
+        return True
+    return _cuda_current_stream_is_capturing(device)
+
+
 @contextmanager
 def _stream_aligned_cuda_graph_capture(
     device: torch.device,
@@ -574,6 +616,8 @@ class DirectRLEnv(gym.Env):
         self._dones_wp_stream = None
         self._rewards_torch_stream = None
         self._rewards_wp_stream = None
+        self._mjw_step_capture_supported: bool | None = None
+        self._mjw_step_capture_unsupported_logged = False
         self._optimized_fwd_position_scratch = None
         self._nonfinite_state_mask_buf: torch.Tensor | None = None
         self._nonfinite_combined_bad_mask_buf: torch.Tensor | None = None
@@ -811,7 +855,6 @@ class DirectRLEnv(gym.Env):
             self._dones_wp_stream = None
             self._rewards_torch_stream = None
             self._rewards_wp_stream = None
-            self._compile_mjw_step = bool(getattr(self.cfg, "compile_mjw_step", False))
             self._use_parallelized_kernel_launch = (
                 self._resolve_use_parallelized_kernel_launch()
             )
@@ -841,12 +884,6 @@ class DirectRLEnv(gym.Env):
             )
             self._substep_rewards_enabled = self._resolve_substep_rewards_enabled()
             self._refresh_mjw_sparse_hessian()
-        if self.cfg.use_cuda_graph and self._compile_mjw_step:
-            logger.info(
-                "env.compile_mjw_step=true is ignored while env.use_cuda_graph=true "
-                "because the full step body is already captured."
-            )
-
         # print the environment information
         logger.info("Completed setting up the environment...")
         env_startup_profiler.log_summary(
@@ -2525,7 +2562,17 @@ class DirectRLEnv(gym.Env):
         skip_kinematics: bool = False,
         skip_state_prefix: bool = False,
     ):
-        """Advance through the repo-owned allocation-free MuJoCo Warp path."""
+        """Advance through the repo-owned allocation-free MuJoCo Warp path.
+
+        With the environment step graph off, the captured suffix runs as its own
+        CUDA graph: capture does not execute work, replay produces the step, and
+        the launch overhead of the many small Warp launches is paid once. The
+        step runs directly when an outer graph is already recording the current
+        torch or Warp stream, when the full step body is captured, when the
+        configured model/integrator does not satisfy the allocation-free capture
+        invariants, or off CUDA, where capture cannot record the matching torch
+        work.
+        """
         scratch = self._optimized_fwd_position_scratch
         if scratch is not None and hasattr(scratch, "implicit_qh_registration_frozen"):
             scratch.implicit_qh_registration_frozen = True
@@ -2551,7 +2598,24 @@ class DirectRLEnv(gym.Env):
                 else "_mjw_step_graph"
             )
 
-        if self.cfg.use_cuda_graph or not self._compile_mjw_step:
+        if (
+            self.cfg.use_cuda_graph
+            or not _env_graph_capture_supported(self.device)
+            or _current_stream_is_capturing(
+                self.device,
+                getattr(self, "_env_graph_wp_stream", None),
+            )
+        ):
+            step_fn(self.mjw_model, self.mjw_data)
+            return
+
+        if not self._can_capture_mjw_step():
+            if not self._mjw_step_capture_unsupported_logged:
+                logger.info(
+                    "MuJoCo Warp step suffix cannot be captured for this model, "
+                    "integrator, or solver topology; running the step directly."
+                )
+                self._mjw_step_capture_unsupported_logged = True
             step_fn(self.mjw_model, self.mjw_data)
             return
 
@@ -2573,6 +2637,15 @@ class DirectRLEnv(gym.Env):
             graph_torch_stream,
             graph_wp_stream,
         )
+
+    def _can_capture_mjw_step(self) -> bool:
+        """Whether the configured step suffix satisfies capture invariants."""
+        if self._mjw_step_capture_supported is None:
+            probe = getattr(self, "supports_allocation_free_step_capture", None)
+            self._mjw_step_capture_supported = (
+                bool(probe()) if callable(probe) else True
+            )
+        return self._mjw_step_capture_supported
 
     def _run_mjw_step_optimized_fwd_position(
         self,

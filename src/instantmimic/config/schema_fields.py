@@ -39,11 +39,7 @@ TORCH_GRAPH_COMPILE_MODES = frozenset({"reduce-overhead", "max-autotune"})
 
 NSYS_NVTX_MODES = frozenset(get_args(NvtxMode))
 
-RULE_REQUIRES_COMPILE = "requires_compile"
-RULE_SHUFFLE_NEEDS_UPDATE_GRAPH = "shuffle_needs_update_graph"
 RULE_TORCH_GRAPH_CONFLICT = "torch_graph_conflict"
-
-_COMPILE_DEPENDENT_FIELDS = ("compile_act_into",)
 
 
 def runtime_rule_violations(
@@ -52,8 +48,7 @@ def runtime_rule_violations(
     """Every cross-field rule the `runtime` block breaks, as `(path, rule)`.
 
     `rule` is one of the `RULE_*` constants above. The caller turns it into its
-    own message, and reports in the order returned: the `compile` dependents
-    first, then the shuffle graph, then the compile-mode conflict.
+    own message and reports in the order returned.
 
     An absent `compile_mode` means `DEFAULT_COMPILE_MODE`, which is what the
     agent factories fall back to. This function does not re-check membership;
@@ -62,16 +57,6 @@ def runtime_rule_violations(
 
     violations: list[tuple[str, str]] = []
     compile_enabled = runtime.get("compile") is True
-    for field in _COMPILE_DEPENDENT_FIELDS:
-        if runtime.get(field) is True and not compile_enabled:
-            violations.append((f"runtime.{field}", RULE_REQUIRES_COMPILE))
-    if (
-        runtime.get("shuffle_cuda_graph") is True
-        and runtime.get("update_cuda_graph") is not True
-    ):
-        violations.append(
-            ("runtime.shuffle_cuda_graph", RULE_SHUFFLE_NEEDS_UPDATE_GRAPH)
-        )
     external_graphs = (
         runtime.get("act_cuda_graph") is True
         or runtime.get("update_cuda_graph") is True

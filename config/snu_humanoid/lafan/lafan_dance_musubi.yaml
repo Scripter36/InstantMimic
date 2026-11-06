@@ -19,8 +19,6 @@ trainer:
     batch_size: 4096
     execution: subprocess
     anchor_stride: 30
-    cuda_graph: true
-    compile: true
     clip_indices: null
     history_filename: clip_failure_benchmark_history.jsonl
 experiment:

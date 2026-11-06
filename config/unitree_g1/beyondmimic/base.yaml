@@ -33,7 +33,6 @@ env:
 
   # Unfused reference task; side_kick enables the fused task and captured PPO paths.
   use_cuda_graph: false
-  compile_mjw_step: false
   use_parallelized_kernel_launch: false
   use_optimized_kernel: false
 
@@ -155,9 +154,7 @@ experiment:
 runtime:
   act_cuda_graph: false
   update_cuda_graph: false
-  shuffle_cuda_graph: false
   compile: false
-  compile_act_into: false
   precision: float32
 
 play:

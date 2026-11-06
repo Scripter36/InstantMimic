@@ -10,7 +10,5 @@ trainer:
     batch_size: 4096
     execution: shared_motion
     anchor_stride: 30
-    cuda_graph: true
-    compile: true
     preserve_training_graphs: true
     clone_shared_motion_tensors: false

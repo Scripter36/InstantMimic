@@ -52,7 +52,6 @@ class AntEnvCfg(DirectRLEnvCfg):
     contact_force_scale: float = 0.1
 
     use_cuda_graph: bool = True
-    compile_mjw_step: bool = False
     terminate_on_nonfinite: bool = True
     use_parallelized_kernel_launch: bool = True
     use_optimized_kernel: bool = True

@@ -310,10 +310,6 @@ def _lower_model_role(
 
 
 _RUNTIME_RULE_MESSAGES = {
-    schema_fields.RULE_REQUIRES_COMPILE: "{path}=true requires runtime.compile=true",
-    schema_fields.RULE_SHUFFLE_NEEDS_UPDATE_GRAPH: (
-        "{path}=true requires runtime.update_cuda_graph=true"
-    ),
     schema_fields.RULE_TORCH_GRAPH_CONFLICT: (
         "{path} enables Torch-managed CUDA graphs while external runtime CUDA "
         "graphs are enabled"
@@ -448,10 +444,6 @@ def _lower_ppo(
         _same_shared_role_settings(actor, critic)
     update_graph = runtime.get("update_cuda_graph") is True
     optimizer = _lower_optimizer(agent["optimizer"], capturable=update_graph)
-    if runtime.get("shuffle_cuda_graph") is True and agent.get("shuffle_mode") == "off":
-        raise ValueError(
-            "runtime.shuffle_cuda_graph=true is incompatible with agent.shuffle_mode=off"
-        )
     learning_rate = _closed(
         agent["learning_rate"],
         path="agent.learning_rate",

@@ -221,7 +221,7 @@ def _setup_capture_runtime(monkeypatch, populated, failure):
     error = RuntimeError("injected setup failure")
     stream = SetupStream(error if failure == "synchronize" else None)
     obj._musclenn_update_torch_stream = stream
-    obj._musclenn_compile_update_fullgraph = False
+    obj._musclenn_compile_full_update = False
     obj._musclenn_compiled_minibatch_ready = False
     obj._musclenn_graph_inputs = inputs
     obj._musclenn_input_buffer = inputs

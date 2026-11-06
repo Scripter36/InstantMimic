@@ -98,6 +98,5 @@ forbidden_prefixes:
   - env.sim
   - env.decimation
   - env.use_cuda_graph
-  - env.compile_mjw_step
   - env.use_optimized_kernel
   - env.use_parallelized_kernel_launch

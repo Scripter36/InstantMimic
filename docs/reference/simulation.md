@@ -94,10 +94,20 @@ The three execution switches are independent:
 | `env.use_parallelized_kernel_launch` | Run independent MuJoCo Warp branches on side CUDA streams | Always used, with or without side streams |
 | `env.use_optimized_kernel` | Enable the eligible specialized kernels below | Always used, with or without specialized kernels |
 
-When `env.use_cuda_graph` is off, `env.compile_mjw_step` captures the MuJoCo
-Warp step alone as a CUDA graph. `env.sim.warn_overflow` controls per-world GPU
-diagnostic printing and defaults to `false`; solver overflow bits are still
-recorded.
+When `env.use_cuda_graph` is off, the repo-owned MuJoCo Warp step suffix is
+captured as its own CUDA graph and replayed; the graph is cached per step
+variant. The suffix runs directly while an outer graph is already recording the
+torch or Warp stream, because CUDA forbids a nested capture on a capturing
+stream, and on non-CUDA devices, where a capture could not pair the Warp and
+torch work. It also runs directly when the configured model/integrator fails
+the allocation-free capture checks (constrained RK4 with graph conditionals,
+sleep/SolverCompact combinations without scratch), logging that fallback once.
+Playback, benchmark evaluation, clip-failure analysis and training rollouts all
+own such outer graphs and keep working through the same rule. The retired
+`env.compile_mjw_step` key is rejected rather than ignored; delete it from a
+configuration that still sets it.
+`env.sim.warn_overflow` controls per-world GPU diagnostic printing and defaults
+to `false`; solver overflow bits are still recorded.
 
 ### Specialized kernels
 

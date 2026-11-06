@@ -30,7 +30,17 @@ class TrainingBenchmarkPlan:
     def from_semantic_trainer(
         cls,
         trainer: Mapping[str, Any],
+        *,
+        env_use_cuda_graph: bool = False,
+        compile: bool = False,
     ) -> TrainingBenchmarkPlan:
+        """Resolve the active evaluation protocol for one run.
+
+        A clip-failure benchmark inherits the run's execution settings rather
+        than authoring its own: its step graph follows ``env.use_cuda_graph``
+        and its policy/analysis compile follows ``runtime.compile``.
+        """
+
         benchmark = trainer.get("benchmark")
         clip_failure_benchmark = trainer.get("clip_failure_benchmark")
         if benchmark is not None and clip_failure_benchmark is not None:
@@ -51,7 +61,11 @@ class TrainingBenchmarkPlan:
                 else None
             ),
             clip_failure=(
-                resolve_semantic_clip_failure_benchmark_config(clip_failure_benchmark)
+                resolve_semantic_clip_failure_benchmark_config(
+                    clip_failure_benchmark,
+                    use_cuda_graph=bool(env_use_cuda_graph),
+                    compile=bool(compile),
+                )
                 if clip_failure_benchmark is not None
                 else None
             ),

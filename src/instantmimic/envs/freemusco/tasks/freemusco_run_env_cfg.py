@@ -35,7 +35,6 @@ class FreemuscoRunEnvCfg(DirectRLEnvCfg):
     observation_space: int | None = None
     action_space: int = 120
     use_cuda_graph: bool = False
-    compile_mjw_step: bool = False
     log_dir: str = ""
     deterministic_reset: bool = False
     randomize_reset_joints: bool = True

@@ -393,7 +393,6 @@ def _minimal_env_cfg(
         action_space=2,
     )
     cfg.use_cuda_graph = False
-    cfg.compile_mjw_step = False
     cfg.use_parallelized_kernel_launch = False
     cfg.use_optimized_kernel = authored_optimized
     return cfg

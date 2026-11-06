@@ -11,7 +11,7 @@ compiles its update wrappers with the default ``fullgraph=False``.
 from __future__ import annotations
 
 
-def update_fullgraph_compile_enabled(
+def full_update_compile_enabled(
     *,
     compile_enabled: bool,
     update_graph_enabled: bool,
@@ -20,4 +20,4 @@ def update_fullgraph_compile_enabled(
     return bool(compile_enabled) and bool(update_graph_enabled)
 
 
-__all__ = ["update_fullgraph_compile_enabled"]
+__all__ = ["full_update_compile_enabled"]

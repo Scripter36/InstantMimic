@@ -30,9 +30,7 @@ class RuntimeConfig(TypedMapping):
 
     act_cuda_graph: bool = False
     update_cuda_graph: bool = False
-    shuffle_cuda_graph: bool = False
     compile: bool = False
-    compile_act_into: bool = False
     compile_mode: CompileMode = DEFAULT_COMPILE_MODE
     precision: Literal["float32", "bfloat16", "float16"] | None = None
     loss_scale: float = Field(default=128.0, gt=0, le=2**24, allow_inf_nan=False)

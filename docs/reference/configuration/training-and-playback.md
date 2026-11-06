@@ -29,7 +29,6 @@ runtime:
   compile: true
   act_cuda_graph: true
   update_cuda_graph: true
-  shuffle_cuda_graph: true
   precision: float32
 ```
 
@@ -52,7 +51,10 @@ environments, using the policy's mean action.
 Benchmark time is not counted as active training time.
 
 For multi-clip datasets, `trainer.clip_failure_benchmark` instead scans each
-clip for where the policy fails. A run uses one of the two.
+clip for where the policy fails. A run uses one of the two. The clip-failure
+benchmark has no graph or compile switches of its own: it inherits
+`env.use_cuda_graph` and `runtime.compile` from the run it evaluates, so
+`execution: inline` cannot be combined with a captured environment step.
 
 ## Stopping, resuming and videos
 
@@ -83,7 +85,7 @@ clip for where the policy fails. A run uses one of the two.
 | Key | Meaning |
 | --- | --- |
 | `compile`, `compile_mode` | Use `torch.compile` for the policy and the update, and its mode (default `max-autotune-no-cudagraphs`) |
-| `act_cuda_graph`, `update_cuda_graph`, `shuffle_cuda_graph` | Capture action sampling, the PPO update and minibatch shuffling as CUDA graphs. `shuffle_cuda_graph` needs `update_cuda_graph` and an `agent.shuffle_mode` other than `off` |
+| `act_cuda_graph`, `update_cuda_graph` | Capture action sampling and the PPO update as CUDA graphs. PPO captures its minibatch shuffle inside the update graph whenever `update_cuda_graph` is set |
 | `precision`, `loss_scale` | Policy network precision (see below) |
 | `fail_on_nonfinite_update` | Stop if an update produces non-finite values |
 
@@ -105,6 +107,12 @@ captured update. Warp muscle dynamics and feasible torque bounds reach every
 compiled region through opaque `torch.library` custom operators. The retired
 `compile_update_fullgraph` key is rejected rather than ignored; delete it from
 a configuration that still sets it.
+
+`runtime.compile` also compiles PPO's training-rollout `act_into` path and
+warms the real rollout and bootstrap signatures before any capture, so no new
+specialization is compiled inside a captured rollout. The retired
+`compile_act_into` and `shuffle_cuda_graph` keys are rejected rather than
+ignored; delete them from a configuration that still sets them.
 
 ### Reduced precision
 

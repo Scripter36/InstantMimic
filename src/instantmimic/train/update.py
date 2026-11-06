@@ -55,9 +55,7 @@ def _configure_musclenn_update_runtime(
     if not callable(configure):
         return fast_muscle_controller
     configure(
-        update_fullgraph_compile=bool(
-            getattr(agent, "_compile_update_fullgraph", False)
-        ),
+        full_update_compile=bool(getattr(agent, "_compile_full_update", False)),
         compile_mode=str(getattr(agent, "_compile_mode", "max-autotune-no-cudagraphs")),
         use_update_graph=bool(getattr(agent, "_use_update_graph", False)),
         use_shuffle_graph=bool(getattr(agent, "_use_shuffle_graph", False)),

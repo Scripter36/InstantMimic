@@ -1262,6 +1262,10 @@ def _validate_benchmark(value: object) -> Mapping[str, object]:
 
 
 def _validate_clip_failure_benchmark(value: object) -> Mapping[str, object]:
+    if isinstance(value, Mapping):
+        for removed, message in _REMOVED_CLIP_FAILURE_BENCHMARK_KEYS.items():
+            if removed in value:
+                _error(f"trainer.clip_failure_benchmark.{removed}", message)
     benchmark = _closed(
         value,
         path="trainer.clip_failure_benchmark",
@@ -1288,23 +1292,12 @@ def _validate_clip_failure_benchmark(value: object) -> Mapping[str, object]:
             {"auto", "inline", "subprocess", "shared_motion"},
         )
     for key in (
-        "cuda_graph",
-        "compile",
         "preserve_training_graphs",
         "clone_shared_motion_tensors",
         "save_history",
     ):
         if key in benchmark:
             _bool(benchmark[key], f"trainer.clip_failure_benchmark.{key}")
-    if (
-        benchmark.get("execution", "auto") == "inline"
-        and benchmark.get("cuda_graph", False) is True
-    ):
-        raise ConfigSchemaError(
-            "trainer.clip_failure_benchmark.execution",
-            "inline execution conflicts with cuda_graph=true; use auto, "
-            "subprocess, or shared_motion",
-        )
     if "clip_indices" in benchmark and benchmark["clip_indices"] is not None:
         clips = _sequence(
             benchmark["clip_indices"],
@@ -1730,10 +1723,6 @@ def _validate_experiment(value: object) -> None:
 
 
 _RUNTIME_RULE_MESSAGES = {
-    schema_fields.RULE_REQUIRES_COMPILE: "requires runtime.compile=true",
-    schema_fields.RULE_SHUFFLE_NEEDS_UPDATE_GRAPH: (
-        "requires runtime.update_cuda_graph=true"
-    ),
     schema_fields.RULE_TORCH_GRAPH_CONFLICT: (
         "must not enable Torch-managed CUDA graphs when external CUDA graphs are enabled; use 'default' or 'max-autotune-no-cudagraphs'"
     ),
@@ -1743,6 +1732,33 @@ _REMOVED_RUNTIME_KEYS = {
     "compile_update_fullgraph": (
         "was removed; full update compilation is implied by runtime.compile "
         "together with runtime.update_cuda_graph"
+    ),
+    "shuffle_cuda_graph": (
+        "was removed; PPO captures its minibatch shuffle inside the update "
+        "graph whenever runtime.update_cuda_graph=true"
+    ),
+    "compile_act_into": (
+        "was removed; runtime.compile compiles the rollout act_into path "
+        "whenever compilation is enabled"
+    ),
+}
+
+
+_REMOVED_ENV_KEYS = {
+    "compile_mjw_step": (
+        "was removed; the repo-owned MuJoCo Warp step suffix is always "
+        "captured as a CUDA graph whenever env.use_cuda_graph is off"
+    ),
+}
+
+
+_REMOVED_CLIP_FAILURE_BENCHMARK_KEYS = {
+    "cuda_graph": (
+        "was removed; the clip-failure benchmark inherits env.use_cuda_graph "
+        "from the run"
+    ),
+    "compile": (
+        "was removed; the clip-failure benchmark inherits runtime.compile from the run"
     ),
 }
 
@@ -2106,6 +2122,9 @@ def validate_semantic_mapping(values: Mapping[str, ThawedValue]) -> None:
     _int(root["seed"], "seed", minimum=-1)
     _string(root["task"], "task", nonempty=True)
     env = _mapping(root["env"], "env")
+    for removed, message in _REMOVED_ENV_KEYS.items():
+        if removed in env:
+            _error(f"env.{removed}", message)
     observations = env.get("observations")
     if isinstance(observations, Mapping) and "muscle_geometry" in observations:
         _bool(observations["muscle_geometry"], "env.observations.muscle_geometry")
@@ -2134,6 +2153,18 @@ def validate_semantic_mapping(values: Mapping[str, ThawedValue]) -> None:
     if not models["shared"] and "critic" not in models:
         _error("models.critic", "is required when models.shared is false for PPO")
     _validate_trainer(root["trainer"])
+    trainer = _mapping(root["trainer"], "trainer")
+    clip_failure_benchmark = trainer.get("clip_failure_benchmark")
+    if (
+        isinstance(clip_failure_benchmark, Mapping)
+        and clip_failure_benchmark.get("execution") == "inline"
+        and env.get("use_cuda_graph") is True
+    ):
+        _error(
+            "trainer.clip_failure_benchmark.execution",
+            "inline execution conflicts with env.use_cuda_graph=true; use auto, "
+            "subprocess, or shared_motion",
+        )
     _validate_experiment(root["experiment"])
     experiment = _mapping(root["experiment"], "experiment")
     checkpoint = experiment.get("checkpoint")

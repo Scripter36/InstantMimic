@@ -13,6 +13,7 @@ def _make_direct_rl_env_stub() -> DirectRLEnv:
     env = DirectRLEnv.__new__(DirectRLEnv)
     env._initialize_runtime_state()
     env._integrator_spec = DirectRLEnv._resolve_integrator_spec("implicitfast")
+    env.device = torch.device("cpu")
     return env
 
 
@@ -59,7 +60,6 @@ def test_run_mjw_step_uses_custom_path_without_parallel_streams(monkeypatch):
     )
     env = _make_direct_rl_env_stub()
     env.cfg = SimpleNamespace(use_cuda_graph=False)
-    env._compile_mjw_step = False
     env._use_parallelized_kernel_launch = False
     env._use_optimized_kernel = False
     env._optimized_fwd_position_streams = ()
@@ -105,7 +105,7 @@ def test_run_mjw_step_uses_custom_path_without_parallel_streams(monkeypatch):
     ],
 )
 @pytest.mark.parametrize("parallelized", [False, True])
-def test_compile_mjw_step_launches_each_captured_variant_once_per_call(
+def test_mjw_step_launches_each_captured_variant_once_per_call(
     monkeypatch, step_kwargs, step_method, graph_attrs, parallelized
 ):
     graph_attr = graph_attrs[parallelized]
@@ -127,13 +127,16 @@ def test_compile_mjw_step_launches_each_captured_variant_once_per_call(
         direct_rl_env, "_stream_aligned_cuda_graph_capture", fake_capture
     )
     monkeypatch.setattr(direct_rl_env, "_launch_stream_aligned_cuda_graph", fake_launch)
+    monkeypatch.setattr(
+        direct_rl_env, "_current_stream_is_capturing", lambda *_args: False
+    )
     env = _make_direct_rl_env_stub()
     env.cfg = SimpleNamespace(use_cuda_graph=False)
-    env.device = torch.device("cpu")
-    env._compile_mjw_step = True
+    env.device = torch.device("cuda")
     env._use_parallelized_kernel_launch = parallelized
     env._env_graph_torch_stream = "torch-stream"
     env._env_graph_wp_stream = "wp-stream"
+    env._mjw_step_capture_supported = True
     setattr(env, graph_attr, None)
     env.mjw_model = object()
     env.mjw_data = object()
@@ -180,7 +183,7 @@ def test_compile_mjw_step_launches_each_captured_variant_once_per_call(
     ],
 )
 @pytest.mark.parametrize("parallelized", [False, True])
-def test_compile_mjw_step_capture_failure_does_not_launch(
+def test_mjw_step_capture_failure_does_not_launch(
     monkeypatch, step_kwargs, step_method, graph_attrs, parallelized
 ):
     graph_attr = graph_attrs[parallelized]
@@ -201,13 +204,16 @@ def test_compile_mjw_step_capture_failure_does_not_launch(
         direct_rl_env, "_stream_aligned_cuda_graph_capture", fake_capture
     )
     monkeypatch.setattr(direct_rl_env, "_launch_stream_aligned_cuda_graph", fake_launch)
+    monkeypatch.setattr(
+        direct_rl_env, "_current_stream_is_capturing", lambda *_args: False
+    )
     env = _make_direct_rl_env_stub()
     env.cfg = SimpleNamespace(use_cuda_graph=False)
-    env.device = torch.device("cpu")
-    env._compile_mjw_step = True
+    env.device = torch.device("cuda")
     env._use_parallelized_kernel_launch = parallelized
     env._env_graph_torch_stream = "torch-stream"
     env._env_graph_wp_stream = "wp-stream"
+    env._mjw_step_capture_supported = True
     setattr(env, graph_attr, None)
     env.mjw_model = object()
     env.mjw_data = object()
@@ -223,6 +229,177 @@ def test_compile_mjw_step_capture_failure_does_not_launch(
 
     assert events == ["capture_begin", "step", "capture_end"]
     assert getattr(env, graph_attr) is None
+
+
+def _forbid_step_capture(monkeypatch) -> None:
+    def fail(*_args, **_kwargs):
+        raise AssertionError("the step suffix must run directly")
+
+    monkeypatch.setattr(direct_rl_env, "_stream_aligned_cuda_graph_capture", fail)
+    monkeypatch.setattr(direct_rl_env, "_launch_stream_aligned_cuda_graph", fail)
+
+
+def _direct_step_env() -> DirectRLEnv:
+    env = _make_direct_rl_env_stub()
+    env.cfg = SimpleNamespace(use_cuda_graph=False)
+    env._mjw_step_capture_supported = True
+    env._use_parallelized_kernel_launch = False
+    env._use_optimized_kernel = False
+    env.mjw_model = object()
+    env.mjw_data = object()
+    return env
+
+
+def test_mjw_step_runs_directly_on_cpu(monkeypatch):
+    _forbid_step_capture(monkeypatch)
+    env = _direct_step_env()
+    calls = []
+    env._run_mjw_step_optimized_fwd_position = lambda model, data: calls.append(
+        (model, data)
+    )
+
+    env._run_mjw_step()
+
+    assert calls == [(env.mjw_model, env.mjw_data)]
+    assert getattr(env, "_mjw_step_graph", None) is None
+
+
+def test_mjw_step_runs_directly_while_an_outer_graph_is_recording(monkeypatch):
+    _forbid_step_capture(monkeypatch)
+    env = _direct_step_env()
+    env.device = torch.device("cuda")
+    monkeypatch.setattr(
+        direct_rl_env, "_current_stream_is_capturing", lambda *_args: True
+    )
+    calls = []
+    env._run_mjw_step_optimized_fwd_position = lambda model, data: calls.append(
+        (model, data)
+    )
+
+    env._run_mjw_step()
+
+    assert calls == [(env.mjw_model, env.mjw_data)]
+    assert getattr(env, "_mjw_step_graph", None) is None
+
+
+@pytest.mark.parametrize(
+    ("warp_stream_capturing", "warp_device_capturing"),
+    [(True, False), (False, True)],
+)
+def test_outer_capture_detection_honors_warp_state(
+    monkeypatch, warp_stream_capturing, warp_device_capturing
+):
+    monkeypatch.setattr(
+        direct_rl_env, "_cuda_current_stream_is_capturing", lambda _device: False
+    )
+    monkeypatch.setattr(
+        direct_rl_env,
+        "_warp_stream_is_capturing",
+        lambda _stream: warp_stream_capturing,
+    )
+    monkeypatch.setattr(
+        direct_rl_env,
+        "_warp_device_is_capturing",
+        lambda _device: warp_device_capturing,
+    )
+
+    assert (
+        direct_rl_env._current_stream_is_capturing(torch.device("cuda"), object())
+        is True
+    )
+
+
+@pytest.mark.cuda
+def test_outer_capture_detection_reads_a_real_warp_side_stream_capture():
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is unavailable")
+    wp = direct_rl_env.wp
+    wp.init()
+    device = torch.device("cuda", torch.cuda.current_device())
+    wp_device = wp.get_device(str(device))
+    side_stream = wp.Stream(wp_device)
+    wp.capture_begin(device=wp_device, stream=side_stream)
+    try:
+        # torch's current (legacy) stream is not the capturing one; the
+        # detector must answer from Warp state without querying it.
+        assert direct_rl_env._current_stream_is_capturing(device) is True
+    finally:
+        wp.capture_end(device=wp_device, stream=side_stream)
+
+
+def test_mjw_step_runs_directly_during_a_warp_only_capture(monkeypatch):
+    _forbid_step_capture(monkeypatch)
+    env = _direct_step_env()
+    env.device = torch.device("cuda")
+    monkeypatch.setattr(
+        direct_rl_env, "_cuda_current_stream_is_capturing", lambda _device: False
+    )
+    monkeypatch.setattr(
+        direct_rl_env, "_warp_stream_is_capturing", lambda _stream: False
+    )
+    monkeypatch.setattr(
+        direct_rl_env, "_warp_device_is_capturing", lambda _device: True
+    )
+    calls = []
+    env._run_mjw_step_optimized_fwd_position = lambda model, data: calls.append(
+        (model, data)
+    )
+
+    env._run_mjw_step()
+
+    assert calls == [(env.mjw_model, env.mjw_data)]
+    assert getattr(env, "_mjw_step_graph", None) is None
+
+
+def test_mjw_step_runs_directly_when_suffix_capture_is_unsupported(monkeypatch, caplog):
+    _forbid_step_capture(monkeypatch)
+    env = _direct_step_env()
+    env.device = torch.device("cuda")
+    env._mjw_step_capture_supported = None
+    monkeypatch.setattr(
+        direct_rl_env, "_cuda_current_stream_is_capturing", lambda _device: False
+    )
+    monkeypatch.setattr(
+        direct_rl_env, "_warp_stream_is_capturing", lambda _stream: False
+    )
+    monkeypatch.setattr(
+        direct_rl_env, "_warp_device_is_capturing", lambda _device: False
+    )
+    env.supports_allocation_free_step_capture = lambda: False
+    calls = []
+    env._run_mjw_step_optimized_fwd_position = lambda model, data: calls.append(
+        (model, data)
+    )
+
+    with caplog.at_level("INFO"):
+        env._run_mjw_step()
+        env._run_mjw_step()
+
+    assert calls == [
+        (env.mjw_model, env.mjw_data),
+        (env.mjw_model, env.mjw_data),
+    ]
+    assert getattr(env, "_mjw_step_graph", None) is None
+    assert sum("cannot be captured" in record.message for record in caplog.records) == 1
+
+
+def test_mjw_step_runs_directly_when_the_full_env_step_is_captured(monkeypatch):
+    _forbid_step_capture(monkeypatch)
+    env = _direct_step_env()
+    env.device = torch.device("cuda")
+    env.cfg = SimpleNamespace(use_cuda_graph=True)
+    monkeypatch.setattr(
+        direct_rl_env, "_current_stream_is_capturing", lambda *_args: False
+    )
+    calls = []
+    env._run_mjw_step_optimized_fwd_position = lambda model, data: calls.append(
+        (model, data)
+    )
+
+    env._run_mjw_step()
+
+    assert calls == [(env.mjw_model, env.mjw_data)]
+    assert getattr(env, "_mjw_step_graph", None) is None
 
 
 def test_run_mjw_forward_uses_custom_allocation_free_path(monkeypatch):
@@ -774,7 +951,6 @@ def test_run_mjw_step_passes_parallel_scratch_without_optimized_kernels(monkeypa
     )
     env = _make_direct_rl_env_stub()
     env.cfg = SimpleNamespace(use_cuda_graph=False)
-    env._compile_mjw_step = False
     env._use_parallelized_kernel_launch = True
     env._use_optimized_kernel = False
     env._optimized_fwd_position_streams = ("stream-a", "stream-b")
@@ -808,7 +984,6 @@ def test_run_mjw_step_uses_optimized_kernel_scratch_when_enabled(monkeypatch):
     )
     env = _make_direct_rl_env_stub()
     env.cfg = SimpleNamespace(use_cuda_graph=False)
-    env._compile_mjw_step = False
     env._use_parallelized_kernel_launch = True
     env._use_optimized_kernel = True
     env._optimized_fwd_position_streams = ("stream-a", "stream-b")
@@ -844,7 +1019,6 @@ def test_run_mjw_step_uses_skip_optimized_when_both_flags_are_enabled(monkeypatc
     )
     env = _make_direct_rl_env_stub()
     env.cfg = SimpleNamespace(use_cuda_graph=False)
-    env._compile_mjw_step = False
     env._use_parallelized_kernel_launch = True
     env._use_optimized_kernel = False
     env._optimized_fwd_position_streams = ("stream-a", "stream-b")
@@ -880,7 +1054,6 @@ def test_run_mjw_step_uses_state_prefix_suffix_when_prefix_is_fresh(monkeypatch)
     )
     env = _make_direct_rl_env_stub()
     env.cfg = SimpleNamespace(use_cuda_graph=False)
-    env._compile_mjw_step = False
     env._use_parallelized_kernel_launch = True
     env._use_optimized_kernel = True
     env._optimized_fwd_position_streams = ("stream-a", "stream-b")

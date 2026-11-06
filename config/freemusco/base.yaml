@@ -13,7 +13,6 @@ env:
     - 1080
     - 1080
   use_cuda_graph: true
-  compile_mjw_step: false
   terminate_on_nonfinite: true
   character_render_mode: mesh
   decimation: 10
@@ -68,12 +67,10 @@ experiment:
     type: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
 runtime:
   compile: true
-  compile_act_into: false
   compile_mode: max-autotune-no-cudagraphs
   precision: float32
   act_cuda_graph: true
   update_cuda_graph: true
-  shuffle_cuda_graph: true
 play:
   steps: null
   video:

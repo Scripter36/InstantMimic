@@ -111,7 +111,7 @@ class FastMuscleTrainingMixin:
         self._musclenn_last_loss = 0.0
         self._musclenn_last_reg_loss = 0.0
         self._musclenn_last_target_loss = 0.0
-        self._musclenn_compile_update_fullgraph = False
+        self._musclenn_compile_full_update = False
         self._musclenn_compile_mode = "max-autotune-no-cudagraphs"
         self._musclenn_use_update_graph = False
         self._musclenn_use_shuffle_graph = False
@@ -1462,14 +1462,14 @@ class FastMuscleTrainingMixin:
     def configure_musclenn_update_runtime(
         self,
         *,
-        update_fullgraph_compile: bool,
+        full_update_compile: bool,
         compile_mode: str,
         use_update_graph: bool,
         use_shuffle_graph: bool,
     ) -> None:
         """Mirror the PPO update runtime for the auxiliary MuscleNN optimizer.
 
-        update_fullgraph_compile is the caller's derived condition (runtime
+        full_update_compile is the caller's derived condition (runtime
         compile together with the update graph); this runtime additionally
         requires its own capture support below.
         """
@@ -1492,7 +1492,7 @@ class FastMuscleTrainingMixin:
             )
         )
         runtime_signature = (
-            bool(update_fullgraph_compile and graph_enabled),
+            bool(full_update_compile and graph_enabled),
             str(compile_mode),
             graph_enabled,
             bool(use_shuffle_graph and graph_enabled),
@@ -1510,9 +1510,7 @@ class FastMuscleTrainingMixin:
             )
 
         self._invalidate_musclenn_update_graphs()
-        self._musclenn_compile_update_fullgraph = bool(
-            update_fullgraph_compile and graph_enabled
-        )
+        self._musclenn_compile_full_update = bool(full_update_compile and graph_enabled)
         self._musclenn_compile_mode = str(compile_mode)
         self._musclenn_use_update_graph = graph_enabled
         self._musclenn_use_shuffle_graph = bool(use_shuffle_graph and graph_enabled)
@@ -2026,7 +2024,7 @@ class FastMuscleTrainingMixin:
     def _compile_and_warm_musclenn_graph_minibatch(self) -> None:
         if self._musclenn_compiled_minibatch_ready:
             return
-        if self._musclenn_compile_update_fullgraph:
+        if self._musclenn_compile_full_update:
             self._run_musclenn_graph_minibatch_fn = torch.compile(
                 self._run_musclenn_graph_minibatch,
                 mode=self._musclenn_compile_mode,
@@ -2160,7 +2158,7 @@ class FastMuscleTrainingMixin:
         self._musclenn_update_graph = graph
         logger.info(
             "Captured full MuscleNN update graph (mode=%s, samples=%d, epochs=%d).",
-            "compiled" if self._musclenn_compile_update_fullgraph else "eager",
+            "compiled" if self._musclenn_compile_full_update else "eager",
             int(self._musclenn_input_buffer.shape[0]),
             self._mass_action_settings().muscle_nn.epochs,
         )

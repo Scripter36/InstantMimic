@@ -34,7 +34,7 @@ from instantmimic.rl.optimizers import (
     validate_graph_optimizer_constraints,
 )
 from instantmimic.rl.sampling import fill_gaussian_noise_kernel, increment_seed_kernel
-from instantmimic.rl.update_compile import update_fullgraph_compile_enabled
+from instantmimic.rl.update_compile import full_update_compile_enabled
 from instantmimic.utils.policy_mean_contract import register_policy_mean_methods
 from instantmimic.utils.startup_profiler import StartupProfiler
 from instantmimic.utils.torch_warp_capture import (
@@ -412,7 +412,6 @@ class PPOAgent:
         kl_scheduler_update_mode: str = "per_epoch",
         compile: bool = False,
         compile_mode: str = "max-autotune-no-cudagraphs",
-        compile_act_into: bool = True,
         use_update_graph: bool = False,
         use_shuffle_graph: bool = False,
         update_torch_stream: torch.cuda.Stream | None = None,
@@ -857,14 +856,14 @@ class PPOAgent:
         )
         self._compile_enabled = bool(compile and hasattr(torch, "compile"))
         self._compile_mode = compile_mode
-        self._compile_update_fullgraph = update_fullgraph_compile_enabled(
+        self._compile_full_update = full_update_compile_enabled(
             compile_enabled=self._compile_enabled,
             update_graph_enabled=self._use_update_graph,
         )
         self._compiled_update_uses_return_path = False
         self._compiled_update_capture_prewarmed = False
         self._compiled_model_functions_warmed = False
-        self._warmup_compiled_act_into = bool(compile_act_into)
+        self._warmup_compiled_act_into = bool(self._compile_enabled)
         self._cuda_libraries_graph_capture_ready = False
         with init_profiler.phase("compile_model_wrappers"):
             if compile and self._use_update_graph:
@@ -886,13 +885,14 @@ class PPOAgent:
                         mode=compile_mode,
                         dynamic=False,
                     )
-                if compile_act_into:
-                    self._act_into_fn = torch.compile(
-                        self.network.act_into, mode=compile_mode, dynamic=False
-                    )
+                self._act_into_fn = torch.compile(
+                    self.network.act_into, mode=compile_mode, dynamic=False
+                )
         if self._compile_enabled:
             with init_profiler.phase("warmup_model_compile"):
-                self._warmup_compiled_functions(warmup_act_into=compile_act_into)
+                # act_into warmup needs the rollout buffer and policy workspace,
+                # which are allocated below; warm it with real arguments there.
+                self._warmup_compiled_functions(warmup_act_into=False)
                 self._compiled_model_functions_warmed = True
         with init_profiler.phase("preprocessor_init"):
             state_preprocessor_kwargs = state_preprocessor_kwargs or {}
@@ -933,7 +933,7 @@ class PPOAgent:
             self._run_update_minibatch_fn = self._run_update_minibatch
             self._evaluate_old_policy_minibatch_fn = self._evaluate_old_policy_minibatch
             self._compiled_update_wrappers_ready = False
-            if self._compile_update_fullgraph:
+            if self._compile_full_update:
                 self._compile_update_wrappers_if_needed()
         with init_profiler.phase("rollout_buffer_alloc"):
             self.buffer = RolloutBuffer(
@@ -1170,10 +1170,13 @@ class PPOAgent:
                 )
             else:
                 self._policy_aux_eps_wp = None
-        if self._compile_enabled and self._compile_update_fullgraph:
+        if self._compile_enabled:
+            with init_profiler.phase("warmup_compiled_act_into"):
+                self._warmup_compiled_act_into_signatures()
+        if self._compile_enabled and self._compile_full_update:
             with init_profiler.phase("compile_update_obs_scalers"):
                 self._warmup_compiled_obs_scalers(warmup_update=self._use_update_graph)
-        if self._compile_enabled and self._compile_update_fullgraph:
+        if self._compile_enabled and self._compile_full_update:
             with init_profiler.phase("compile_update_prepare_views"):
                 self._warmup_compiled_prepare_update_views()
             with init_profiler.phase("compile_update_minibatch_warmup"):
@@ -1218,7 +1221,7 @@ class PPOAgent:
         self._flat_update_size = 0
         self._update_batch_size = 0
         self._compile_enabled = False
-        self._compile_update_fullgraph = False
+        self._compile_full_update = False
         self._compiled_update_capture_prewarmed = False
         self._compiled_model_functions_warmed = False
         self._compiled_update_wrappers_ready = False
@@ -1642,12 +1645,45 @@ class PPOAgent:
         with self._nvtx_range("act_into"):
             self._act_into_body(step)
 
-    def _act_into_body(self, step: int) -> None:
+    def _act_into_body(
+        self,
+        step: int,
+        *,
+        eps: torch.Tensor | None = None,
+    ) -> None:
         buf = self.buffer
         self._obs_scale_eval_into_fn(buf.obs[step], self._policy_scaled_obs)
         if buf.policy_obs is not None:
             buf.policy_obs[step].copy_(self._policy_scaled_obs)
-        policy_eps = self._fill_policy_noise_()
+        policy_eps = eps if eps is not None else self._fill_policy_noise_()
+        args, kwargs = self._act_into_call_arguments(
+            step=step,
+            scaled_obs=self._policy_scaled_obs,
+            actions=buf.actions[step],
+            log_probs=buf.log_probs[step],
+            values=buf.values[step],
+            eps=policy_eps,
+        )
+        self._act_into_fn(*args, **kwargs)
+        self._inverse_scale_values_(buf.values[step])
+
+    def _act_into_call_arguments(
+        self,
+        *,
+        step: int,
+        scaled_obs: torch.Tensor,
+        actions: torch.Tensor,
+        log_probs: torch.Tensor,
+        values: torch.Tensor,
+        eps: torch.Tensor,
+    ) -> tuple[tuple[Any, ...], dict[str, Any]]:
+        """The exact rollout ``act_into`` call, shared with compile warmup.
+
+        Optional positional and keyword arguments are chosen from the same
+        persistent buffers the rollout uses, so warmup cannot specialize a
+        different None/tensor pattern and force a recompile during capture.
+        """
+        buf = self.buffer
         replay_kwargs = (
             {"out_pre_squash_actions": buf.pre_squash_actions[step]}
             if buf.pre_squash_actions is not None
@@ -1661,18 +1697,13 @@ class PPOAgent:
         if buf.policy_aux is not None and self._policy_aux_eps is not None:
             buf.policy_aux[step].copy_(self._policy_aux_eps)
             policy_aux = buf.policy_aux[step]
-        self._act_into_fn(
-            self._policy_scaled_obs,
-            buf.actions[step],
-            buf.log_probs[step],
-            buf.values[step],
-            policy_eps,
-            policy_aux=policy_aux,
-            out_policy_mean=policy_mean,
-            out_policy_log_std=policy_log_std,
+        kwargs = {
+            "policy_aux": policy_aux,
+            "out_policy_mean": policy_mean,
+            "out_policy_log_std": policy_log_std,
             **replay_kwargs,
-        )
-        self._inverse_scale_values_(buf.values[step])
+        }
+        return (scaled_obs, actions, log_probs, values, eps), kwargs
 
     @torch.no_grad()
     def _bootstrap_values_fast(
@@ -1974,6 +2005,24 @@ class PPOAgent:
         torch.cuda.synchronize(self.device)
         self._cuda_libraries_graph_capture_ready = True
 
+    def _warmup_compiled_act_into_signatures(self, *, force: bool = False) -> None:
+        """Warm ``act_into`` with the real rollout and bootstrap signatures.
+
+        This runs after the rollout buffer and policy workspace exist and calls
+        the same producers as the captured paths. Optional arguments therefore
+        keep the exact None/tensor pattern of the rollout calls.
+        """
+        if not force and not self._warmup_compiled_act_into:
+            return
+        if self.buffer is None or getattr(self, "_policy_scaled_obs", None) is None:
+            return
+        with torch.no_grad():
+            self._act_into_body(0, eps=self._policy_eps)
+            self._bootstrap_values_fast(
+                self.buffer.obs[0],
+                torch.empty_like(self.buffer.values[0]),
+            )
+
     def _warmup_compiled_functions(self, warmup_act_into: bool) -> None:
         """Compile graph-specialized callables before any external CUDA capture."""
         update_wp_stream = getattr(self, "_update_wp_stream", None)
@@ -1992,71 +2041,7 @@ class PPOAgent:
         with update_wp_stream_ctx:
             with update_stream_ctx:
                 if warmup_act_into:
-                    with torch.no_grad():
-                        warmup_obs = torch.zeros(
-                            self.num_envs,
-                            self.obs_dim,
-                            device=self.device,
-                            dtype=torch.float32,
-                        )
-                        warmup_actions = torch.empty(
-                            self.num_envs, self.act_dim, device=self.device
-                        )
-                        warmup_collect_replay_kwargs = (
-                            {"out_pre_squash_actions": torch.empty_like(warmup_actions)}
-                            if self._uses_pre_squash_action_replay
-                            else {}
-                        )
-                        warmup_collect_policy_aux = (
-                            torch.zeros(
-                                self.num_envs, self._policy_aux_dim, device=self.device
-                            )
-                            if self._policy_aux_dim > 0
-                            else None
-                        )
-                        warmup_log_probs = torch.empty(
-                            self.num_envs, 1, device=self.device
-                        )
-                        warmup_values = torch.empty(
-                            self.num_envs, 1, device=self.device
-                        )
-                        warmup_policy_mean = (
-                            torch.empty_like(warmup_actions)
-                            if self._uses_analytic_kl
-                            else None
-                        )
-                        warmup_policy_log_std = (
-                            torch.empty_like(warmup_actions)
-                            if self._analytic_kl_store_policy_log_std
-                            else None
-                        )
-                        warmup_eps = torch.zeros(
-                            self.num_envs,
-                            self.act_dim,
-                            device=self.device,
-                            dtype=torch.float32,
-                        )
-                        self._act_into_fn(
-                            warmup_obs,
-                            warmup_actions,
-                            warmup_log_probs,
-                            warmup_values,
-                            warmup_eps,
-                            policy_aux=warmup_collect_policy_aux,
-                            out_policy_mean=warmup_policy_mean,
-                            out_policy_log_std=warmup_policy_log_std,
-                            **warmup_collect_replay_kwargs,
-                        )
-                        # Bootstrap omits rollout-only outputs. Compile its
-                        # distinct signature before external CUDA capture.
-                        self._act_into_fn(
-                            warmup_obs,
-                            warmup_actions,
-                            warmup_log_probs,
-                            warmup_values,
-                            warmup_eps,
-                            policy_aux=warmup_collect_policy_aux,
-                        )
+                    self._warmup_compiled_act_into_signatures(force=True)
 
                 warmup_batch = self._update_batch_size
                 warmup_eval_obs = torch.zeros(
@@ -4493,7 +4478,7 @@ class PPOAgent:
         return True
 
     def _compile_update_wrappers_if_needed(self) -> None:
-        if not self._compile_update_fullgraph or self._compiled_update_wrappers_ready:
+        if not self._compile_full_update or self._compiled_update_wrappers_ready:
             return
         self._obs_scale_update_into_fn = torch.compile(
             self._obs_scale_update_into, mode=self._compile_mode, dynamic=False

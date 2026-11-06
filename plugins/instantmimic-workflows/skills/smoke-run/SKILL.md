@@ -33,7 +33,6 @@ Add minimal overrides for the specific wiring under test. Do not turn off:
 - `env.use_cuda_graph`
 - `runtime.act_cuda_graph`
 - `runtime.update_cuda_graph`
-- `runtime.shuffle_cuda_graph`
 - `runtime.compile`
 
 ## Play Smoke Shape

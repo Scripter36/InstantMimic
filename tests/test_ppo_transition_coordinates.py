@@ -44,7 +44,6 @@ def _agent(device: str, shuffle_mode: str, *, detailed: bool = False):
             "latent_ar1_phi": 1.0,
         },
         compile=graph,
-        compile_act_into=False,
         compile_mode="max-autotune-no-cudagraphs",
         use_update_graph=graph,
         use_shuffle_graph=graph,

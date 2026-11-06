@@ -124,7 +124,6 @@ def test_the_compiled_update_recomputes_through_its_compiled_evaluation(
         state_preprocessor=None,
         value_preprocessor=None,
         compile=True,
-        compile_act_into=False,
     )
     assert agent._evaluate_old_policy_minibatch_fn is not (
         agent._evaluate_old_policy_minibatch

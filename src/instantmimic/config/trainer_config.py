@@ -98,8 +98,6 @@ class ClipFailureBenchmarkConfig(Settings):
     window_steps: int | None = None
     batch_size: int | None = None
     execution: Literal["auto", "inline", "subprocess", "shared_motion"] | None = None
-    cuda_graph: bool | None = None
-    compile: bool | None = None
     preserve_training_graphs: bool | None = None
     clone_shared_motion_tensors: bool | None = None
     clip_indices: tuple[int, ...] | None = None

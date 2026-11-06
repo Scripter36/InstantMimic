@@ -35,7 +35,6 @@ class FreemuscoImitationEnvCfg(DirectRLEnvCfg):
     action_space: int = 120
     use_cuda_graph: bool = False
     terminate_on_nonfinite: bool = True
-    compile_mjw_step: bool = False
     log_dir: str = ""
 
     species: str = ""

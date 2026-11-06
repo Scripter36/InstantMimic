@@ -36,7 +36,6 @@ the rest of two execution paths match.
   - `env.use_cuda_graph`
   - `runtime.act_cuda_graph`
   - `runtime.update_cuda_graph`
-  - `runtime.shuffle_cuda_graph`
   - `runtime.compile`
 - Post-training evaluation uses `play` from the best checkpoint.
 - Per seed, record checkpoint path, reward, episode length, and video path if produced.

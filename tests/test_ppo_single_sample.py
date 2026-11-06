@@ -59,7 +59,6 @@ def test_single_sample_ppo_update_keeps_parameters_finite(compile_update):
         state_preprocessor=None,
         value_preprocessor=None,
         compile=compile_update,
-        compile_act_into=False,
     )
     agent.buffer.obs.zero_()
     agent.act_into(0)

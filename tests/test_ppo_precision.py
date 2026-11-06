@@ -204,7 +204,6 @@ def test_compiled_fp16_scaler_and_policy_update(precision):
         agent = _agent(
             precision=precision,
             compile=True,
-            compile_act_into=True,
         )
         for _ in range(2):
             _rollout(agent)

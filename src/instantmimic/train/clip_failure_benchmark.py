@@ -48,6 +48,13 @@ _PROCESS_GROUP_TERM_GRACE_SECONDS = 5.0
 
 @dataclass(frozen=True)
 class ClipFailureBenchmarkConfig:
+    """Resolved clip-failure benchmark settings.
+
+    ``use_cuda_graph`` and ``compile`` are inherited from the run's
+    ``env.use_cuda_graph`` and ``runtime.compile``; the benchmark block cannot
+    author them.
+    """
+
     enabled: bool
     interval: int
     anchor_stride: int
@@ -810,7 +817,17 @@ def apply_clip_failure_benchmark_prior_to_env(
 
 def resolve_semantic_clip_failure_benchmark_config(
     benchmark: Any,
+    *,
+    use_cuda_graph: bool,
+    compile: bool,
 ) -> ClipFailureBenchmarkConfig:
+    """Lower the benchmark block and inherit graph/compile from the run.
+
+    The benchmark never authors its own execution strategy: ``cuda_graph`` maps
+    to ``env.use_cuda_graph`` and ``compile`` to ``runtime.compile`` for the
+    checkpoint it evaluates.
+    """
+
     if not hasattr(benchmark, "get"):
         raise TypeError("trainer.clip_failure_benchmark must be a mapping")
 
@@ -826,12 +843,6 @@ def resolve_semantic_clip_failure_benchmark_config(
             "trainer.clip_failure_benchmark.execution must be auto, inline, "
             "subprocess, or shared_motion"
         )
-    use_cuda_graph = bool(benchmark.get("cuda_graph", False))
-    if execution == "inline" and use_cuda_graph:
-        raise ValueError(
-            "trainer.clip_failure_benchmark.execution=inline conflicts with "
-            "cuda_graph=true"
-        )
     raw_clip_indices = benchmark.get("clip_indices")
     clip_indices = (
         None
@@ -845,8 +856,8 @@ def resolve_semantic_clip_failure_benchmark_config(
         anchor_stride=int(benchmark.get("anchor_stride", 32)),
         window_steps=int(benchmark["window_steps"]),
         batch_size=int(benchmark["batch_size"]),
-        use_cuda_graph=use_cuda_graph,
-        compile=bool(benchmark.get("compile", False)),
+        use_cuda_graph=bool(use_cuda_graph),
+        compile=bool(compile),
         clip_indices=clip_indices,
         subprocess=subprocess_mode,
         preserve_training_graphs=bool(benchmark.get("preserve_training_graphs", False)),

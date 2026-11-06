@@ -151,7 +151,12 @@ class DirectRLEnvCfg:
 
     use_cuda_graph: bool = False
     """Whether to capture the step function as a CUDA graph for reduced launch overhead.
-    Requires all step operations to use pre-allocated buffers with stable pointers."""
+    Requires all step operations to use pre-allocated buffers with stable pointers.
+
+    When disabled on CUDA, the repo-owned MuJoCo Warp step suffix is still
+    captured as its own graph and replayed. An enclosing capture records the
+    suffix directly instead of nesting a graph capture.
+    """
 
     preserve_sim_visual_assets: bool = False
     """Keep rendering-only assets in a non-rendering simulation model.
@@ -178,13 +183,6 @@ class DirectRLEnvCfg:
     When enabled, environments may register named termination masks and the base
     environment will accumulate counts on the GPU. Disabled by default to avoid
     extra bookkeeping on runs that do not need this diagnostics stream.
-    """
-
-    compile_mjw_step: bool = False
-    """Whether to compile the selected repo-owned MuJoCo Warp step suffix.
-
-    This is useful when full-step CUDA graph capture is disabled via :attr:`use_cuda_graph`
-    but the allocation-free physics suffix still benefits from compilation.
     """
 
     use_parallelized_kernel_launch: bool = False

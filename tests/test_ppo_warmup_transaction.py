@@ -371,7 +371,7 @@ def _stage(agent, name):
     # Enter the setup phase after wrapper compilation. The callbacks retain
     # the actual eager PPO work so this unit isolates the transaction boundary.
     agent._compile_enabled = True
-    agent._compile_update_fullgraph = True
+    agent._compile_full_update = True
     agent._compiled_update_wrappers_ready = True
     agent._compiled_model_functions_warmed = True
     # CPU agents do not build update streams, but the capture prewarm is gated
