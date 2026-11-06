@@ -12,7 +12,7 @@ widens the dense J^T D J Hessian block (WIDE_JTDAJ_BLOCK_DIM).
 
 The lift edits the one ``nv_max = 60`` assignment of the pinned upstream source
 and fails loudly when that line is not found exactly once (see the upgrade
-procedure in ``docs/reference/mujoco-warp.md``).
+checklist in ``docs/reference/simulation.md``).
 """
 
 from __future__ import annotations
@@ -79,3 +79,58 @@ def put_model(mjm: mujoco.MjModel):
     if m.nv_pad >= 80:
         m.block_dim.update_gradient_JTDAJ_dense = WIDE_JTDAJ_BLOCK_DIM
     return m
+
+
+def _dense_fused_newton_structure(mjm: mujoco.MjModel) -> bool:
+    """Model-side structural gates of the dense fused Newton solver.
+
+    Mirrors the parts of ``instantmimic.utils.mjw_kernels.newton_fusion.eligible``
+    that are known from a compiled ``MjModel``: Newton with a positive iteration
+    budget, pyramidal cone, a non-``DISCRETE`` integrator, and a DOF count that
+    pads to at most 80 (``nv <= DENSE_NV_MAX``). Sleeping models are excluded
+    because they solve through a compact context, which the fused iteration
+    explicitly rejects. The remaining gates (CUDA device, line-search width,
+    per-world scratch) come from the uploaded model and its data.
+    """
+    return (
+        0 < mjm.nv <= DENSE_NV_MAX
+        and mjm.opt.solver == mujoco.mjtSolver.mjSOL_NEWTON
+        and mjm.opt.cone == mujoco.mjtCone.mjCONE_PYRAMIDAL
+        and mjm.opt.integrator != mujoco.mjtIntegrator.mjINT_DISCRETE
+        and mjm.opt.iterations > 0
+        and not (mjm.opt.enableflags & mujoco.mjtEnableBit.mjENBL_SLEEP)
+    )
+
+
+def promote_dense_jacobian_for_fused_newton(
+    mjm: mujoco.MjModel,
+    *,
+    use_optimized_kernel: bool,
+    authored_is_sparse: bool | None,
+) -> bool:
+    """Resolve an ``auto`` Jacobian to dense when the fused Newton path wants it.
+
+    ``mujoco_warp`` resolves ``mjJAC_AUTO`` to sparse above 32 DOFs, which keeps
+    the dense fused Newton solver away from mid-size models such as the 35-DOF
+    G1. Raising the dense cap in ``put_model`` only helps models that already
+    compile as dense. When the specialized kernels are on, the user left
+    ``env.sim.is_sparse`` unset, and the fused path's structural gates hold, set
+    the compiled model's Jacobian to dense before upload so that path is
+    reachable. An authored ``env.sim.is_sparse`` or XML Jacobian setting always
+    wins, and the rule does nothing when the specialized kernels are off.
+
+    Returns whether the model was changed.
+    """
+
+    if not use_optimized_kernel or authored_is_sparse is not None:
+        return False
+    if mjm.opt.jacobian != mujoco.mjtJacobian.mjJAC_AUTO:
+        return False
+    # Only act where upstream would pick sparse; below that the model is already
+    # dense and the fused path needs no Jacobian change.
+    if not mjw_io.is_sparse(mjm):
+        return False
+    if not _dense_fused_newton_structure(mjm):
+        return False
+    mjm.opt.jacobian = mujoco.mjtJacobian.mjJAC_DENSE
+    return True

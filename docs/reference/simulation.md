@@ -125,6 +125,31 @@ The Newton loop keeps the upstream setup, convergence and overflow tracking and
 final force recovery. Parallel reductions can still round differently in
 float32, so numerical equivalence with upstream is tolerance-based.
 
+#### Dense Jacobian resolution for the fused Newton path
+
+MuJoCo Warp resolves an `auto` Jacobian to sparse above 32 DOFs
+(`mujoco_warp._src.io.is_sparse`), so `put_model`'s raised dense cap alone leaves
+mid-size models such as the 35-DOF G1 on the sparse path. `DirectRLEnv` closes
+that gap by setting the compiled model's `opt.jacobian` to dense before upload
+(`instantmimic.utils.mjw_model.promote_dense_jacobian_for_fused_newton`) and
+logging one `JACOBIAN_DENSE_AUTO_RESOLVED` INFO line. The rule applies only when
+all of these hold:
+
+- `env.use_optimized_kernel` resolved on for this device;
+- `env.sim.is_sparse` is unset, so the config authored no Jacobian choice;
+- the compiled model still has `mjJAC_AUTO`, and MuJoCo Warp would resolve it to
+  sparse;
+- the fused Newton path's model-side gates hold: `nv <= DENSE_NV_MAX` (pads to
+  `nv_pad <= 80`), Newton solver, pyramidal cone, non-`DISCRETE` integrator, a
+  positive iteration budget, and no sleeping model. Sleep selects the compact
+  solver context, which the fused iteration rejects.
+
+This is a structural rule; no model or task is named. An authored
+`env.sim.is_sparse` (and an explicit XML `jacobian`) always wins, and with
+`env.use_optimized_kernel` off nothing changes: upstream's sparse resolution
+above 32 DOFs stands. `tests/test_mjw_dense_jacobian_resolution.py` holds the
+resolution matrix.
+
 #### Newton occupancy
 
 The persistent Newton kernel launches one CTA per world, so resident CTAs per SM
@@ -161,7 +186,10 @@ factor replaced, from `NONFUSED_MIN_NV` DOFs up. `MIN_NV`, `MAX_DENSITY` and
 cap raised from 60 to 79 DOFs (`nv_pad` 80) and a wider dense Hessian block at
 `nv_pad` 80. It edits the single `nv_max = 60` assignment of the pinned upstream
 source and fails if that line is missing; every other model goes to the upstream
-function. Environments and the playback renderer upload through it.
+function. Environments and the playback renderer upload through it. The module
+also owns `promote_dense_jacobian_for_fused_newton`, which resolves an `auto`
+Jacobian to dense before upload when the fused Newton path applies (see Dense
+Jacobian resolution above).
 
 ## Differences from stock MuJoCo Warp
 
@@ -217,7 +245,9 @@ For every MuJoCo Warp upgrade:
 4. Capture and replay the full environment step, and confirm benchmark
    evaluation captures its nested conditional graph without an eager fallback.
 5. Re-audit `mjw_model.put_model` and confirm the dense Newton path still
-   matches CPU MuJoCo above 60 DOFs (`tests/test_mjw_model.py`).
+   matches CPU MuJoCo above 60 DOFs (`tests/test_mjw_model.py`). Also re-check
+   `mujoco_warp._src.io.is_sparse`: its 32-DOF auto threshold decides when the
+   dense Jacobian rule fires.
 
 ## Measuring changes
 
@@ -229,6 +259,7 @@ Focused checks:
 ```bash
 uv run pytest -q tests/test_mjw_data_contracts.py tests/test_blocked_dense_factor_solve.py \
   tests/test_mjw_newton_fusion.py tests/test_mjw_tree_fusion.py \
+  tests/test_mjw_dense_jacobian_resolution.py \
   tests/test_direct_rl_env_state_prefix.py tests/test_mjw_step_parallel_kinematics.py
 ```
 

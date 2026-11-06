@@ -46,7 +46,11 @@ from instantmimic.utils.mjw_kernels.private import (
     collision_driver as mjw_collision_driver,
 )
 from instantmimic.utils.mjw_kernels.private import default_njmax_nnz
-from instantmimic.utils.mjw_model import put_model
+from instantmimic.utils.mjw_model import (
+    DENSE_NV_MAX,
+    promote_dense_jacobian_for_fused_newton,
+    put_model,
+)
 from instantmimic.utils.mjw_step_optimized import (
     com_pos_vel_parallel,
     forward_after_state_prefix_optimized_fwd_position,
@@ -625,6 +629,10 @@ class DirectRLEnv(gym.Env):
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
+        # The specialized-kernel policy decides whether model upload resolves an
+        # `auto` Jacobian to dense for the fused Newton path, so resolve it
+        # before scene creation uploads the model.
+        self._use_optimized_kernel = self._resolve_use_optimized_kernel()
         control_pipeline = self._control_pipeline
         if control_pipeline is None:
             control_pipeline = resolve_control_pipeline(
@@ -690,10 +698,7 @@ class DirectRLEnv(gym.Env):
                     resolved_ball_limits if ball_limit_mode == "force" else ()
                 )
             with env_startup_profiler.phase("mjw_put_model"):
-                self.mjw_model = put_model(self.model)
-                self.mjw_model.opt.warn_overflow = bool(
-                    getattr(self.cfg.sim, "warn_overflow", False)
-                )
+                self._upload_mjw_model()
             with env_startup_profiler.phase("create_mjdata"):
                 self.data = mujoco.MjData(self.model)
             with env_startup_profiler.phase("mjw_put_data"):
@@ -807,7 +812,6 @@ class DirectRLEnv(gym.Env):
             self._use_parallelized_kernel_launch = (
                 self._resolve_use_parallelized_kernel_launch()
             )
-            self._use_optimized_kernel = self._resolve_use_optimized_kernel()
             self._optimized_fwd_position_streams = (
                 make_optimized_fwd_position_streams(self.device)
                 if self._use_parallelized_kernel_launch
@@ -902,6 +906,42 @@ class DirectRLEnv(gym.Env):
         if enabled and torch.device(self.device).type != "cuda":
             raise ValueError("env.use_optimized_kernel=true requires CUDA.")
         return enabled
+
+    def _resolve_dense_jacobian_for_upload(self) -> bool:
+        """Promote the compiled `auto` Jacobian for the fused Newton path.
+
+        Uses the resolved device policy, so a config that authored
+        `use_optimized_kernel` on cannot promote a Jacobian on a device where the
+        specialized kernels are off. Returns whether the model changed.
+        """
+
+        if not promote_dense_jacobian_for_fused_newton(
+            self.model,
+            use_optimized_kernel=self._use_optimized_kernel,
+            authored_is_sparse=getattr(self.cfg.sim, "is_sparse", None),
+        ):
+            return False
+        logger.info(
+            "JACOBIAN_DENSE_AUTO_RESOLVED nv=%d nv_max=%d: "
+            "MuJoCo Warp would resolve auto to sparse; the "
+            "optimized kernels use the dense fused Newton solver.",
+            int(self.model.nv),
+            DENSE_NV_MAX,
+        )
+        return True
+
+    def _upload_mjw_model(self) -> None:
+        """Resolve the Jacobian, then upload the compiled model.
+
+        The Jacobian decision must precede `put_model`: the dense cap and the
+        `is_sparse`-dependent data options are read from the uploaded model.
+        """
+
+        self._resolve_dense_jacobian_for_upload()
+        self.mjw_model = put_model(self.model)
+        self.mjw_model.opt.warn_overflow = bool(
+            getattr(self.cfg.sim, "warn_overflow", False)
+        )
 
     def _prepare_substep_rewards(self) -> None:
         raise NotImplementedError(
@@ -2126,9 +2166,8 @@ class DirectRLEnv(gym.Env):
         # that needs them at this state must run its own forward first, the way
         # `StablePDController.compute_torque` does; do not assume the boundary
         # refreshed them. With `defer`, contacts and constraint rows are also
-        # one substep back until the reset prefix below rebuilds them. See
-        # "Stateful control state-prefix schedule" in
-        # docs/reference/mujoco-warp.md.
+        # one substep back until the reset prefix below rebuilds them. See the
+        # state-prefix schedule in docs/reference/simulation.md.
         nonfinite_state_mask = self._compute_dones_and_rewards()
 
         # Preserve observations from the state that produced this transition
