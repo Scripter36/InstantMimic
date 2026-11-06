@@ -41,8 +41,11 @@ assertions. Protect every discovered contract, including assets/topology,
 lifecycle, learning/evaluation, and specialized behavior.
 
 Demonstrate that critical tests fail under plausible ordering, scale, timing, and
-reset mistakes. If the source cannot be observed, record missing evidence rather
-than inventing a pass.
+reset mistakes. A control must fail by assertion; a control that crashes proves
+nothing and leaves the gate missing. Run learning oracles (normalization, losses,
+schedules) through the production captured or fused path as well as the eager
+one. If the source cannot be observed, record missing evidence rather than
+inventing a pass.
 
 ## Phase 4 — Implement the Vertical Slice
 

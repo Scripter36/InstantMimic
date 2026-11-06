@@ -56,7 +56,10 @@ On approval, write `contract.json` and advance `state.json` to `approved`.
 Each gate becomes one `required_gates` entry. `id` is a stable slug used by
 every later artifact and by the reviewer's output. `claim` must be falsifiable:
 state what would have to be observed for the gate to fail. `acceptance` is one
-of the four acceptance classes in `SKILL.md` § Vocabulary.
+of the four acceptance classes in `SKILL.md` § Vocabulary. Per I8, each claim
+also names the path it is measured on, its known-bad control, where any
+tolerance comes from, and its comparator. Freeze a `tolerant` bound only after
+measuring same-path repeat noise on the production device.
 
 Include a blocking execution-scope/budget gate whose exact claim records the
 chosen seed set, per-setting stopping budget, evaluation cadence, maximum setting
@@ -79,7 +82,12 @@ freeze a blocking `statistical` gate and its tolerance. Every `required_gates`
 entry is blocking to the mechanical verdict; acceptance class does not make it
 optional. Keep learning viability blocking: finite-budget training must remain
 numerically healthy and improve over a frozen untrained or random baseline under
-the agreed evaluation protocol.
+the agreed evaluation protocol. That check alone is not discriminating (I8): a
+port with a disabled normalizer or a slower precision still passes it. Add
+learning-state invariants on the production path, such as normalizer sample
+counts, optimizer steps and scheduler updates matching their formulas. When the
+source and target share a simulator backend, also freeze a learning-speed
+non-inferiority gate whose tolerance comes from the source's own seed spread.
 
 Freeze what establishes simulator-orchestration and performance completion:
 state dependency/call-count evidence, actual runtime-path markers, warm matched

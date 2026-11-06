@@ -38,7 +38,11 @@ verdicts, or desired outcome.
    raw evidence and try to falsify the claim.
 4. Check test sensitivity, backend-difference classification, state/reset
    lifecycle, learning and evaluation behavior, and all discovered specialized
-   source features demanded by the frozen contract.
+   source features demanded by the frozen contract. For each gate, ask whether
+   an obviously broken port would also pass it. Evidence that ran on a path other
+   than the production one, lacks a failing known-bad control, uses a tolerance
+   not derived from measured repeat noise, or comes from a control that errored
+   is `missing`.
 5. Independently attribute production graph nodes and kernels. Graph capture or
    optimization flags alone do not pass optimization. For MuJoCo Warp, unexplained
    framework kernels in environment-owned action, task state, done, reward,
@@ -51,8 +55,8 @@ verdicts, or desired outcome.
    profile counts. Require explained common orchestration even when simulator
    specialization is excluded. Unexplained duplicate solves fail the relevant
    optimization gate; ambiguous attribution is missing.
-7. Compare warm unprofiled maintained-source/target throughput and optimized/
-   reference differentials with matched work and disclosed backend differences.
+7. Compare warm unprofiled maintained-source/target throughput, the target's
+   own established path for the same model, and optimized/reference differentials with matched work and disclosed backend differences.
    Inspect active-time definitions, GPU interference and rollout/update phases.
    Missing required baseline, cold startup, profile or post-change evidence is
    missing. Shared-contact formula checks do not prove independent contact force

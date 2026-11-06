@@ -66,7 +66,8 @@ The deterministic result is authoritative:
 - no fail and any required `missing` → `unverifiable`;
 - every required gate `pass` → `accept`.
 
-Repair actionable findings and refresh affected artifacts. Permit at most one
+Repair actionable findings and refresh affected artifacts. Evidence produced
+after a verdict enters only through a new packet. Permit at most one
 new context-free re-review; never steer a reviewer toward a desired verdict.
 Do not reopen exhausted training budgets in response to review. A reviewer may
 fail a blocking gate, but it cannot authorize another setting or redefine source

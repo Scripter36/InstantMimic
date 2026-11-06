@@ -60,6 +60,11 @@ procedure or a universal kFPS ratio.
   normal-condition source/target measurements and explain material gaps by actual
   phases/calls. A required unavailable baseline remains missing; do not substitute
   historical numbers or attribute all gaps to absent specialized kernels.
+  Matching the source's speed is not enough (I8): also measure the target's own
+  established path for the same model and work, and explain any gap to it. A
+  fallback to fuller dynamics needs a named consumer that requires it. Run the
+  source baseline stock, without added instrumentation, and use one throughput
+  definition for both sides.
 - **Startup reliability.** Where compile/graphs are used, verify isolated cold
   startup and actual authored capture/replay. Warm-cache success after a failed
   cold launch is not repair; prewarm/capture ordering must pass on the final code.

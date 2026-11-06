@@ -47,6 +47,25 @@ Assert these at every phase boundary. Later phases reference them by id.
   `missing`.
 - **I6 Finite budgets.** Never use reward attainment as a loop condition. Freeze
   learning budgets and retry counts before execution; stop when exhausted.
+- **I7 Source semantics first.** The default target is the source's behavior,
+  including its learning setup: the policy distribution and the tensor the
+  optimizer actually trains (for example sigma or log sigma, whatever the config
+  key is called), observation normalization, initialization, optimizer,
+  scheduler cadence, loss clipping, numerical precision and compile mode. When InstantMimic has no equivalent, add
+  one as an option whose default leaves other tasks unchanged; never substitute
+  the nearest native setting. Native learning settings are separate opt-in
+  configs, compared against the parity config only after parity passes.
+  Representations that look equivalent can still learn differently.
+- **I8 Discriminating evidence.** A pass counts only if the check could have
+  failed on the code and configuration that ship. For every blocking gate:
+  run the evidence on the production path and authored config (captured graph,
+  fused kernels, compile mode and precision), not on an eager or reference twin;
+  show the check can fail, with a known-bad variant that fails it and a
+  tolerance taken from the measured noise of repeating the same path; compare
+  against the strongest relevant reference under one metric definition, with
+  that reference run stock. A check that errors or cannot run is `missing`. A
+  gate that an obviously broken port would also pass does not establish its
+  claim.
 
 ## Run State
 
@@ -124,8 +143,8 @@ completely, execute it, write its exit artifact into the workspace, update
 
 | State | Load | Exit artifact | Asserts |
 |---|---|---|---|
-| `preflight` → `approved` | [Phase 0–1](references/phase-0-1-contract.md) | `contract.json` | I1, I2, I6 |
-| `approved` → `implemented` | [Phase 2–4](references/phase-2-4-port.md) | `ledger.jsonl`, oracles, vertical slice | I3, I5 |
+| `preflight` → `approved` | [Phase 0–1](references/phase-0-1-contract.md) | `contract.json` | I1, I2, I6, I7, I8 |
+| `approved` → `implemented` | [Phase 2–4](references/phase-2-4-port.md) | `ledger.jsonl`, oracles, vertical slice | I3, I5, I7, I8 |
 | `implemented` → `optimized` | [Phase 5–6](references/phase-5-6-production.md), invoking `$optimize-runtime` | delegated optimization evidence under `evidence/optimization/` | I3, I6 |
 | `optimized` → `reported` | [Phase 7–8](references/phase-7-8-review.md) | `packet.json`, `review.json`, `verdict.json` | I4, I5 |
 
