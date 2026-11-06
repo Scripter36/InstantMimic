@@ -21,9 +21,12 @@
 
 [![Walk, run, spinkick, backflip and cartwheel policies](docs/assets/motion-preview.gif)](https://scripter36.github.io/projects/instantmimic/#motion-demo)
 
-InstantMimic trains physics-based character controllers with reinforcement
-learning, fast enough that a humanoid learns to walk, run or backflip in about
-one to two seconds of training on a single GPU. Simulation
+InstantMimic is an AI-native framework for learning physics-based character
+skills. A humanoid learns to walk, run or backflip in about one to two seconds
+of training on a single GPU, which is fast enough for a coding agent to run the
+experiments itself, and the repository ships the agent skills to do so: set up
+the environment, train, evaluate, profile, tune hyperparameters and port
+environments from other frameworks. Simulation
 ([MuJoCo Warp](https://github.com/google-deepmind/mujoco_warp)), rollout
 collection and PPO updates all stay on the GPU and run as CUDA graphs. The
 [motion demonstrations](https://instantmimic.readthedocs.io/en/latest/reference/motion-demo/) page lists the configs
@@ -40,8 +43,8 @@ and timings behind the clips above.
 | Motion imitation with a PD humanoid: walk, run, spinkick, backflip and cartwheel | `humanoid/imitation/walk_pd` | [First run](https://instantmimic.readthedocs.io/en/latest/getting-started/first-run/) |
 | Muscle-actuated characters: SNU humanoid, FreeMusco ostrich and Chimanoid | `snu_humanoid/imitation/walk_musubi` | [Muscle control](https://instantmimic.readthedocs.io/en/latest/guides/muscle-control/) |
 | Latent policies trained on AMASS, and point-goal navigation on top of them | `humanoid/amass/imitation/phc_train_pd_vae` | [AMASS](https://instantmimic.readthedocs.io/en/latest/data/amass-retargeting/) |
-| Unitree G1 motion tracking following BeyondMimic | `unitree_g1/beyondmimic/side_kick` | [BeyondMimic](https://instantmimic.readthedocs.io/en/latest/guides/beyondmimic/) |
 | Hyperparameter searches planned by an LLM agent | `config/hpo/` | [HPO](https://instantmimic.readthedocs.io/en/latest/guides/hpo/) |
+| Example port from another framework: BeyondMimic's Unitree G1 motion tracking | `unitree_g1/beyondmimic/side_kick` | [BeyondMimic](https://instantmimic.readthedocs.io/en/latest/guides/beyondmimic/) |
 
 ## Getting started
 
@@ -76,10 +79,46 @@ reuse them. Any setting can be overridden on the command line, for example
 `trainer.max_iterations=300`. The
 [configuration reference](https://instantmimic.readthedocs.io/en/latest/reference/configuration/) describes them.
 
-When you work in the checkout with Codex or Claude Code, the
-`instantmimic-workflows` plugin adds skills for training, evaluation, profiling
-and porting environments from other frameworks. See
-[assistant workflows](https://instantmimic.readthedocs.io/en/latest/guides/assistant-workflows/) to install it.
+When you work in the checkout with Codex or Claude Code, install the
+`instantmimic-workflows` plugin to get the [skills below](#coding-agent-skills);
+[assistant workflows](https://instantmimic.readthedocs.io/en/latest/guides/assistant-workflows/#install-for-codex)
+shows how.
+
+## Coding agent skills
+
+Making a task train fast usually takes a lot of code work, debugging and
+measurement. InstantMimic includes skills that let a coding agent such as Codex
+or Claude Code take on much of that work. They are in the
+`instantmimic-workflows` plugin under `plugins/`. The main skills:
+
+| Skill | What the agent does |
+| --- | --- |
+| `instantmimic` | Starts from a goal in your own project: clones and installs InstantMimic, then trains, evaluates or renders. |
+| `migrate-external-env` | Ports an environment from Isaac Lab, mjlab or another framework: freezes the behavior to match, implements it, checks parity with the source, then moves the task onto the fused GPU path. |
+| `review-external-env-migration` | Reviews a finished port from its evidence alone, in a fresh context. |
+| `optimize-runtime` | Speeds up a workload by repeatedly profiling, changing and validating it. |
+| `tune-hyperparameters` | Plans and runs a hyperparameter search over training settings. |
+| `train`, `smoke-run`, `play-best`, `experiment-report` | Builds training commands, checks wiring, evaluates checkpoints and compares runs fairly. |
+
+[Assistant workflows](https://instantmimic.readthedocs.io/en/latest/guides/assistant-workflows/)
+lists every skill and how to install them.
+
+### Example: porting BeyondMimic
+
+A coding agent ported the Unitree G1 motion-tracking task of
+[BeyondMimic](https://github.com/HybridRobotics/whole_body_tracking) from
+[mjlab](https://github.com/mujocolab/mjlab) under our review, and we turned that
+workflow into the `migrate-external-env` skill. The port reaches the same
+tracking quality and trains about 2.2× faster than mjlab:
+
+| Implementation | Training throughput |
+| --- | ---: |
+| mjlab 1.6.0 tracking | 245 kFPS |
+| InstantMimic | 541 kFPS |
+
+Measured on an RTX 5090; see the
+[BeyondMimic guide](https://instantmimic.readthedocs.io/en/latest/guides/beyondmimic/#how-this-port-was-made)
+for details.
 
 ## Documentation
 

@@ -82,6 +82,76 @@ uv run python -m instantmimic.envs.unitree_g1.tasks.beyondmimic_tracking.evaluat
 
 It runs 1,024 episodes by default; `--episodes 128` gives a quicker estimate.
 
+## How this port was made
+
+A coding agent ported this task under a contract that we wrote and reviewed
+at every stage: reproduce the public Stage-1 tracking task, prove parity
+against the official BeyondMimic code and the pinned mjlab implementation,
+keep that parity on the optimized CUDA-graph path, and pass a fixed tracking
+benchmark. The port has two stages:
+
+1. A reference port that keeps mjlab's task structure, used to check parity
+   term by term (`side_kick_reference`).
+2. The production path, which fuses the task's observation, reward,
+   termination and reset computations into Warp kernels and runs rollout and
+   PPO updates as CUDA graphs (`side_kick`). On the same work it runs a training
+   iteration 4.9× faster than the reference port.
+
+Matching the learning setup took PPO options that InstantMimic did not have:
+privileged critic observations, RSL-RL's empirical observation normalization,
+its initialization order, a learned standard deviation trained directly rather
+than as its logarithm, and learning-rate adaptation after every minibatch. They
+are options that default off for other tasks. The direct standard deviation
+matters: with InstantMimic's log-space parameterization instead, the same task
+learned measurably slower over 500 iterations.
+
+Three seeds trained for 6,000 iterations with the `side_kick` settings pass
+every quality gate of the 1,024-episode evaluation and track about as well as
+mjlab. Averaged over iterations 5,000, 5,500 and 6,000 and then over seeds:
+
+| Metric | InstantMimic | mjlab (pinned revision) |
+| --- | ---: | ---: |
+| Success rate | 0.976 | 0.985 |
+| MPKPE | 0.107 m | 0.106 m |
+| Root-relative MPKPE | 0.030 m | 0.030 m |
+| End-effector position error | 0.047 m | 0.046 m |
+| End-effector orientation error | 0.170 rad | 0.167 rad |
+
+The lowest success of any evaluated checkpoint is 0.958.
+
+Training throughput on one RTX 5090, with 4,096 environments, 24-step rollouts
+and the same PPO workload (5 epochs, 4 minibatches), counting both rollout
+collection and PPO updates, in thousands of environment steps per second
+(kFPS). The first row was measured on the current code; the other two on the
+development branch before release.
+
+| Comparison | Baseline (kFPS) | InstantMimic (kFPS) | Ratio |
+| --- | ---: | ---: | ---: |
+| [mjlab 1.6.0](https://github.com/mujocolab/mjlab), one seed, iterations 100–199 | 245 | 541 | 2.21× |
+| [mjlab](https://github.com/mujocolab/mjlab/tree/15ebce8840ee2205f4c62d0c20df65dd1794cab4/src/mjlab/tasks/tracking) at the parity revision, three seeds | 247 | 470 | 1.90× |
+| [BeyondMimic](https://github.com/HybridRobotics/whole_body_tracking) on Isaac Lab 2.1.0, iterations 100–199 | 118 | 470 | 3.99× |
+
+The first row is the closest match: both sides use MuJoCo Warp 3.16, InstantMimic
+runs with its optimized simulator kernels and parallel kernel launch, and both
+totals cover rollout collection and the update, each from its own framework's
+timers, though PyTorch, Warp and TF32 settings differ. In the second row the
+two sides differ in MuJoCo Warp revision and in throughput definition (mjlab's
+final reported value, run under our measurement harness with profiling markers
+enabled, against InstantMimic's active training time). The original BeyondMimic repository has since retired its Isaac Lab
+implementation in favor of mjlab; its gap is in rollout collection, and its PPO
+update takes about as long as the other two.
+
+How the port was reviewed shaped the skill. The skill was written after this
+port and revised with what later reviews caught: a public version of the port
+that duplicated simulator work at half speed while still matching mjlab's
+throughput, a normalizer that the fused rollout never updated, tolerance
+checks set without measuring repeat noise, and random draws in the fused
+kernels that all reused one value per environment, which made reset, push and
+observation noise perfectly correlated and the task easier than mjlab's. Those
+became the
+[source-semantics and discriminating-evidence rules](assistant-workflows.md#port-an-environment-from-another-framework)
+of `migrate-external-env`.
+
 ## Check configs before preparing the assets
 
 `validate_configs` normally requires every asset a config refers to. With

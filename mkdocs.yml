@@ -31,6 +31,7 @@ nav:
       - Installation: getting-started/installation.md
       - First training run: getting-started/first-run.md
   - Guides:
+      - Assistant workflows: guides/assistant-workflows.md
       - Training and playback: guides/training-and-playback.md
       - Writing an environment: guides/writing-environments.md
       - Muscle simulation and control: guides/muscle-control.md
@@ -51,7 +52,6 @@ nav:
       - HPO task schema: reference/hpo-task-schema.md
   - Development:
       - Contributing: development.md
-      - Assistant workflows: guides/assistant-workflows.md
 validation:
   omitted_files: warn
   absolute_links: warn

@@ -1,9 +1,13 @@
 # InstantMimic
 
-InstantMimic learns physics-based character skills on the GPU in seconds. Its
-training loop keeps simulation, rollout collection and PPO updates on the GPU,
-which makes motion imitation fast enough to run many experiments, including
-hyperparameter searches planned by an LLM agent.
+InstantMimic is an AI-native framework that learns physics-based character
+skills on the GPU in seconds. Its training loop keeps simulation, rollout
+collection and PPO updates on the GPU, which makes motion imitation fast enough
+for a coding agent to run the experiments itself. The repository ships the
+agent skills for that work: setting up, training, evaluating, profiling, tuning
+hyperparameters and porting environments from other frameworks, as was done for
+[BeyondMimic](guides/beyondmimic.md#how-this-port-was-made). See
+[assistant workflows](guides/assistant-workflows.md) to install them.
 
 ## Get started
 
