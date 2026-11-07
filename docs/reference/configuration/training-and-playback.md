@@ -114,6 +114,23 @@ specialization is compiled inside a captured rollout. The retired
 `compile_act_into` and `shuffle_cuda_graph` keys are rejected rather than
 ignored; delete them from a configuration that still sets them.
 
+### Network-scoped TF32
+
+TF32 is never a process default. `configure_process()` selects IEEE float32
+(`highest`) for matmuls and IEEE precision for cuDNN convolution and RNN work.
+Environment, physics, observation, reward and asset construction run in IEEE
+float32. Only learning-network forward and update work enters
+`instantmimic.utils.network_precision.network_matmul_precision()`, including
+PPO, policy playback, benchmark policy snapshots and MuscleNN training.
+The scope restores the previous state on exit, including on exceptions.
+
+Compiled playback and benchmark wrappers enter the scope outside Dynamo's traced
+region. Network prewarm, compile and CUDA graph capture select the same precision
+as network execution; captured graphs retain that choice. The helper uses
+`torch.set_float32_matmul_precision` because PyTorch 2.11's new per-backend TF32
+setter leaves the legacy getter unreadable, and Inductor reads that getter for
+autotune cache keys.
+
 ### Reduced precision
 
 `runtime.precision` runs the policy network in `float32` (the default),

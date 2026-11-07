@@ -28,6 +28,7 @@ from instantmimic.rl.runtime import (
     agent_observation_output_views,
     copy_agent_observation_into,
 )
+from instantmimic.utils.network_precision import network_matmul_precision
 from instantmimic.utils.torch_warp_capture import capture_warp_graph
 
 _LOGGER = logging.getLogger(__name__)
@@ -208,8 +209,9 @@ def _policy_sample_into(
     out_actions: torch.Tensor,
 ) -> None:
     """Stochastic action sampling (same as training, but without grad)."""
-    sampled_actions, _, _ = agent.act(obs_policy)
-    out_actions.copy_(sampled_actions)
+    with network_matmul_precision():
+        sampled_actions, _, _ = agent.act(obs_policy)
+        out_actions.copy_(sampled_actions)
 
 
 @torch.no_grad()
@@ -221,11 +223,16 @@ def _policy_sample_graph_safe_into(
     out_values: torch.Tensor,
 ) -> None:
     """Sample through the same preallocated noise and evaluation path as rollout."""
-    scaled_obs = agent._policy_scaled_obs
-    agent._obs_scale_eval_into_fn(obs_policy, scaled_obs)
-    agent._act_into_fn(
-        scaled_obs, out_actions, out_log_probs, out_values, agent._fill_policy_noise_()
-    )
+    with network_matmul_precision():
+        scaled_obs = agent._policy_scaled_obs
+        agent._obs_scale_eval_into_fn(obs_policy, scaled_obs)
+        agent._act_into_fn(
+            scaled_obs,
+            out_actions,
+            out_log_probs,
+            out_values,
+            agent._fill_policy_noise_(),
+        )
 
 
 def _maybe_build_compiled_playback_policy(
@@ -252,20 +259,28 @@ def _maybe_build_compiled_playback_policy(
         else nullcontext()
     )
     try:
+        unscoped_mean = getattr(agent, "_policy_mean_into_unscoped", None)
+        if not callable(unscoped_mean):
+            unscoped_mean = agent.policy_mean_into
+        unscoped_execution_mean = getattr(
+            agent, "_policy_execution_mean_into_unscoped", None
+        )
+        if not callable(unscoped_execution_mean):
+            unscoped_execution_mean = agent.policy_execution_mean_into
 
         @torch.no_grad()
         def _playback_policy_mean_compiled(
             obs: torch.Tensor,
             out_actions: torch.Tensor,
         ) -> None:
-            agent.policy_mean_into(obs, out_actions)
+            unscoped_mean(obs, out_actions)
 
         @torch.no_grad()
         def _playback_policy_execution_mean_compiled(
             obs: torch.Tensor,
             out_actions: torch.Tensor,
         ) -> None:
-            agent.policy_execution_mean_into(
+            unscoped_execution_mean(
                 obs,
                 out_actions,
             )
@@ -276,7 +291,15 @@ def _maybe_build_compiled_playback_policy(
             if use_execution_mean
             else _playback_policy_mean_compiled
         )
-        compiled[key] = torch.compile(policy, mode=compile_mode, dynamic=False)
+        compiled_policy = torch.compile(policy, mode=compile_mode, dynamic=False)
+
+        @torch.no_grad()
+        def _scoped_policy(obs: torch.Tensor, out_actions: torch.Tensor) -> None:
+            # Keep process-state reads outside Dynamo's traced region.
+            with network_matmul_precision():
+                compiled_policy(obs, out_actions)
+
+        compiled[key] = _scoped_policy
         warmup_obs = torch.zeros_like(obs_policy)
         warmup_actions = torch.empty_like(agent_actions)
         with torch_stream_ctx:
@@ -734,10 +757,11 @@ class _HeadlessPlaybackGraphRunner(_PlaybackGraphRunnerBase):
                     self._values,
                 )
             else:
-                self._agent.policy_execution_mean_into(
-                    self._obs_policy,
-                    self._agent_actions,
-                )
+                with network_matmul_precision():
+                    self._agent.policy_execution_mean_into(
+                        self._obs_policy,
+                        self._agent_actions,
+                    )
         with self._nvtx_range("playback_env_step"):
             self._env_raw.step_with_io(
                 self._step_io,
@@ -1119,10 +1143,11 @@ class _PlaybackVideoStepGraphRunner(_PlaybackGraphRunnerBase):
                 if callable(compiled_execution_mean):
                     compiled_execution_mean(self._obs_policy, self._agent_actions)
                 else:
-                    self._agent.policy_execution_mean_into(
-                        self._obs_policy,
-                        self._agent_actions,
-                    )
+                    with network_matmul_precision():
+                        self._agent.policy_execution_mean_into(
+                            self._obs_policy,
+                            self._agent_actions,
+                        )
         with self._nvtx_range("playback_env_step"):
             self._env_raw.step_with_io(
                 self._step_io,

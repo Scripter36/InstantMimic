@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import warnings
 
-import torch
+from instantmimic.utils.network_precision import configure_ieee_float32_precision
 
 
 def _install_benign_torch_warning_filters() -> None:
@@ -49,7 +49,7 @@ def configure_process() -> None:
     """
 
     logging.basicConfig(level=logging.INFO)
-    torch.set_float32_matmul_precision("high")
+    configure_ieee_float32_precision()
     _install_benign_torch_warning_filters()
 
 

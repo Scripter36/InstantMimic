@@ -12,6 +12,7 @@ from instantmimic.muscle.muscle_qfrc_projector import (
     write_generalized_force_actions_indexed_kernel,
     write_generalized_force_actions_kernel,
 )
+from instantmimic.utils.network_precision import network_matmul_precision
 
 from .config_models import MassPosePolicyOutputSettings
 
@@ -184,7 +185,7 @@ class FastMuscleStepMixin:
         musclenn_input = self._write_musclenn_step_input(contribution, torque_actions)
         self._sanitize_musclenn_input_inplace(musclenn_input)
         training_target = musclenn_input[:, self._musclenn_sparse_entry_dim :]
-        with torch.no_grad():
+        with torch.no_grad(), network_matmul_precision():
             activation = self._musclenn_model(
                 self._prepare_musclenn_model_input(musclenn_input)
             ).to(dtype=torch.float32)

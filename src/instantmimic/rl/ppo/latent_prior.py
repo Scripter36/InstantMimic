@@ -25,6 +25,7 @@ from instantmimic.rl.models.distributions import (
     diagonal_gaussian_entropy,
     gaussian_tanh_log_prob,
 )
+from instantmimic.utils.network_precision import network_matmul_precision
 from instantmimic.utils.policy_mean_contract import register_policy_mean_methods
 
 from .agent import (
@@ -1542,18 +1543,19 @@ class LatentPriorPPOAgent(PPOAgent):
         eps: torch.Tensor | None = None,
         temperature: float = 1.0,
     ) -> None:
-        scaled_obs = self._scaled_eval_obs(obs)
-        sample_fn = getattr(self.network, "policy_prior_sample_into", None)
-        if not callable(sample_fn):
-            raise RuntimeError(
-                "policy_prior_sample_into() requires a network that exposes policy_prior_sample_into()."
+        with network_matmul_precision():
+            scaled_obs = self._scaled_eval_obs(obs)
+            sample_fn = getattr(self.network, "policy_prior_sample_into", None)
+            if not callable(sample_fn):
+                raise RuntimeError(
+                    "policy_prior_sample_into() requires a network that exposes policy_prior_sample_into()."
+                )
+            sample_fn(
+                scaled_obs,
+                out_actions,
+                eps=None if eps is None else eps.to(device=scaled_obs.device),
+                temperature=float(temperature),
             )
-        sample_fn(
-            scaled_obs,
-            out_actions,
-            eps=None if eps is None else eps.to(device=scaled_obs.device),
-            temperature=float(temperature),
-        )
 
     @torch.no_grad()
     def sample_prior_latent(
@@ -1563,39 +1565,42 @@ class LatentPriorPPOAgent(PPOAgent):
         eps: torch.Tensor | None = None,
         temperature: float = 1.0,
     ) -> torch.Tensor:
-        scaled_obs = self._scaled_eval_obs(obs)
-        sample_fn = getattr(self.network, "sample_prior_latent", None)
-        if not callable(sample_fn):
-            raise RuntimeError(
-                "sample_prior_latent() requires a network that exposes sample_prior_latent()."
+        with network_matmul_precision():
+            scaled_obs = self._scaled_eval_obs(obs)
+            sample_fn = getattr(self.network, "sample_prior_latent", None)
+            if not callable(sample_fn):
+                raise RuntimeError(
+                    "sample_prior_latent() requires a network that exposes sample_prior_latent()."
+                )
+            return sample_fn(
+                scaled_obs,
+                eps=None if eps is None else eps.to(device=scaled_obs.device),
+                temperature=float(temperature),
             )
-        return sample_fn(
-            scaled_obs,
-            eps=None if eps is None else eps.to(device=scaled_obs.device),
-            temperature=float(temperature),
-        )
 
     @torch.no_grad()
     def prior_mean(self, obs: torch.Tensor) -> torch.Tensor:
-        scaled_obs = self._scaled_eval_obs(obs)
-        mean_fn = getattr(self.network, "prior_mean", None)
-        if not callable(mean_fn):
-            raise RuntimeError(
-                "prior_mean() requires a network that exposes prior_mean()."
-            )
-        return mean_fn(scaled_obs)
+        with network_matmul_precision():
+            scaled_obs = self._scaled_eval_obs(obs)
+            mean_fn = getattr(self.network, "prior_mean", None)
+            if not callable(mean_fn):
+                raise RuntimeError(
+                    "prior_mean() requires a network that exposes prior_mean()."
+                )
+            return mean_fn(scaled_obs)
 
     @torch.no_grad()
     def policy_latent_mean_into(
         self, obs: torch.Tensor, latent: torch.Tensor, out_actions: torch.Tensor
     ) -> None:
-        scaled_obs = self._scaled_eval_obs(obs)
-        mean_fn = getattr(self.network, "policy_latent_mean_into", None)
-        if not callable(mean_fn):
-            raise RuntimeError(
-                "policy_latent_mean_into() requires a network that exposes policy_latent_mean_into()."
-            )
-        mean_fn(scaled_obs, latent.to(device=scaled_obs.device), out_actions)
+        with network_matmul_precision():
+            scaled_obs = self._scaled_eval_obs(obs)
+            mean_fn = getattr(self.network, "policy_latent_mean_into", None)
+            if not callable(mean_fn):
+                raise RuntimeError(
+                    "policy_latent_mean_into() requires a network that exposes policy_latent_mean_into()."
+                )
+            mean_fn(scaled_obs, latent.to(device=scaled_obs.device), out_actions)
 
 
 class FrozenLatentPolicyAdapter:

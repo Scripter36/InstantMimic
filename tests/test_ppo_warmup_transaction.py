@@ -546,3 +546,21 @@ def test_prewarm_refresh_failure_restores_permutations_and_random_state(monkeypa
     assert caught.value is failure
     _unchanged(agent, before)
     assert not agent._compiled_update_capture_prewarmed
+
+
+def test_prepare_view_warmup_evaluates_network_under_scoped_tf32():
+    from instantmimic.utils.network_precision import configure_ieee_float32_precision
+
+    agent = _agent("adamw", initialized=False)
+    agent._prepare_update_views_fn = agent._prepare_update_views_compiled
+    configure_ieee_float32_precision()
+    seen = []
+    hook = agent.network.trunk.register_forward_pre_hook(
+        lambda *_args: seen.append(torch.get_float32_matmul_precision())
+    )
+    try:
+        agent._warmup_compiled_prepare_update_views()
+    finally:
+        hook.remove()
+    assert seen and set(seen) == {"high"}
+    assert torch.get_float32_matmul_precision() == "highest"

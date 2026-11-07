@@ -13,6 +13,7 @@ _TOP_LEVEL_MODULES = {
     "ball_joint_limits",
     "experiment_logging",
     "hydra_cli",
+    "network_precision",
     "mjw_step_optimized",
     "mjw_model",
     "policy_mean_contract",

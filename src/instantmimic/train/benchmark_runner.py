@@ -38,6 +38,7 @@ from instantmimic.rl.runtime import (
     agent_observation_output_views,
     copy_agent_observation_into,
 )
+from instantmimic.utils.network_precision import network_matmul_precision
 from instantmimic.utils.policy_mean_contract import (
     matches_policy_mean_bound_callable,
     matches_policy_mean_methods,
@@ -1257,6 +1258,12 @@ class _CompletePolicySnapshot:
     def policy_mean_into(
         self, observations: torch.Tensor, actions: torch.Tensor
     ) -> None:
+        with network_matmul_precision():
+            self._policy_mean_into_unscoped(observations, actions)
+
+    def _policy_mean_into_unscoped(
+        self, observations: torch.Tensor, actions: torch.Tensor
+    ) -> None:
         self.scaler(observations, train=False, out=self.scaled_obs)
         self.network.policy_mean_into(self.scaled_obs, actions)
 
@@ -1725,6 +1732,14 @@ class _BenchmarkPolicyRunner:
             obs_policy: torch.Tensor,
             out_actions: torch.Tensor,
         ) -> None:
+            with network_matmul_precision():
+                self._policy_mean_into_unscoped(obs_policy, out_actions)
+
+        def _policy_mean_into_unscoped(
+            self,
+            obs_policy: torch.Tensor,
+            out_actions: torch.Tensor,
+        ) -> None:
             if not self.supports_policy_mean:
                 raise RuntimeError(
                     "native policy snapshot output width does not match the policy action width"
@@ -1847,21 +1862,42 @@ class _BenchmarkPolicyRunner:
 
     def _build_policy_mean_into_fn(self):
         policy = self._complete_policy_snapshot or self._agent
+        unscoped_policy_mean = getattr(policy, "_policy_mean_into_unscoped", None)
+        if not callable(unscoped_policy_mean):
+            unscoped_policy_mean = policy.policy_mean_into
 
         @torch.no_grad()
-        def _policy_mean_into_from_obs(
+        def _policy_mean_into_public(
             obs_policy: torch.Tensor, out_actions: torch.Tensor
         ) -> torch.Tensor:
             policy.policy_mean_into(obs_policy, out_actions)
             return out_actions
 
+        @torch.no_grad()
+        def _policy_mean_into_compiled(
+            obs_policy: torch.Tensor, out_actions: torch.Tensor
+        ) -> torch.Tensor:
+            unscoped_policy_mean(obs_policy, out_actions)
+            return out_actions
+
         if self._compile_enabled:
-            return torch.compile(
-                _policy_mean_into_from_obs,
+            policy_mean_into = torch.compile(
+                _policy_mean_into_compiled,
                 mode=self._compile_mode,
                 dynamic=False,
             )
-        return _policy_mean_into_from_obs
+        else:
+            policy_mean_into = _policy_mean_into_public
+
+        @torch.no_grad()
+        def _scoped_policy_mean_into(
+            obs_policy: torch.Tensor, out_actions: torch.Tensor
+        ) -> torch.Tensor:
+            # Keep process-state reads outside Dynamo's traced region.
+            with network_matmul_precision():
+                return policy_mean_into(obs_policy, out_actions)
+
+        return _scoped_policy_mean_into
 
     def _warmup(self) -> None:
         warmup_obs = torch.zeros(

@@ -485,3 +485,40 @@ def test_shuffle_capture_preserves_rng_and_first_replay_consumption(monkeypatch)
     assert torch.equal(obj._musclenn_graph_permutations, expected)
     assert torch.equal(generator.get_state(), reference.get_state())
     assert obj._musclenn_graph_permutations.data_ptr() == pointer
+
+
+def test_update_prewarm_compiles_and_captures_under_network_precision(monkeypatch):
+    from contextlib import contextmanager, nullcontext
+
+    from instantmimic.utils.network_precision import configure_ieee_float32_precision
+
+    configure_ieee_float32_precision()
+    obj, stream, _ = _setup_capture_runtime(monkeypatch, False, None)
+    obj._musclenn_use_update_graph = True
+    obj._musclenn_use_shuffle_graph = False
+    obj._musclenn_graph_runtime_is_supported = lambda: True
+    obj._ensure_musclenn_graph_workspace = lambda: None
+    obj._stage_musclenn_graph_inputs = lambda: None
+    stream.wait_stream = lambda _stream: None
+    monkeypatch.setattr(torch.cuda, "current_stream", lambda _device: stream)
+    monkeypatch.setattr(torch.cuda, "stream", lambda _stream: nullcontext())
+    updates = []
+    captures = []
+    update = obj._run_musclenn_graph_minibatch_fn
+
+    def record_update(*args):
+        updates.append(torch.get_float32_matmul_precision())
+        update(*args)
+
+    @contextmanager
+    def record_capture(*_args, **_kwargs):
+        captures.append(torch.get_float32_matmul_precision())
+        yield
+
+    obj._run_musclenn_graph_minibatch_fn = record_update
+    obj._run_musclenn_graph_epoch_loops = record_update
+    monkeypatch.setattr(torch.cuda, "graph", record_capture)
+    assert obj.prewarm_musclenn_update_graph()
+    assert updates == ["high", "high"]
+    assert captures == ["high"]
+    assert torch.get_float32_matmul_precision() == "highest"

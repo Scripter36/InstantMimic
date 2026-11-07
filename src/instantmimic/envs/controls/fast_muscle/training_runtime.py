@@ -23,6 +23,7 @@ from instantmimic.muscle.parsing.mjcf import (
 )
 from instantmimic.muscle.runtime_specs import MuscleLayerRuntimeSpec
 from instantmimic.rl.optimizers import build_optimizer
+from instantmimic.utils.network_precision import network_matmul_precision
 from instantmimic.utils.startup_profiler import startup_nvtx_wrapped
 from instantmimic.utils.torch_warp_capture import warp_stream_from_torch
 
@@ -2165,6 +2166,10 @@ class FastMuscleTrainingMixin:
 
     def prewarm_musclenn_update_graph(self) -> bool:
         """Reserve and capture the steady-state graph before other runtime graphs."""
+        with network_matmul_precision():
+            return self._prewarm_musclenn_update_graph_unscoped()
+
+    def _prewarm_musclenn_update_graph_unscoped(self) -> bool:
         if (
             not bool(getattr(self, "_musclenn_use_update_graph", False))
             or not self._musclenn_graph_runtime_is_supported()
@@ -2333,6 +2338,10 @@ class FastMuscleTrainingMixin:
         an update is now in flight (only the captured update runs
         asynchronously; otherwise ``optimize_muscle_nn`` runs it).
         """
+        with network_matmul_precision():
+            return self._begin_muscle_nn_update_unscoped()
+
+    def _begin_muscle_nn_update_unscoped(self) -> bool:
         self._require_no_pending_musclenn_update()
         if not self._musclenn_update_is_configured() or not bool(
             getattr(self, "_musclenn_use_update_graph", False)
@@ -2345,6 +2354,10 @@ class FastMuscleTrainingMixin:
 
     def optimize_muscle_nn(self) -> dict[str, float] | None:
         """Run, or finish a begun, MuscleNN update and return its metrics."""
+        with network_matmul_precision():
+            return self._optimize_muscle_nn_unscoped()
+
+    def _optimize_muscle_nn_unscoped(self) -> dict[str, float] | None:
         if getattr(self, "_musclenn_update_pending", False):
             self._musclenn_update_pending = False
             return self._finish_musclenn_update_graph()

@@ -35,6 +35,7 @@ from instantmimic.rl.optimizers import (
 )
 from instantmimic.rl.sampling import fill_gaussian_noise_kernel, increment_seed_kernel
 from instantmimic.rl.update_compile import full_update_compile_enabled
+from instantmimic.utils.network_precision import network_matmul_precision
 from instantmimic.utils.policy_mean_contract import register_policy_mean_methods
 from instantmimic.utils.startup_profiler import StartupProfiler
 from instantmimic.utils.torch_warp_capture import (
@@ -1466,10 +1467,11 @@ class PPOAgent:
 
     @torch.no_grad()
     def act(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        scaled_obs = self._scaled_eval_obs(obs)
-        actions, log_prob, values = self.network.act(scaled_obs)
-        self._inverse_scale_values_(values)
-        return (actions, log_prob, values)
+        with network_matmul_precision():
+            scaled_obs = self._scaled_eval_obs(obs)
+            actions, log_prob, values = self.network.act(scaled_obs)
+            self._inverse_scale_values_(values)
+            return (actions, log_prob, values)
 
     @torch.no_grad()
     def _obs_scale_into(
@@ -1583,7 +1585,8 @@ class PPOAgent:
                 (label, lambda value=value, saved=saved: value.copy_(saved))
             )
         try:
-            self._prepare_update_views_fn()
+            with network_matmul_precision():
+                self._prepare_update_views_fn()
             self._restore_warmup_components(components)
             self._synchronize_warmup_work()
         except Exception as error:
@@ -1651,6 +1654,15 @@ class PPOAgent:
         *,
         eps: torch.Tensor | None = None,
     ) -> None:
+        with network_matmul_precision():
+            self._act_into_body_unscoped(step, eps=eps)
+
+    def _act_into_body_unscoped(
+        self,
+        step: int,
+        *,
+        eps: torch.Tensor | None = None,
+    ) -> None:
         buf = self.buffer
         self._obs_scale_eval_into_fn(buf.obs[step], self._policy_scaled_obs)
         if buf.policy_obs is not None:
@@ -1709,6 +1721,12 @@ class PPOAgent:
     def _bootstrap_values_fast(
         self, obs: torch.Tensor, out_values: torch.Tensor
     ) -> None:
+        with network_matmul_precision():
+            self._bootstrap_values_fast_unscoped(obs, out_values)
+
+    def _bootstrap_values_fast_unscoped(
+        self, obs: torch.Tensor, out_values: torch.Tensor
+    ) -> None:
         self._obs_scale_eval_into_fn(obs, self._policy_scaled_obs)
         self._act_into_fn(
             self._policy_scaled_obs,
@@ -1729,6 +1747,12 @@ class PPOAgent:
             self._bootstrap_values_into_body(obs, out_values)
 
     def _bootstrap_values_into_body(
+        self, obs: torch.Tensor, out_values: torch.Tensor
+    ) -> None:
+        with network_matmul_precision():
+            self._bootstrap_values_into_unscoped(obs, out_values)
+
+    def _bootstrap_values_into_unscoped(
         self, obs: torch.Tensor, out_values: torch.Tensor
     ) -> None:
         obs = obs.to(self.device)
@@ -2025,6 +2049,10 @@ class PPOAgent:
 
     def _warmup_compiled_functions(self, warmup_act_into: bool) -> None:
         """Compile graph-specialized callables before any external CUDA capture."""
+        with network_matmul_precision():
+            self._warmup_compiled_functions_unscoped(warmup_act_into)
+
+    def _warmup_compiled_functions_unscoped(self, warmup_act_into: bool) -> None:
         update_wp_stream = getattr(self, "_update_wp_stream", None)
         update_wp_stream_ctx = (
             wp.ScopedStream(update_wp_stream, sync_enter=False, sync_exit=False)
@@ -2403,6 +2431,14 @@ class PPOAgent:
         recorded on the original error and the remaining restoration is attempted.
         Compiler caches are deliberately retained; training state is not.
         """
+        with network_matmul_precision():
+            self._warmup_compiled_update_minibatch_unscoped(
+                max_minibatches=max_minibatches
+            )
+
+    def _warmup_compiled_update_minibatch_unscoped(
+        self, *, max_minibatches: int | None = None
+    ) -> None:
         parameters = tuple(self.network.parameters())
         saved_gradients = [
             (
@@ -3513,16 +3549,29 @@ class PPOAgent:
 
     @torch.no_grad()
     def policy_mean(self, obs: torch.Tensor) -> torch.Tensor:
-        scaled_obs = self._scaled_eval_obs(obs)
-        return self.network.policy_mean(scaled_obs)
+        with network_matmul_precision():
+            scaled_obs = self._scaled_eval_obs(obs)
+            return self.network.policy_mean(scaled_obs)
 
     @torch.no_grad()
     def policy_mean_into(self, obs: torch.Tensor, out_actions: torch.Tensor) -> None:
+        with network_matmul_precision():
+            self._policy_mean_into_unscoped(obs, out_actions)
+
+    def _policy_mean_into_unscoped(
+        self, obs: torch.Tensor, out_actions: torch.Tensor
+    ) -> None:
         scaled_obs = self._scaled_eval_obs(obs)
         self.network.policy_mean_into(scaled_obs, out_actions)
 
     @torch.no_grad()
     def policy_execution_mean_into(
+        self, obs: torch.Tensor, out_actions: torch.Tensor
+    ) -> None:
+        with network_matmul_precision():
+            self._policy_execution_mean_into_unscoped(obs, out_actions)
+
+    def _policy_execution_mean_into_unscoped(
         self, obs: torch.Tensor, out_actions: torch.Tensor
     ) -> None:
         scaled_obs = self._scaled_eval_obs(obs)
@@ -4465,6 +4514,10 @@ class PPOAgent:
         return self._replay_update_graphs()
 
     def prewarm_update_graph(self) -> bool:
+        with network_matmul_precision():
+            return self._prewarm_update_graph_unscoped()
+
+    def _prewarm_update_graph_unscoped(self) -> bool:
         if not self._use_update_graph:
             return False
         if self._detailed_nvtx:
@@ -4584,6 +4637,10 @@ class PPOAgent:
         return self._read_update_summary()
 
     def update(self) -> dict[str, float]:
+        with network_matmul_precision():
+            return self._update_unscoped()
+
+    def _update_unscoped(self) -> dict[str, float]:
         self._require_training_runtime("update")
         if self.fail_on_nonfinite_update:
             self._raise_on_nonfinite_update_inputs()
@@ -4641,8 +4698,9 @@ class PPOAgent:
         )
 
     def update_initial_state(self) -> dict[str, float]:
-        learner = self.initial_state_learner
-        return {} if learner is None else learner.update()
+        with network_matmul_precision():
+            learner = self.initial_state_learner
+            return {} if learner is None else learner.update()
 
     @torch.no_grad()
     def clear_initial_state_rollout(self) -> None:

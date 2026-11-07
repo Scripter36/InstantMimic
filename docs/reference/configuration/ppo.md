@@ -97,3 +97,10 @@ rewards with `RunningReturnScaler`.
   [Muscle simulation and control](../../guides/muscle-control.md#direct-control-baselines)).
 - `latent_prior` turns the policy into the latent (VAE) policy used by the
   [AMASS tasks](../../data/amass-retargeting.md).
+
+## Network precision
+
+PPO policy/value forward calls and updates use scoped TF32 on CUDA, including
+prewarm and graph capture. Environment and simulator math use IEEE float32.
+[Runtime precision](training-and-playback.md#network-scoped-tf32) describes the
+scope and its relationship to `runtime.precision`.
