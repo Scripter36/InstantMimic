@@ -103,8 +103,8 @@ uv run run_hpo --config-name hpo/beyondmimic_side_kick_training_pareto_60s \
 ```
 
 Remove `runtime.dry_run=true` to run the search. It uses the public `local`
-evaluator, seeds 42/43/44, up to 100 cycles, and the untouched baseline followed
-by the hybrid Muon candidate. Each trial has 60 seconds of active training and
+evaluator, seeds 42/43/44 and up to 100 cycles, and starts from the untouched
+baseline followed by the hybrid Muon candidate. Each trial has 60 seconds of active training and
 a fixed 500-step, 512-world benchmark every 10 seconds of active time. The Pareto
 objective balances median best-per-seed final reward with anytime quality.
 Planner instructions contain only the hard learning-rate, rollout, epoch,
@@ -120,5 +120,5 @@ use the fields accepted by the selected optimizer. The public override validator
 strips `++` when checking the whitelist and preserves it for Hydra composition.
 
 The settings this search selected are available as the opt-in
-[`unitree_g1/beyondmimic/side_kick_hpo`](beyondmimic.md#use-the-hpo-configuration)
+[`unitree_g1/beyondmimic/side_kick_hpo`](beyondmimic.md#tune-the-training-settings-with-hpo)
 preset; the search itself starts from `side_kick`.

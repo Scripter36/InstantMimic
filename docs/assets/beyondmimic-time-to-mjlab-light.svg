@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 438" width="680" height="438" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img">
+<title>Active training time to reach mjlab's final tracking error on BeyondMimic G1</title>
+<defs><clipPath id="c"><rect x="64" y="12" width="600" height="258"/></clipPath></defs>
+<line stroke="#e7e9ea" x1="64" x2="664" y1="229.3" y2="229.3"/>
+<text fill="#59636e" font-size="13" x="54" y="233.3" text-anchor="end">100</text>
+<line stroke="#e7e9ea" x1="64" x2="664" y1="174.9" y2="174.9"/>
+<text fill="#59636e" font-size="13" x="54" y="178.9" text-anchor="end">120</text>
+<line stroke="#e7e9ea" x1="64" x2="664" y1="120.6" y2="120.6"/>
+<text fill="#59636e" font-size="13" x="54" y="124.6" text-anchor="end">140</text>
+<line stroke="#e7e9ea" x1="64" x2="664" y1="66.3" y2="66.3"/>
+<text fill="#59636e" font-size="13" x="54" y="70.3" text-anchor="end">160</text>
+<line stroke="#e7e9ea" x1="64" x2="664" y1="12.0" y2="12.0"/>
+<text fill="#59636e" font-size="13" x="54" y="16.0" text-anchor="end">180</text>
+<line stroke="#aeb6bb" x1="64.0" x2="64.0" y1="270" y2="275"/>
+<text fill="#59636e" font-size="13" x="64.0" y="292" text-anchor="middle">0</text>
+<line stroke="#aeb6bb" x1="206.9" x2="206.9" y1="270" y2="275"/>
+<text fill="#59636e" font-size="13" x="206.9" y="292" text-anchor="middle">10</text>
+<line stroke="#aeb6bb" x1="349.7" x2="349.7" y1="270" y2="275"/>
+<text fill="#59636e" font-size="13" x="349.7" y="292" text-anchor="middle">20</text>
+<line stroke="#aeb6bb" x1="492.6" x2="492.6" y1="270" y2="275"/>
+<text fill="#59636e" font-size="13" x="492.6" y="292" text-anchor="middle">30</text>
+<line stroke="#aeb6bb" x1="635.4" x2="635.4" y1="270" y2="275"/>
+<text fill="#59636e" font-size="13" x="635.4" y="292" text-anchor="middle">40</text>
+<path stroke="#aeb6bb" fill="none" d="M64,12 V270 H664"/>
+<text fill="#1f2328" font-size="14" x="364.0" y="318" text-anchor="middle">Active training time on an RTX 5090 (min)</text>
+<text fill="#1f2328" font-size="14" transform="translate(18 141.0) rotate(-90)" text-anchor="middle">MPKPE (mm)</text>
+<line stroke="#8a9399" stroke-width="1.2" stroke-dasharray="5 4" x1="64" x2="664" y1="209.7" y2="209.7"/>
+<g clip-path="url(#c)" fill="none" stroke-width="2.5" stroke-linejoin="round">
+<polyline stroke="#5f5f5f" points="112.5,-967.4 160.8,-99.4 209.0,16.3 257.5,76.9 305.3,127.8 353.0,146.8 400.7,180.7 448.3,181.1 496.0,193.3 543.6,202.7 591.2,207.4 638.7,218.9"/>
+<polyline stroke="#6b97b5" points="85.6,-678.5 107.3,-241.7 128.8,2.4 150.3,83.9 171.8,123.3 193.3,142.6 214.7,167.7 236.0,176.6 257.4,196.5 278.8,206.4 300.2,205.0 321.7,214.1"/>
+<polyline stroke="#2f5d7c" points="78.5,-292.0 92.8,63.4 107.1,148.6 121.5,184.8 135.8,197.3 150.2,191.8 164.6,190.8 178.9,215.5 193.3,213.9 207.8,217.4 222.1,235.4 236.5,224.7"/>
+</g>
+<line stroke="#5f5f5f" stroke-width="1.5" stroke-dasharray="2 3" x1="600.5" x2="600.5" y1="209.7" y2="270"/>
+<circle fill="#5f5f5f" stroke="#ffffff" stroke-width="1.5" cx="600.5" cy="209.7" r="4.5"/>
+<line stroke="#6b97b5" stroke-width="1.5" stroke-dasharray="2 3" x1="311.2" x2="311.2" y1="209.7" y2="270"/>
+<circle fill="#6b97b5" stroke="#ffffff" stroke-width="1.5" cx="311.2" cy="209.7" r="4.5"/>
+<line stroke="#2f5d7c" stroke-width="1.5" stroke-dasharray="2 3" x1="175.5" x2="175.5" y1="209.7" y2="270"/>
+<circle fill="#2f5d7c" stroke="#ffffff" stroke-width="1.5" cx="175.5" cy="209.7" r="4.5"/>
+<path fill="none" stroke="#8a9399" stroke-width="1.2" d="M178.5,239.7 V243.7 H308.2 V239.7"/>
+<text fill="#59636e" font-size="13" x="243.3" y="259.7" text-anchor="middle"><tspan fill="#1f2328" font-weight="700">2.2×</tspan> HPO</text>
+<path fill="none" stroke="#8a9399" stroke-width="1.2" d="M314.2,239.7 V243.7 H597.5 V239.7"/>
+<text fill="#59636e" font-size="13" x="455.8" y="259.7" text-anchor="middle"><tspan fill="#1f2328" font-weight="700">2.2×</tspan> throughput</text>
+<line stroke="#5f5f5f" stroke-width="3" x1="64" x2="78" y1="348" y2="348"/>
+<text fill="#59636e" font-size="14" x="86" y="352">mjlab</text>
+<text fill="#1f2328" font-size="14" font-weight="700" x="434" y="352" text-anchor="end">37 min 33 s</text>
+<line stroke="#6b97b5" stroke-width="3" x1="64" x2="78" y1="372" y2="372"/>
+<text fill="#59636e" font-size="14" x="86" y="376">InstantMimic, mjlab&#39;s PPO settings</text>
+<text fill="#1f2328" font-size="14" font-weight="700" x="434" y="376" text-anchor="end">17 min 18 s</text>
+<line stroke="#2f5d7c" stroke-width="3" x1="64" x2="78" y1="396" y2="396"/>
+<text fill="#59636e" font-size="14" x="86" y="400">InstantMimic, HPO-tuned settings</text>
+<text fill="#1f2328" font-size="14" font-weight="700" x="434" y="400" text-anchor="end">7 min 48 s</text>
+<line stroke="#8a9399" stroke-width="1.5" stroke-dasharray="3 3" x1="64" x2="78" y1="420" y2="420"/>
+<text fill="#59636e" font-size="14" x="86" y="424">mjlab final MPKPE, 107 mm</text>
+</svg>

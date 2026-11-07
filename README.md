@@ -108,17 +108,22 @@ lists every skill and how to install them.
 A coding agent ported the Unitree G1 motion-tracking task of
 [BeyondMimic](https://github.com/HybridRobotics/whole_body_tracking) from
 [mjlab](https://github.com/mujocolab/mjlab) under our review, and we turned that
-workflow into the `migrate-external-env` skill. The port reaches the same
-tracking quality and trains about 2.2× faster than mjlab:
+workflow into the `migrate-external-env` skill. The port tracks nearly as
+well as mjlab and trains about 2.2× faster. A `tune-hyperparameters` search
+then found settings
+([`side_kick_hpo`](https://instantmimic.readthedocs.io/en/latest/guides/beyondmimic/#tune-the-training-settings-with-hpo))
+that cut the training time by another 2.2×. The tuned port reaches mjlab's
+final tracking error 4.8× sooner than mjlab:
 
-| Implementation | Training throughput |
-| --- | ---: |
-| mjlab 1.6.0 tracking | 245 kFPS |
-| InstantMimic | 541 kFPS |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/beyondmimic-time-to-mjlab-dark.svg">
+  <img src="docs/assets/beyondmimic-time-to-mjlab-light.svg" width="680" alt="MPKPE against active training time: mjlab reaches its final tracking error, 107 mm, after 37 min 33 s; the InstantMimic port with mjlab's PPO settings after 17 min 18 s; the port with HPO-tuned settings after 7 min 48 s.">
+</picture>
 
-Measured on an RTX 5090; see the
+Mean of two seeds. After full training (6,000 iterations, three seeds), the
+tuned settings also raise success from 0.968 to 0.984. The
 [BeyondMimic guide](https://instantmimic.readthedocs.io/en/latest/guides/beyondmimic/#how-this-port-was-made)
-for details.
+has the full measurements.
 
 ## Documentation
 

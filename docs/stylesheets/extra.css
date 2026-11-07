@@ -65,3 +65,50 @@
 .im-diagram .im-arrowhead {
   fill: var(--md-default-fg-color--light);
 }
+
+/* Diagram fills for the dark colour scheme. */
+[data-md-color-scheme="slate"] .im-diagram .im-hook { fill: #2a3058; }
+[data-md-color-scheme="slate"] .im-diagram .im-physics { fill: #4a3218; }
+[data-md-color-scheme="slate"] .im-diagram .im-refresh { fill: #1f3d2b; }
+
+/* Data figures, styled like the project page's figures. Series colours are
+   tokens so they can change with the colour scheme. */
+.md-typeset .im-figure {
+  --im-s-mjlab: #5f5f5f;
+  --im-s-baseline: #6b97b5;
+  --im-s-hpo: #2f5d7c;
+  --im-surface: var(--md-default-bg-color);
+  width: 100%;
+  max-width: 680px;
+  margin: 1.5em auto;
+}
+[data-md-color-scheme="slate"] .im-figure {
+  --im-s-mjlab: #a3a9ad;
+  --im-s-baseline: #4f86ba;
+  --im-s-hpo: #86c0f0;
+}
+.im-figure svg { display: block; width: 100%; height: auto; max-width: 680px; font-family: var(--md-text-font-family, sans-serif); font-size: 14px; }
+.im-figure .plot-axis { stroke: var(--md-default-fg-color--lighter); stroke-width: 1; }
+.im-figure .plot-grid { stroke: var(--md-default-fg-color--lightest); stroke-width: 1; }
+.im-figure .plot-tick { fill: var(--md-default-fg-color--light); font-size: 13px; font-variant-numeric: tabular-nums; }
+.im-figure .plot-label { fill: var(--md-default-fg-color); font-size: 14px; }
+.im-figure .plot-threshold { stroke: var(--md-default-fg-color--light); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.im-figure .im-s-mjlab { stroke: var(--im-s-mjlab); }
+.im-figure .im-s-baseline { stroke: var(--im-s-baseline); }
+.im-figure .im-s-hpo { stroke: var(--im-s-hpo); }
+.im-figure .im-fill.im-s-mjlab { fill: var(--im-s-mjlab); }
+.im-figure .im-fill.im-s-baseline { fill: var(--im-s-baseline); }
+.im-figure .im-fill.im-s-hpo { fill: var(--im-s-hpo); }
+.im-figure__legend { display: flex; flex-direction: column; gap: .2rem; align-self: stretch; max-width: calc(24rem + min(9.41%, 64px)); margin-top: .5rem; text-align: left; padding-left: min(9.41%, 64px); color: var(--md-default-fg-color--light); font-size: .7rem; }
+.im-figure__legend > span { display: inline-flex; align-items: center; gap: .45rem; }
+.im-figure__legend i { flex: none; display: inline-block; width: 14px; height: 0; border-top: 3px solid; }
+.im-figure__legend i.im-s-mjlab { border-color: var(--im-s-mjlab); }
+.im-figure__legend i.im-s-baseline { border-color: var(--im-s-baseline); }
+.im-figure__legend i.im-s-hpo { border-color: var(--im-s-hpo); }
+.im-figure__legend i.im-figure__threshold { border-top: 1.5px dashed var(--md-default-fg-color--light); }
+.im-figure__legend strong { margin-left: auto; padding-left: .75rem; white-space: nowrap; color: var(--md-default-fg-color); font-variant-numeric: tabular-nums; }
+.im-figure .im-figure__span { fill: none; stroke: var(--md-default-fg-color--light); stroke-width: 1.2; }
+.im-figure .im-figure__gain { fill: var(--md-default-fg-color--light); font-size: 13px; }
+.im-figure .im-figure__gain tspan { fill: var(--md-default-fg-color); font-weight: 700; }
+.md-typeset .im-figure__legend code { background: none; padding: 0; font-size: .95em; }
+.im-figure figcaption { margin-top: .5rem; color: var(--md-default-fg-color--light); font-size: .7rem; line-height: 1.6; }
