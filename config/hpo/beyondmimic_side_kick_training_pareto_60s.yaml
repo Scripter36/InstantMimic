@@ -1,0 +1,149 @@
+# @package _global_
+
+defaults:
+  - /hpo/runtime/default
+  - /hpo/planner/default
+  - _self_
+
+name: beyondmimic-side-kick-training-pareto-60s
+
+parameter_space:
+  - models.actor.layers
+  - models.actor.activation
+  - models.critic.layers
+  - models.critic.activation
+  - models.actor.distribution.parameterization
+  - models.actor.distribution.initial_log_std
+  - agent.rollouts
+  - agent.discount_factor
+  - agent.gae_lambda
+  - agent.grad_norm_clip
+  - agent.state_preprocessor
+  - agent.learning_epochs
+  - agent.mini_batches
+  - agent.shuffle_mode
+  - agent.kl_estimator
+  - agent.learning_rate.initial
+  - agent.learning_rate.bounds
+  - agent.learning_rate.scheduler.threshold
+  - agent.learning_rate.scheduler.factor
+  - agent.learning_rate.scheduler.update_mode
+  - agent.ratio_clip
+  - agent.value_clip
+  - agent.clip_predicted_values
+  - agent.value_loss_clip_mode
+  - agent.entropy_loss_scale
+  - agent.value_loss_scale
+  - agent.optimizer.type
+  - agent.optimizer.weight_decay
+  - agent.optimizer.betas
+  - agent.optimizer.eps
+  - agent.optimizer.momentum
+  - agent.optimizer.nesterov
+  - agent.optimizer.adjust_lr_fn
+  - agent.optimizer.ns_steps
+  - agent.optimizer.adamw.betas
+  - agent.optimizer.adamw.eps
+  - agent.optimizer.adamw.weight_decay
+  - agent.parameter_initialization
+
+hpo_tracking:
+  backend: ${oc.env:INSTANTMIMIC_LOGGER,tensorboard}
+  experiment_name: instantmimic-hpo
+  group: beyondmimic-side-kick-training-pareto-60s
+  scope: training-pareto
+  log_artifacts: true
+  log_llm_traces: true
+  required: true
+
+forbidden_prefixes:
+  - env
+  - task
+  - objective
+  - reward
+  - seed
+  - trainer
+  - experiment
+  - play
+  - runtime
+
+batch:
+  motions:
+    side_kick:
+      config_path: config/unitree_g1/beyondmimic
+      config_name: side_kick
+  seeds: [42, 43, 44]
+  max_parallel: 1
+  seed_batch: require
+  min_experiments_per_cycle: 1
+  max_experiments_per_cycle: 1
+  lock_motion_configs: true
+  eval_source: train_benchmark
+  train_benchmark_recent_window: 3
+  playback:
+    video: false
+  fixed_train_overrides:
+    - trainer.max_iterations=100000
+    - experiment.logger.type=tensorboard
+    - experiment.write_interval=100000
+    - experiment.episode_metrics_interval=100000
+    - ++experiment.checkpoint.disabled=true
+    - ++trainer.benchmark={interval_seconds:10.0,steps:500,num_envs:512,deterministic_reset:true,require_full_horizon:false,episode_semantics:full_horizon,use_best_candidate:false,best_metric:reward_mean,save_history:true}
+    - ++trainer.stopping={type:time_budget,warmup_iterations:0,timeout_seconds:60.0}
+
+objective:
+  mode: pareto
+  strategy: learning_curve_pareto
+  active_time_budget_seconds: 60.0
+  terminal_time_tolerance_seconds: 0.25
+  final_quality:
+    key: current_reward_mean
+    aggregate: median
+    statistic: best_per_seed
+    epsilon: 0.5
+  anytime_quality:
+    epsilon: 0.5
+  selection: balanced
+  guards: []
+
+planner:
+  platform: openai
+  reasoning_effort: medium
+  sandbox: workspace-write
+  timeout_seconds: 900
+  retry_delay_seconds: 30
+  recent_cycles: 12
+  instructions: |
+    Keep learning rate within 1e-5..3e-3, rollouts within 8..48, epochs within
+    1..8, mini-batches within 1..8 (rollouts x 4096 envs must divide evenly by
+    mini-batches), and network widths no larger than [1024, 512, 256].
+  initial_candidates:
+    - name: untouched_baseline
+      rationale: Establish the RSL-parity baseline under the frozen protocol.
+      motions:
+        side_kick:
+          overrides: []
+    - name: hybrid_muon
+      rationale: Isolate the hybrid Muon optimizer profile that helped this task at 500 iterations.
+      motions:
+        side_kick:
+          overrides:
+            - agent.optimizer.type=muon
+            - ++agent.optimizer.momentum=0.95
+            - ++agent.optimizer.nesterov=true
+            - ++agent.optimizer.adjust_lr_fn=match_rms_adamw
+            - ++agent.optimizer.ns_steps=5
+            - ++agent.optimizer.eps=1e-7
+            - ++agent.optimizer.weight_decay=3e-5
+            - ++agent.optimizer.adamw.betas=[0.9,0.999]
+            - ++agent.optimizer.adamw.eps=2e-5
+            - ++agent.optimizer.adamw.weight_decay=3e-5
+            - agent.learning_rate.initial=1e-4
+            - agent.learning_rate.bounds=[1e-6,4e-4]
+
+runtime:
+  cycles: 100
+  resume: null
+  dry_run: false
+  evaluator:
+    launcher: local

@@ -91,3 +91,34 @@ The planner runs as an agent CLI with these permissions:
 
 Since the planner can read the checkout, run it with credentials and permissions
 you are comfortable giving it.
+
+## BeyondMimic side kick
+
+After [preparing the G1 assets](beyondmimic.md#prepare-the-g1-model-and-motion),
+inspect the 60 s active-time Pareto search without launching training or a planner:
+
+```bash
+uv run run_hpo --config-name hpo/beyondmimic_side_kick_training_pareto_60s \
+  runtime.dry_run=true
+```
+
+Remove `runtime.dry_run=true` to run the search. It uses the public `local`
+evaluator, seeds 42/43/44, up to 100 cycles, and the untouched baseline followed
+by the hybrid Muon candidate. Each trial has 60 seconds of active training and
+a fixed 500-step, 512-world benchmark every 10 seconds of active time. The Pareto
+objective balances median best-per-seed final reward with anytime quality.
+Planner instructions contain only the hard learning-rate, rollout, epoch,
+minibatch and network-width bounds; environment, runtime, evaluation and logging
+settings are frozen.
+
+`parameter_space` lists exact paths. Optional optimizer fields absent from the
+baseline YAML must be introduced with `++`, as the hybrid Muon initial candidate
+demonstrates. This also applies to Adam's `betas`, `eps` and `weight_decay` when
+tuning them from the untouched baseline. `agent.optimizer.betas` belongs to
+Adam/AdamW; Muon's companion uses `agent.optimizer.adamw.betas`. Proposals must
+use the fields accepted by the selected optimizer. The public override validator
+strips `++` when checking the whitelist and preserves it for Hydra composition.
+
+The settings this search selected are available as the opt-in
+[`unitree_g1/beyondmimic/side_kick_hpo`](beyondmimic.md#use-the-hpo-configuration)
+preset; the search itself starts from `side_kick`.

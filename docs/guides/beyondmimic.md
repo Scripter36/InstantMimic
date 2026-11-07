@@ -60,6 +60,7 @@ in the same directory:
 | Config | Purpose |
 | --- | --- |
 | `side_kick` | The default: fused Warp task kernels, CUDA graphs and compiled PPO updates |
+| `side_kick_hpo` | Opt-in training settings selected by the 60 s HPO search |
 | `side_kick_reference` | The same task without fused kernels, for comparison |
 | `side_kick_native_ppo` | InstantMimic's PPO settings instead of mjlab's |
 | `side_kick_native_ppo_muon` | As above, with the hybrid Muon optimizer |
@@ -68,6 +69,20 @@ in the same directory:
 Resuming restores the policy, optimizer and observation normalization, but the
 episodes and adaptive motion-sampling statistics start over, so the resumed run
 does not follow the exact same trajectory.
+
+## Use the HPO configuration
+
+The opt-in `side_kick_hpo` preset inherits `side_kick` and applies the training
+settings selected by the
+[60-second HPO search](hpo.md#beyondmimic-side-kick): hybrid Muon/AdamW,
+16-step rollouts, three learning epochs, a 640/320/160 critic and the tuned PPO
+and learning-rate values. The task, actor network, runtime and training length
+are unchanged:
+
+```bash
+uv run train --config-name unitree_g1/beyondmimic/side_kick_hpo \
+  experiment.name=side_kick_hpo
+```
 
 ## Evaluate tracking
 
